@@ -7,7 +7,7 @@ export default function BlogPage() {
         // Fond noir, texte blanc
         <main className="min-h-screen bg-black text-white py-10">
             <div className="max-w-7xl mx-auto px-6 md:px-8">
-                <h1 className="text-4xl font-bold mb-10">Blog</h1>
+                {/* <h1 className="text-4xl font-bold mb-10">Blog</h1> */}
                 <CategoryFilter />
                 <br />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-[1px]">
