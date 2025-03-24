@@ -1,0 +1,74 @@
+services:
+  symfony-backend:
+    build:
+      context: ./backend
+    container_name: the-blog-backend
+    restart: unless-stopped
+    volumes:
+      - ./backend:/var/www/symfony
+    ports:
+      - "9500:9000"
+    environment:
+      APP_ENV: dev
+    depends_on:
+      - db
+
+  nginx:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.nginx
+    container_name: the-blog-nginx
+    ports:
+      - "8082:80"
+    volumes:
+      - ./backend/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - symfony-backend
+
+  db:
+    image: mysql:8.0
+    container_name: the-blog-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: symfony
+      MYSQL_USER: symfony
+      MYSQL_PASSWORD: symfony
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: arm64v8/phpmyadmin
+    container_name: the-blog-phpmyadmin
+    ports:
+      - "8093:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: the-blog-frontend
+    restart: unless-stopped
+    ports:
+      - "3100:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - symfony-backend
+      - db
+
+volumes:
+  mysql_data:
+  symfony_code:
+
+
