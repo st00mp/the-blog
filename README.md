@@ -31,7 +31,7 @@ The goal is to recreate a clean, elegant blog layout inspired by Vercel’s desi
 #### `/blog` – static layout  
 🧱 Component composition + overall structure
 
-<img width="1721" alt="image" src="https://github.com/user-attachments/assets/9f5005f7-e8c5-4b79-a938-7b251af1b829" />
+<img width="1725" alt="image" src="https://github.com/user-attachments/assets/32a11088-9e66-435b-af6e-4406f72dd87d" />
 
 ---
 
