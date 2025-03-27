@@ -1,7 +1,29 @@
+// Étape 1 : Générer les slugs dynamiques à build time
+export async function generateStaticParams() {
+
+    // console.log("BACKEND_API_URL =", process.env.BACKEND_API_URL); // ⬅️ debug important
+
+    const API_URL = process.env.BACKEND_API_URL;
+    const res = await fetch(`${API_URL}/api/articles`); const articles = await res.json();
+
+    return articles.map((article: any) => ({
+        slug: article.slug,
+    }));
+}
+
+// Étape 2 : Composant de page dynamique
 import { Button } from "@/components/ui/button"
 import { ClockIcon } from "lucide-react"
 
-export default function BlogPostPage() {
+type Props = {
+    params: { slug: string }
+}
+
+export default async function BlogPostPage({ params }: Props) {
+    const API_URL = process.env.BACKEND_API_URL;
+    const res = await fetch(`${API_URL}/api/articles/${params.slug}`);
+    const article = await res.json();
+
     return (
         <main className="bg-black text-white min-h-screen pt-16 pb-16 px-4 sm:px-6">
 
@@ -33,7 +55,7 @@ export default function BlogPostPage() {
 
                     {/* Titre centré dans conteneur large */}
                     <h1 className="text-center text-[32px] sm:text-[36px] md:text-[42px] lg:text-[48px] font-medium tracking-tight leading-[1.1] mb-2 max-w-5xl mx-auto">
-                        Using the AI SDK to build Sitecore Stream's AI-powered brand aware assistant
+                        {article.title}
                     </h1>
                 </section>
 

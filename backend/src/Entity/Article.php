@@ -3,36 +3,61 @@
 namespace App\Entity;
 
 use App\Repository\ArticleRepository;
+use Cocur\Slugify\Slugify;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 
 #[ORM\Entity(repositoryClass: ArticleRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Article
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['article:list', 'article:detail'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['article:list', 'article:detail'])]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['article:list', 'article:detail'])]
     private ?string $excerpt = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['article:detail'])]
     private ?string $content = null;
 
+    #[ORM\PrePersist]
+    #[ORM\PreUpdate]
+    public function generateSlug(): void
+    {
+        if (!$this->slug && $this->title) {
+            $slugify = new Slugify();
+            $this->slug = $slugify->slugify($this->title);
+        }
+    }
+
+    #[ORM\Column(length: 255, unique: true, updatable: false)]
+    #[Groups(['article:list', 'article:detail'])]
+    private ?string $slug = null;
+
     #[ORM\Column]
+    #[Groups(['article:list', 'article:detail'])]
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\Column]
+    #[Groups(['article:detail'])]
     private ?\DateTimeImmutable $updated_at = null;
 
     #[ORM\ManyToOne(inversedBy: 'article')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['article:list', 'article:detail'])]
     private ?User $author = null;
 
     /**
@@ -93,6 +118,19 @@ class Article
 
         return $this;
     }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): static
+    {
+        $this->slug = $slug;
+
+        return $this;
+    }
+
 
     public function getCreatedAt(): ?\DateTimeImmutable
     {

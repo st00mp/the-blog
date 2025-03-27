@@ -6,6 +6,7 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -16,9 +17,11 @@ class User
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['article:list', 'article:detail'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['article:list', 'article:detail'])]
     private ?string $name = null;
 
     // Pour éviter des doublons d'utilisateurs : unique: true
