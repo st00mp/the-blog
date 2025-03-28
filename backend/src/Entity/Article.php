@@ -52,7 +52,7 @@ class Article
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\Column]
-    #[Groups(['article:detail'])]
+    #[Groups(['article:list', 'article:detail'])]
     private ?\DateTimeImmutable $updated_at = null;
 
     #[ORM\ManyToOne(inversedBy: 'article')]

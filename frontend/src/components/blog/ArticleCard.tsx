@@ -1,36 +1,50 @@
-interface ArticleProps {
-    article: {
-        id: number
-        title: string
-        excerpt: string
-        date: string
-        author: string
-    }
+import Link from "next/link"
+import { ArticleCardProps } from "@/types/article-card"
+
+function truncate(text: string, max: number) {
+    return text.length > max ? text.slice(0, max).trim() + "…" : text
 }
 
-export function ArticleCard({ article }: { article: any }) {
+export function ArticleCard({ article }: ArticleCardProps) {
     return (
-        <div
-            className="
-          border border-white/10
-          rounded-none
-          p-8
-          hover:bg-white/5
-          transition-colors
-        "
-        >
-            <p className="text-sm text-white/60 mb-2">
-                {new Date(article.date).toDateString()}
-            </p>
-            <h2 className="text-2xl font-bold mb-4">
-                {article.title}
-            </h2>
-            <p className="text-white/70 leading-relaxed">
-                {article.excerpt}
-            </p>
-            <div className="text-sm text-white/50 mt-5">
-                {article.author}
+        <Link href={`/blog/${article.slug}`}>
+            <div
+                className="
+                    border border-white/10
+                    hover:bg-white/5
+                    transition-colors
+                    flex flex-col
+                    p-4 sm:p-6 md:p-8
+                    gap-3
+                    h-full
+                "
+            >
+                {/* Catégorie + Date */}
+                <div className="flex justify-between text-xs text-white/60 mb-2">
+                    <span className="capitalize">{article.category ?? "Uncategorized"}</span>
+                    <span>
+                        {new Date(article.date).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                        })}
+                    </span>
+                </div>
+
+                {/* Titre */}
+                <h2 className="text-lg font-semibold leading-tight mb-2">
+                    {truncate(article.title, 80)}
+                </h2>
+
+                {/* Extrait */}
+                <p className="text-sm text-white/70 leading-relaxed mb-4">
+                    {truncate(article.excerpt, 130)}
+                </p>
+
+                {/* Auteur */}
+                <div className="text-xs text-white/50 mt-auto">
+                    {article.author}
+                </div>
             </div>
-        </div>
+        </Link>
     )
 }
