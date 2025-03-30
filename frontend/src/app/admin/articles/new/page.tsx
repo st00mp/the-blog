@@ -60,7 +60,7 @@ export default function NewArticlePage() {
     };
 
     return (
-        <div className="max-w-3xl mx-auto py-8 px-4 text-zinc-100">
+        <div className="max-w-4xl mx-auto py-8 px-4 text-zinc-100">
             <h1 className="text-3xl font-bold mb-8 text-center">Créer un nouvel article</h1>
 
             <ArticleSection
