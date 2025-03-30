@@ -1,34 +1,29 @@
+// app/admin/articles/new/page.tsx
 "use client";
 
 import React, { useState } from "react";
-// import TipTapEditor from "@/components/TipTapEditor"; // <-- à implémenter si tu veux TipTap
-// import Tooltip from "@/components/Tooltip"; // <-- composant custom ou librairie tierce
+import ArticleSection from "@/components/admin/article/new/ArticleSection";
+import { StepBlock } from "@/components/admin/article/new/StepBlock";
+import { RichTextEditor } from "@/components/admin/article/new/RichTextEditor";
 
 export default function NewArticlePage() {
     const [title, setTitle] = useState("");
     const [metaTitle, setMetaTitle] = useState("");
     const [intro, setIntro] = useState("");
-    const [definition, setDefinition] = useState("");
-
-    // Étapes : champ pour le titre H3 + champ pour le contenu
-    const [step1Title, setStep1Title] = useState("Étape 1 : ");
+    const [step1Title, setStep1Title] = useState("");
     const [step1Content, setStep1Content] = useState("");
-    const [step2Title, setStep2Title] = useState("Étape 2 : ");
+    const [step2Title, setStep2Title] = useState("");
     const [step2Content, setStep2Content] = useState("");
-    const [step3Title, setStep3Title] = useState("Étape 3 : ");
+    const [step3Title, setStep3Title] = useState("");
     const [step3Content, setStep3Content] = useState("");
-
     const [objections, setObjections] = useState("");
     const [quote, setQuote] = useState("");
     const [conclusion, setConclusion] = useState("");
     const [cta, setCta] = useState("");
-
     const [isSaving, setIsSaving] = useState(false);
-    const [previewMode, setPreviewMode] = useState(false);
 
     const handleSubmit = async () => {
         setIsSaving(true);
-
         try {
             const res = await fetch("/api/articles", {
                 method: "POST",
@@ -37,7 +32,6 @@ export default function NewArticlePage() {
                     title,
                     metaTitle,
                     intro,
-                    definition,
                     step1Title,
                     step1Content,
                     step2Title,
@@ -51,13 +45,11 @@ export default function NewArticlePage() {
                 }),
             });
             if (!res.ok) throw new Error("Erreur lors de la création de l'article");
-
             alert("Article créé avec succès !");
-            // Réinitialiser les champs
-            setTitle(""); setMetaTitle(""); setIntro(""); setDefinition("");
-            setStep1Title("Étape 1 : "); setStep1Content("");
-            setStep2Title("Étape 2 : "); setStep2Content("");
-            setStep3Title("Étape 3 : "); setStep3Content("");
+            setTitle(""); setMetaTitle(""); setIntro("");
+            setStep1Title(""); setStep1Content("");
+            setStep2Title(""); setStep2Content("");
+            setStep3Title(""); setStep3Content("");
             setObjections(""); setQuote(""); setConclusion(""); setCta("");
         } catch (err) {
             console.error(err);
@@ -69,285 +61,125 @@ export default function NewArticlePage() {
 
     return (
         <div className="max-w-3xl mx-auto py-8 px-4 text-zinc-100">
-            <h1 className="text-3xl font-bold mb-6 text-center">
-                Créer un nouvel article
-            </h1>
+            <h1 className="text-3xl font-bold mb-8 text-center">Créer un nouvel article</h1>
 
-            {/* Titre principal (H1) */}
-            <SectionInput
-                label="Titre de l’article (H1)"
-                tooltip="70 caractères max. Doit contenir ton mot-clé principal."
-                placeholder="Ex: Pourquoi [Mot-clé] va changer..."
-                value={title}
-                onChange={setTitle}
-            />
+            <ArticleSection
+                title="Titre de l’article"
+                tooltip="Le titre principal s’affiche en haut de l’article. Le meta title est utilisé par Google dans les résultats de recherche."
+                badge="H1"
+            >
+                <div className="space-y-6">
+                    {/* H1 visible */}
+                    <div>
+                        <label className="text-sm py-2 font-medium text-zinc-400 mb-1 block rounded-sm">
+                            Titre principal
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 placeholder:text-zinc-500"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="7 astuces pour [Résultat clé] en moins de [temps]"
+                        />
+                    </div>
 
-            {/* Meta Title */}
-            <SectionInput
-                label="Meta Title (SEO)"
-                tooltip="Le titre qui apparaît dans l'onglet du navigateur et sur Google. ~60-70 caractères."
-                placeholder="Ton titre SEO optimisé"
-                value={metaTitle}
-                onChange={setMetaTitle}
-            />
+                    {/* Meta Title SEO */}
+                    <div>
+                        <label className="text-xs font-medium text-zinc-400 mb-1 block">
+                            Meta Title (SEO)
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full text-sm bg-zinc-800 border border-zinc-700 rounded-sm p-3 placeholder:text-zinc-500"
+                            value={metaTitle}
+                            onChange={(e) => setMetaTitle(e.target.value)}
+                            placeholder="Titre affiché sur Google (~60-70 caractères)"
+                        />
+                    </div>
+                </div>
+            </ArticleSection>
 
-            {/* Introduction */}
-            <SectionTextarea
-                label="Introduction"
-                tooltip="2-4 phrases pour accrocher le lecteur, présenter le problème et l'intérêt de l'article."
-                placeholder="Ex: Vous cherchez à [objectif] ? Dans cet article, vous allez..."
-                value={intro}
-                onChange={setIntro}
-            />
+            <ArticleSection title="Introduction" badge="<p>" tooltip="Résume le sujet en 2-4 phrases. Présente le problème et ce que le lecteur va apprendre.">
+                <RichTextEditor
+                    value={intro}
+                    onChange={setIntro}
+                    placeholder={`- Problème / contexte du lecteur \n- Ce que l’article va lui apporter\n- Ce qu’il va découvrir`}
+                />
+            </ArticleSection>
 
-            {/* Définition / Contexte (H2) */}
-            <SectionTextarea
-                label="Définition ou Contexte (H2)"
-                tooltip="Explique les bases du sujet, pourquoi il est important, quelques chiffres clés si nécessaire."
-                placeholder="Ex: Qu’est-ce que [mot-clé] ? Pourquoi c'est crucial ?"
-                value={definition}
-                onChange={setDefinition}
-            />
+            <div className="space-y-10 border-l-[2px] border-white/10 pl-6 mt-10">
+                <h2 className="text-xl font-semibold text-white mb-4">Les étapes de l’article</h2>
 
-            {/* Étape 1 : Titre (H3) + Contenu */}
-            <SectionInput
-                label="Titre de l’Étape 1 (H3)"
-                tooltip="Donne un titre court et explicite, ex: Étape 1 : Préparer votre environnement"
-                placeholder="Étape 1 : ..."
-                value={step1Title}
-                onChange={setStep1Title}
-            />
+                <StepBlock
+                    stepNumber={1}
+                    title={step1Title}
+                    onChangeTitle={setStep1Title}
+                    content={step1Content}
+                    onChangeContent={setStep1Content}
+                    titlePlaceholder="Préparer votre environnement"
+                    tooltip="Titre court + contenu qui introduit clairement cette étape de l’article.">
+                    <RichTextEditor
+                        value={step1Content}
+                        onChange={setStep1Content}
+                        placeholder={`Qu’est-ce que [Mot-clé] ?\nPourquoi ce sujet est important ?\nChiffres-clés ou contexte actuel`}
+                    />
+                </StepBlock>
 
-            <SectionTiptap
-                label="Contenu de l’Étape 1"
-                tooltip="Explique la première étape, prérequis, détails concrets. Formatage enrichi possible."
-                placeholder="Décris la première étape..."
-                value={step1Content}
-                onChange={setStep1Content}
-            />
 
-            {/* Étape 2 : Titre (H3) + Contenu */}
-            <SectionInput
-                label="Titre de l’Étape 2 (H3)"
-                tooltip="Ex: Étape 2 : Appliquer la stratégie"
-                placeholder="Étape 2 : ..."
-                value={step2Title}
-                onChange={setStep2Title}
-            />
-
-            <SectionTiptap
-                label="Contenu de l’Étape 2"
-                tooltip="Explique la seconde étape, mise en œuvre, etc."
-                placeholder="Décris la deuxième étape..."
-                value={step2Content}
-                onChange={setStep2Content}
-            />
-
-            {/* Étape 3 : Titre (H3) + Contenu */}
-            <SectionInput
-                label="Titre de l’Étape 3 (H3)"
-                tooltip="Ex: Étape 3 : Évaluer les résultats"
-                placeholder="Étape 3 : ..."
-                value={step3Title}
-                onChange={setStep3Title}
-            />
-
-            <SectionTiptap
-                label="Contenu de l’Étape 3"
-                tooltip="Explique comment valider ou mesurer les résultats, retours d’expérience, etc."
-                placeholder="Décris la troisième étape..."
-                value={step3Content}
-                onChange={setStep3Content}
-            />
-
-            {/* Objections / FAQ */}
-            <SectionTextarea
-                label="Objections fréquentes"
-                tooltip="Réponds aux doutes et questions typiques : budget, temps, alternatives..."
-                placeholder="Et si je n'ai pas de budget ?..."
-                value={objections}
-                onChange={setObjections}
-            />
-
-            {/* Citation / Punchline */}
-            <SectionTextarea
-                label="Citation / Punchline / Chiffre fort"
-                tooltip="Une phrase marquante, un chiffre d'étude, un témoignage client..."
-                placeholder="“80% des lecteurs…”"
-                value={quote}
-                onChange={setQuote}
-            />
-
-            {/* Conclusion */}
-            <SectionTextarea
-                label="Conclusion (H2)"
-                tooltip="Récapitule les points clés et ouvre sur une perspective ou une question."
-                placeholder="En résumé..."
-                value={conclusion}
-                onChange={setConclusion}
-            />
-
-            {/* CTA */}
-            <SectionTextarea
-                label="Call To Action (optionnel)"
-                tooltip="Incite à une action : télécharger, s'inscrire, laisser un commentaire, etc."
-                placeholder="Ex: ‘Télécharge notre guide gratuit’"
-                value={cta}
-                onChange={setCta}
-            />
-
-            {/* Boutons d'action */}
-            <div className="flex flex-wrap justify-end gap-4 mt-6">
-                <button
-                    type="button"
-                    className="px-4 py-2 bg-zinc-700 rounded-md hover:bg-zinc-600"
-                    onClick={() => {
-                        // Optionnel : action "Annuler"
-                        // On pourrait faire un router.push('/admin/articles') par ex.
-                    }}
+                <StepBlock
+                    stepNumber={2}
+                    title={step2Title}
+                    onChangeTitle={setStep2Title}
+                    content={step2Content}
+                    onChangeContent={setStep2Content}
+                    titlePlaceholder="Appliquer la stratégie"
+                    tooltip="Titre clair + contenu pour décrire précisément les bénéfices ou les étapes de mise en œuvre."
                 >
-                    Annuler
-                </button>
+                    <RichTextEditor
+                        value={step2Content}
+                        onChange={setStep2Content}
+                        placeholder={`- Astuces concrètes\n- Étapes détaillées (avec H3 si besoin)\n- Comparaisons, tableaux, visuels`}
+                    />
+                </StepBlock>
 
-                <button
-                    type="button"
-                    onClick={() => setPreviewMode(!previewMode)}
-                    className="px-4 py-2 bg-green-600 rounded-md hover:bg-green-500"
+                <StepBlock
+                    stepNumber={3}
+                    title={step3Title}
+                    onChangeTitle={setStep3Title}
+                    content={step3Content}
+                    onChangeContent={setStep3Content}
+                    titlePlaceholder="Évaluer les résultats"
+                    tooltip="Titre court + contenu pour anticiper les objections, variantes ou erreurs classiques."
                 >
-                    {previewMode ? "Retour édition" : "Aperçu"}
-                </button>
+                    <RichTextEditor
+                        value={step3Content}
+                        onChange={setStep3Content}
+                        placeholder={`- FAQ\n- “Est-ce que ça marche aussi pour… ?”\n- “Et si je n’ai pas de budget / d’expérience ?”`}
+                    />
+                </StepBlock>
 
-                <button
-                    type="button"
-                    className="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-500"
-                    disabled={isSaving}
-                    onClick={handleSubmit}
-                >
+            </div>
+
+            <ArticleSection title="Citation ou punchline" badge="<p>" tooltip="Citation client, punchline, étude de cas ou chiffre impactant. Utiliser un block quote/ Highlight.">
+                <textarea rows={2} className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 placeholder:text-zinc-500" value={quote} onChange={(e) => setQuote(e.target.value)} placeholder="“80% des lecteurs...”" />
+            </ArticleSection>
+
+            <ArticleSection title="Conclusion" badge="H2" tooltip="Récapitule les points-clés, donne un conseil final, ouvre sur une question ou perspective.">
+                <textarea rows={4} className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 placeholder:text-zinc-500" value={conclusion} onChange={(e) => setConclusion(e.target.value)} placeholder={`- Résumé des 2-3 grandes idées\n- Astuce ou mot de la fin\n- Question ouverte pour générer des commentaires`} />
+            </ArticleSection>
+
+            <ArticleSection title="Call to Action (optionnel)" badge="CTA" tooltip="Proposer une action concrète à faire après lecture.">
+                <textarea rows={3} className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 placeholder:text-zinc-500" value={cta} onChange={(e) => setCta(e.target.value)} placeholder={`- “Télécharger le guide PDF”\n- “Tester notre outil gratuit”\n- “S’abonner à la newsletter”`} />
+            </ArticleSection>
+
+            <div className="flex justify-end gap-4 mt-8">
+                {/* Bouton "Annuler" */}
+                <button className="px-4 py-2 bg-zinc-700 rounded-md hover:bg-zinc-600">Annuler</button>
+                {/* Bouton "Publier" */}
+                <button className="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-500" onClick={handleSubmit} disabled={isSaving}>
                     {isSaving ? "Enregistrement..." : "Publier l’article"}
                 </button>
             </div>
-
-            {/* Section d'aperçu si previewMode est true */}
-            {previewMode && (
-                <div className="bg-zinc-800 p-4 mt-8 rounded-md">
-                    <h2 className="text-xl font-semibold mb-4">Aperçu</h2>
-                    <div
-                        dangerouslySetInnerHTML={{
-                            __html: generatePreviewHTML(),
-                        }}
-                    />
-                </div>
-            )}
-        </div>
-    );
-
-    // Génère un HTML simple pour l'aperçu
-    function generatePreviewHTML() {
-        return `
-      <h1>${title || ""}</h1>
-      <p><strong>[Intro]</strong> ${intro || ""}</p>
-
-      <h2>[Définition]</h2>
-      <p>${definition || ""}</p>
-
-      <h3>${step1Title || ""}</h3>
-      <div>${step1Content || ""}</div>
-
-      <h3>${step2Title || ""}</h3>
-      <div>${step2Content || ""}</div>
-
-      <h3>${step3Title || ""}</h3>
-      <div>${step3Content || ""}</div>
-
-      <h2>Objections / FAQ</h2>
-      <p>${objections || ""}</p>
-
-      <blockquote>${quote || ""}</blockquote>
-
-      <h2>Conclusion</h2>
-      <p>${conclusion || ""}</p>
-
-      <p><strong>CTA :</strong> ${cta || ""}</p>
-    `;
-    }
-}
-
-/* ---------------------
-   Composants réutilisables
----------------------- */
-
-// Champ input + tooltip
-function SectionInput({ label, tooltip, placeholder, value, onChange }) {
-    return (
-        <div className="flex flex-col mb-6">
-            <div className="flex items-center space-x-2 mb-1">
-                <label className="font-semibold text-zinc-300">{label}</label>
-                <span
-                    className="cursor-pointer text-sm text-blue-400"
-                    title={tooltip}
-                >
-                    ℹ️
-                </span>
-            </div>
-            <input
-                type="text"
-                placeholder={placeholder}
-                className="bg-zinc-800 border border-zinc-700 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-            />
-        </div>
-    );
-}
-
-// Champ textarea + tooltip
-function SectionTextarea({ label, tooltip, placeholder, value, onChange }) {
-    return (
-        <div className="flex flex-col mb-6">
-            <div className="flex items-center space-x-2 mb-1">
-                <label className="font-semibold text-zinc-300">{label}</label>
-                <span
-                    className="cursor-pointer text-sm text-blue-400"
-                    title={tooltip}
-                >
-                    ℹ️
-                </span>
-            </div>
-            <textarea
-                rows={4}
-                placeholder={placeholder}
-                className="bg-zinc-800 border border-zinc-700 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-            />
-        </div>
-    );
-}
-
-// Champ Tiptap + tooltip (ici simplifié, juste un <textarea>)
-function SectionTiptap({ label, tooltip, placeholder, value, onChange }) {
-    return (
-        <div className="flex flex-col mb-6">
-            <div className="flex items-center space-x-2 mb-1">
-                <label className="font-semibold text-zinc-300">{label}</label>
-                <span
-                    className="cursor-pointer text-sm text-blue-400"
-                    title={tooltip}
-                >
-                    ℹ️
-                </span>
-            </div>
-            {/* 
-        Si tu implémentes Tiptap, remplace ce <textarea> par <TipTapEditor />
-        <TipTapEditor initialContent={value} onUpdate={onChange} ... />
-      */}
-            <textarea
-                rows={5}
-                placeholder={placeholder}
-                className="bg-zinc-800 border border-zinc-700 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-            />
-        </div>
+        </div >
     );
 }

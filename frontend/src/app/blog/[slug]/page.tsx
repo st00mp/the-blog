@@ -123,7 +123,7 @@ export default async function BlogPostPage({ params }: Props) {
                     {/* Contenu principal rendu depuis Tiptap (dangerouslySetInnerHTML) */}
                     <article
                         className="mx-auto w-full max-w-3xl px-4 py-10 space-y-6 leading-relaxed text-neutral-100"
-                        dangerouslySetInnerHTML={{ __html: article.content }} // ✅ correct ici
+                        dangerouslySetInnerHTML={{ __html: article.content }}
                     />
 
                 </div>
