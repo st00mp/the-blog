@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@tiptap/extension-bullet-list": "^2.11.7",
+    "@tiptap/extension-list-item": "^2.11.7"
+  }
+}
