@@ -119,7 +119,6 @@ export default function NewArticlePage() {
                     titlePlaceholder="Préparer votre environnement"
                     tooltip="Titre court + contenu qui introduit clairement cette étape de l’article.">
                     <RichTextEditor
-                        className="mt-1"
                         value={step1Content}
                         onChange={setStep1Content}
                         placeholder={`Qu’est-ce que [Mot-clé] ?\nPourquoi ce sujet est important ?\nChiffres-clés ou contexte actuel`}
