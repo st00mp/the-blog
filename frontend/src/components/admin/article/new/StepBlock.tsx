@@ -1,5 +1,6 @@
 import ArticleSection from "./ArticleSection";
 import React from "react";
+import { FieldLabel } from "./FieldLabel";
 
 type StepBlockProps = {
     stepNumber: number;
@@ -9,7 +10,7 @@ type StepBlockProps = {
     onChangeContent: (val: string) => void;
     titlePlaceholder: string;
     tooltip: string;
-    children?: React.ReactNode; // Ajout du children
+    children?: React.ReactNode;
 };
 
 export function StepBlock({
@@ -25,30 +26,29 @@ export function StepBlock({
     return (
         <ArticleSection
             title={`Étape ${stepNumber} : ${titlePlaceholder}`}
-            badge="H3 + <p>"
             tooltip={tooltip}
         >
             <div className="space-y-6">
                 {/* H3 */}
                 <div>
-                    <label className="text-sm font-medium text-zinc-400 mb-1 block">
-                        Sous-titre de l’étape (H3)
-                    </label>
-                    <input
-                        type="text"
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 placeholder:text-zinc-500"
-                        value={title}
-                        onChange={(e) => onChangeTitle(e.target.value)}
-                        placeholder={titlePlaceholder}
-                    />
+                    <FieldLabel badge="H3">Sous-titre de l’étape</FieldLabel>
+                    <div className="mt-3">
+                        <input
+                            type="text"
+                            className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 placeholder:text-zinc-500"
+                            value={title}
+                            onChange={(e) => onChangeTitle(e.target.value)}
+                            placeholder={titlePlaceholder}
+                        />
+                    </div>
                 </div>
 
                 {/* Paragraphe associé */}
                 <div>
-                    <label className="text-sm font-medium text-zinc-400 mb-1 block">
-                        Contenu de l’étape (p)
-                    </label>
-                    {children}
+                    <FieldLabel badge="<p>">Contenu de l’étape</FieldLabel>
+                    <div className="mt-3">
+                        {children}
+                    </div>
                 </div>
             </div>
         </ArticleSection>

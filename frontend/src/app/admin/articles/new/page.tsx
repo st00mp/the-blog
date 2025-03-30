@@ -119,6 +119,7 @@ export default function NewArticlePage() {
                     titlePlaceholder="Préparer votre environnement"
                     tooltip="Titre court + contenu qui introduit clairement cette étape de l’article.">
                     <RichTextEditor
+                        className="mt-1"
                         value={step1Content}
                         onChange={setStep1Content}
                         placeholder={`Qu’est-ce que [Mot-clé] ?\nPourquoi ce sujet est important ?\nChiffres-clés ou contexte actuel`}
@@ -161,15 +162,25 @@ export default function NewArticlePage() {
             </div>
 
             <ArticleSection title="Citation ou punchline" badge="<p>" tooltip="Citation client, punchline, étude de cas ou chiffre impactant. Utiliser un block quote/ Highlight.">
-                <textarea rows={2} className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 placeholder:text-zinc-500" value={quote} onChange={(e) => setQuote(e.target.value)} placeholder="“80% des lecteurs...”" />
+                <RichTextEditor
+                    value={quote}
+                    onChange={setQuote}
+                    placeholder="“80% des lecteurs...”"
+                />
             </ArticleSection>
 
             <ArticleSection title="Conclusion" badge="H2" tooltip="Récapitule les points-clés, donne un conseil final, ouvre sur une question ou perspective.">
-                <textarea rows={4} className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 placeholder:text-zinc-500" value={conclusion} onChange={(e) => setConclusion(e.target.value)} placeholder={`- Résumé des 2-3 grandes idées\n- Astuce ou mot de la fin\n- Question ouverte pour générer des commentaires`} />
+                <RichTextEditor
+                    value={conclusion}
+                    onChange={setConclusion}
+                    placeholder={`- Résumé des 2-3 grandes idées\n- Astuce ou mot de la fin\n- Question ouverte pour générer des commentaires`} />
             </ArticleSection>
 
             <ArticleSection title="Call to Action (optionnel)" badge="CTA" tooltip="Proposer une action concrète à faire après lecture.">
-                <textarea rows={3} className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 placeholder:text-zinc-500" value={cta} onChange={(e) => setCta(e.target.value)} placeholder={`- “Télécharger le guide PDF”\n- “Tester notre outil gratuit”\n- “S’abonner à la newsletter”`} />
+                <RichTextEditor
+                    value={cta}
+                    onChange={setCta}
+                    placeholder={`- “Télécharger le guide PDF”\n- “Tester notre outil gratuit”\n- “S’abonner à la newsletter”`} />
             </ArticleSection>
 
             <div className="flex justify-end gap-4 mt-8">
