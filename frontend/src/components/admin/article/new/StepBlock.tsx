@@ -35,7 +35,7 @@ export function StepBlock({
                     <div className="mt-3">
                         <input
                             type="text"
-                            className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 placeholder:text-zinc-500"
+                            className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 text-md focus:outline-none focus:ring-0 focus:border-zinc-700"
                             value={title}
                             onChange={(e) => onChangeTitle(e.target.value)}
                             placeholder={titlePlaceholder}

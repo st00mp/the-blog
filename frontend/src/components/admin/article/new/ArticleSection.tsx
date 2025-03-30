@@ -28,7 +28,7 @@ export default function ArticleSection({
         <section className="mb-8 border border-zinc-800 overflow-hidden" >
             <div className="flex items-center justify-between px-5 py-3 bg-zinc-900 border-b border-zinc-800">
                 <div className="flex items-center gap-3 ">
-                    <h2 className="text-base font-medium text-white tracking-tight">{title}</h2>
+                    <div className="text-lg font-medium text-white tracking-tight">{title}</div>
                     {badge && (
                         <span className={cn(
                             "text-xs px-2 py-0.5 rounded-full border border-zinc-700",

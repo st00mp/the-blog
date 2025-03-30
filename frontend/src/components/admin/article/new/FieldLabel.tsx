@@ -16,7 +16,7 @@ export function FieldLabel({ children, badge }: FieldLabelProps) {
 
     return (
         <div className="flex items-center gap-2 mb-1">
-            <label className="text-sm font-medium text-zinc-400">{children}</label>
+            <label className="text-md font-medium text-zinc-400">{children}</label>
             {badge && (
                 <span
                     className={`text-xs px-2 py-0.5 rounded-full border border-zinc-600 ${badgeColors[badge] || "bg-zinc-800 text-zinc-400"

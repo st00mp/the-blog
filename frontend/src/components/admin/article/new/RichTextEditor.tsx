@@ -223,7 +223,7 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
             left: 0;
             top: 0;
             pointer-events: none;
-            color: #71717A;
+            color: #8D8D8F;
         }
 
         .no-scrollbar {
