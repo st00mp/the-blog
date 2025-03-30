@@ -4,7 +4,8 @@ import { useEditor, EditorContent, BubbleMenu } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import React, { useEffect } from "react";
 import Placeholder from "@tiptap/extension-placeholder";
-import { Bold, Italic, Strikethrough, List, ListOrdered } from 'lucide-react'
+import { Bold, Italic, Strikethrough, List, ListOrdered, ImageIcon } from 'lucide-react'
+import Image from '@tiptap/extension-image'
 
 
 type Props = {
@@ -28,6 +29,10 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                 },
                 showOnlyWhenEditable: true,
                 showOnlyCurrent: false,
+            }),
+            Image.configure({
+                inline: false,
+                allowBase64: false,
             }),
         ],
         content: "",
@@ -105,6 +110,24 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                     }                >
                     <ListOrdered size={16} />
                 </button>
+
+                {/* Bouton insertion image */}
+                <button
+                    onClick={() => {
+                        const url = prompt("URL de l’image")
+                        if (url) {
+                            editor.chain().focus().setImage({ src: url }).run()
+                        }
+                    }}
+                    className={
+                        editor.isActive("image")
+                            ? "px-2 py-1 text-white bg-zinc-700 border border-zinc-600 rounded"
+                            : "px-2 py-1 text-zinc-400 hover:text-white hover:bg-zinc-700 border border-zinc-700 rounded"
+                    }
+                >
+                    <ImageIcon size={16} />
+                </button>
+
             </BubbleMenu>
 
             <EditorContent editor={editor} />
