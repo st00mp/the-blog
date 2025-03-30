@@ -15,7 +15,9 @@ The goal is to recreate a clean, elegant blog layout inspired by Vercel’s desi
 - [ ] Add basic authentication (register / login)
 - [ ] Implement user roles (reader vs author)
 - [ ] Add comment system (with nesting support)
-- [ ] Allow authors to create/edit/delete their own articles
+- [x] Allow authors to create their own articles
+- [ ] Allow authors to edit their own articles
+- [ ] Allow authors to delete their own articles
 - [ ] Allow readers to post and manage their own comments
 - [ ] Add file upload support (image/video/document per article)
 - [ ] Add user management from initial .txt file
@@ -31,7 +33,7 @@ The goal is to recreate a clean, elegant blog layout inspired by Vercel’s desi
 #### `/blog` – static layout  
 🧱 Component composition + overall structure
 
-<img width="1725" alt="image" src="https://github.com/user-attachments/assets/32a11088-9e66-435b-af6e-4406f72dd87d" />
+![localhost_3100_blog](https://github.com/user-attachments/assets/9033acdf-79ec-4482-8d60-01a6cfa269a0)
 
 ---
 
@@ -39,6 +41,58 @@ The goal is to recreate a clean, elegant blog layout inspired by Vercel’s desi
 💡 Metadata + CTA + Vercel-inspired styling
 
 <img width="1720" alt="image" src="https://github.com/user-attachments/assets/03f16f0f-a2bd-4320-9757-61b406f05a74" />
+
+---
+
+#### `/admin/article/new` – article creation  
+✍️ Structured editor for authors to write high-quality articles
+
+This interface provides a guided, step-by-step layout for writing blog content.  
+It's optimized for clarity, SEO-readiness, and a smooth authoring experience.
+
+![localhost_3100_admin_articles_new (3)](https://github.com/user-attachments/assets/2cf36ab7-778c-4c95-ad28-161aa915462b)
+
+**Key features:**
+
+- 🧱 **Section-based layout**:  
+  - Introduction  
+  - 3 customizable content steps  
+  - Quote or punchline  
+  - Conclusion and CTA
+
+- 📝 **Title & metadata fields**:  
+  - H1 Title  
+  - Meta Title (SEO)  
+  - Meta Description (SEO)
+
+- 🧠 **Smart placeholders** to guide the writing process in each section
+
+- 💡 **Rich text editing with Tiptap**:  
+  - BubbleMenu with grouped formatting tools (bold, italic, strike, color, highlight)  
+  - Alignment, blockquote, link insertion  
+  - Lists (bullet, ordered)
+
+- ➕ **Block insertion modal** for:  
+  - Images  
+  - Tables  
+  - Horizontal separators
+
+- ✅ Clean and structured JSON payload ready for export to the backend
+
+---
+
+##### 🎯 Bubble menu with minimal UI  
+Floating toolbar with horizontal scroll on overflow — optimized for readability and focus.
+
+![BubbleMenu](https://github.com/user-attachments/assets/aa2741c9-a851-4b82-9eed-3c4246528d17)
+
+---
+
+##### ➕ Block insertion modal  
+Quickly insert visuals or layout elements without disrupting the writing flow.
+
+![BlockModal](https://github.com/user-attachments/assets/c5a5fba6-af29-4453-891a-c91798b1b785)
+
 
 
 
