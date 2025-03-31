@@ -8,12 +8,12 @@ import { FieldLabel } from "@/components/admin/article/new/FieldLabel";
 import { ChevronDown } from "lucide-react";
 
 export default function NewArticlePage() {
+    const [category, setCategory] = useState("");
     const [title, setTitle] = useState("");
     const [meta, setMeta] = useState({
         title: "",
         description: ""
     });
-    const [category, setCategory] = useState("");
     const [intro, setIntro] = useState("");
     const [steps, setSteps] = useState([
         { title: "", content: "" },
@@ -47,6 +47,7 @@ export default function NewArticlePage() {
         }));
 
         const payload = {
+            category,
             title,
             meta,
             intro: cleanHTML(intro),
@@ -54,7 +55,6 @@ export default function NewArticlePage() {
             quote: cleanHTML(quote),
             conclusion: cleanHTML(conclusion),
             cta: cleanHTML(cta),
-            category,
         };
 
 
