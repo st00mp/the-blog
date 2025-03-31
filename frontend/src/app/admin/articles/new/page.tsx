@@ -5,6 +5,7 @@ import ArticleSection from "@/components/admin/article/new/ArticleSection";
 import { StepBlock } from "@/components/admin/article/new/StepBlock";
 import { RichTextEditor } from "@/components/admin/article/new/RichTextEditor";
 import { FieldLabel } from "@/components/admin/article/new/FieldLabel";
+import { ChevronDown } from "lucide-react";
 
 export default function NewArticlePage() {
     const [title, setTitle] = useState("");
@@ -12,6 +13,7 @@ export default function NewArticlePage() {
         title: "",
         description: ""
     });
+    const [category, setCategory] = useState("");
     const [intro, setIntro] = useState("");
     const [steps, setSteps] = useState([
         { title: "", content: "" },
@@ -32,15 +34,29 @@ export default function NewArticlePage() {
     const handleSubmit = async () => {
         setIsSaving(true);
 
+        const cleanHTML = (html: string) => {
+            return html
+                .replace(/<p>(&nbsp;|\s)*<\/p>/g, "") // supprime aussi les paragraphes vides contenant juste des `&nbsp;`
+                .trim(); // optionnel : supprime les espaces en début/fin
+        };
+
+        // Appliquer à chaque step :
+        const cleanedSteps = steps.map(step => ({
+            ...step,
+            content: cleanHTML(step.content)
+        }));
+
         const payload = {
             title,
             meta,
-            intro,
-            steps,
-            quote,
-            conclusion,
-            cta,
+            intro: cleanHTML(intro),
+            steps: cleanedSteps,
+            quote: cleanHTML(quote),
+            conclusion: cleanHTML(conclusion),
+            cta: cleanHTML(cta),
+            category,
         };
+
 
         console.log("[API POST /api/articles] payload:", payload);
 
@@ -79,10 +95,34 @@ export default function NewArticlePage() {
         "- FAQ\n- “Est-ce que ça marche aussi pour… ?”\n- “Et si je n’ai pas de budget / d’expérience ?”",
     ];
 
-
     return (
         <div className="max-w-4xl mx-auto py-8 px-4 text-zinc-100">
             <h1 className="text-3xl font-bold mb-8 text-center">Rédaction guidée d’un article de blog</h1>
+
+            <ArticleSection title="Catégorie de l'article" tooltip="Classer cet article dans une thématique">
+                <div className="relative">
+                    <select
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 text-md text-white appearance-none pr-10 relative focus:outline-none focus:ring-0 focus:border-zinc-700"
+                        value={category} defaultValue=""
+                        onChange={(e) => setCategory(e.target.value)}
+                    >
+                        <option value="">Choisir une catégorie</option>
+                        <option value="agents-ia">Agents IA</option>
+                        <option value="llm">Grands modèles de langage</option>
+                        <option value="prompting">Prompt Engineering</option>
+                        <option value="autonomie">Autonomie des IA</option>
+                        <option value="infrastructure">Infra & orchestration</option>
+                        <option value="veille">Veille et innovations</option>
+                        <option value="tuto">Tutos & démos</option>
+                    </select>
+
+                    {/* Icône flèche */}
+                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                        <ChevronDown size={18} className="text-zinc-400" />
+                    </div>
+                </div>
+
+            </ArticleSection >
 
             <ArticleSection title="Titre de l’article" tooltip="Titre affiché en haut + SEO">
                 <div className="space-y-6">
@@ -129,8 +169,6 @@ export default function NewArticlePage() {
                         </div>
                     </div>
                 </div>
-
-
             </ArticleSection>
 
             <ArticleSection title="Introduction" badge="<p>" tooltip="Contexte, promesse, plan">
@@ -200,6 +238,6 @@ export default function NewArticlePage() {
                     {isSaving ? "Enregistrement..." : "Publier l’article"}
                 </button>
             </div>
-        </div>
+        </div >
     );
 }

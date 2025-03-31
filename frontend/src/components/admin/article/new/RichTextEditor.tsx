@@ -18,7 +18,7 @@ import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import HorizontalRule from "@tiptap/extension-horizontal-rule";
-import { Bold, Italic, Strikethrough, List, ListOrdered, Plus, ImagesIcon, X, Table as TableIcon, Minus, Link as LinkIcon, AlignLeft, AlignCenter, AlignRight, Quote, Highlighter, Palette } from "lucide-react";
+import { Bold, Italic, Strikethrough, List, ListOrdered, Plus, ImagesIcon, X, Table as TableIcon, Minus, Link as LinkIcon, AlignLeft, AlignCenter, AlignRight, Quote, Highlighter, Palette, Video, FileText } from "lucide-react";
 
 
 // Type
@@ -185,25 +185,87 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
 
                                 <h3 className="text-lg font-bold mb-4 text-white">Ajouter un bloc</h3>
                                 <div className="flex flex-col gap-3">
+
+                                    {/* Image */}
                                     <button className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base" onClick={() => {
                                         setOpen(false);
                                         const url = prompt("URL de l'image ?");
-                                        if (url) editor?.chain().focus().setImage({ src: url }).run();
+                                        if (url) {
+                                            const alt = prompt("Texte alternatif (description de l’image) ?") || "Image ajoutée";
+                                            editor?.chain().focus().setImage({ src: url, alt }).run();
+                                        }
                                     }}>
                                         <ImagesIcon size={20} /> Image
                                     </button>
+
+                                    {/* Vidéo */}
+                                    <button
+                                        className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base"
+                                        onClick={() => {
+                                            setOpen(false);
+                                            const url = prompt("URL de la vidéo ?");
+                                            if (!url) return;
+
+                                            const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+                                            const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+
+                                            let label = "📹 Vidéo intégrée";
+                                            let link = url;
+
+                                            if (youtubeMatch) {
+                                                label = "Vidéo YouTube";
+                                                link = `https://www.youtube.com/watch?v=${youtubeMatch[1]}`;
+                                            } else if (vimeoMatch) {
+                                                label = "🎬 Vidéo Vimeo";
+                                                link = `https://vimeo.com/${vimeoMatch[1]}`;
+                                            }
+
+                                            const html = `<blockquote class="video-preview-block"><strong>${label}</strong> — <a href="${link}" target="_blank" rel="noopener noreferrer">${link}</a></blockquote>`;
+                                            editor?.chain().focus().insertContent(html).run();
+                                        }}
+                                    >
+                                        <Video size={20} /> Vidéo (Youtube / Vimeo)
+                                    </button>
+
+                                    {/* Document */}
+                                    <button
+                                        className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base"
+                                        onClick={() => {
+                                            setOpen(false);
+                                            const url = prompt("URL du document ?");
+                                            if (!url) return;
+
+                                            const ext = url.split(".").pop()?.toLowerCase();
+                                            let label = "📄 Document";
+
+                                            if (ext === "pdf") label = "📕 PDF à consulter";
+                                            else if (ext === "doc" || ext === "docx") label = "📘 Fichier Word";
+                                            else if (ext === "ppt" || ext === "pptx") label = "📙 Présentation PowerPoint";
+                                            else if (ext === "xls" || ext === "xlsx") label = "📗 Tableur Excel";
+
+                                            const html = `<blockquote class="doc-preview-block">📄 <strong>${label}</strong> — <a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a></blockquote>`;
+                                            editor?.chain().focus().insertContent(html).run();
+                                        }}
+                                    >
+                                        <FileText size={20} /> Document
+                                    </button>
+
+                                    {/* Séparateur */}
                                     <button className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base" onClick={() => {
                                         setOpen(false);
                                         editor?.chain().focus().setHorizontalRule().run();
                                     }}>
                                         <Minus size={20} /> Séparateur
                                     </button>
+
+                                    {/* Tableau */}
                                     <button className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base" onClick={() => {
                                         setOpen(false);
                                         editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
                                     }}>
                                         <TableIcon size={20} /> Tableau
                                     </button>
+
                                 </div>
                             </div>
                         </div>
@@ -251,6 +313,33 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
 
         .ProseMirror a:hover {
             color: #60a5fa; /* blue-400 */
+        }
+
+        .ProseMirror img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            display: block;
+            margin: 1rem auto;
+            border-radius: 0.5rem;
+        }
+
+        .ProseMirror blockquote.video-preview-block {
+            background-color: #18181b;
+            border: 1px solid #3f3f46;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .ProseMirror blockquote.doc-preview-block {
+            background-color: #18181b;
+            border: 1px solid #3f3f46;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            font-style: normal;
+            line-height: 1.4;
         }
 
         .ProseMirror blockquote {
