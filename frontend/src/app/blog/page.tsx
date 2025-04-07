@@ -1,6 +1,22 @@
 import { ArticleCard } from "@/components/blog/ArticleCard"
 import { CategoryFilter } from "@/components/blog/layout/CategoryFilter"
-import { Article } from "@/types/article"
+
+type Article = {
+    id: number
+    title: string
+    intro: string
+    slug: string
+    category: string
+    updated_at: string
+    created_at: string
+    author: {
+        name: string
+    }
+}
+
+type ArticleCardProps = {
+    article: Article
+}
 
 export default async function BlogPage() {
     const API_URL = process.env.BACKEND_API_URL;
@@ -20,13 +36,7 @@ export default async function BlogPage() {
                         {articles.map((article) => (
                             <ArticleCard
                                 key={article.id}
-                                article={{
-                                    title: article.title,
-                                    excerpt: article.excerpt,
-                                    date: article.updated_at,
-                                    author: article.author?.name ?? "Unknown",
-                                    slug: article.slug,
-                                }}
+                                article={article}
                             />
                         ))}
                     </div>

@@ -25,13 +25,37 @@ class Article
     #[Groups(['article:list', 'article:detail'])]
     private ?string $title = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(length: 100)]
     #[Groups(['article:list', 'article:detail'])]
-    private ?string $excerpt = null;
+    private ?string $category = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['article:detail'])]
-    private ?string $content = null;
+    private ?string $metaTitle = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['article:detail'])]
+    private ?string $metaDescription = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['article:list', 'article:detail'])]
+    private ?string $intro = null;
+
+    #[ORM\Column(type: Types::JSON)]
+    #[Groups(['article:detail'])]
+    private array $steps = [];
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['article:detail'])]
+    private ?string $quote = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['article:detail'])]
+    private ?string $conclusion = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['article:detail'])]
+    private ?string $cta = null;
 
     #[ORM\PrePersist]
     #[ORM\PreUpdate]
@@ -95,26 +119,98 @@ class Article
         return $this;
     }
 
-    public function getExcerpt(): ?string
+    public function getCategory(): ?string
     {
-        return $this->excerpt;
+        return $this->category;
     }
 
-    public function setExcerpt(string $excerpt): static
+    public function setCategory(string $category): static
     {
-        $this->excerpt = $excerpt;
+        $this->category = $category;
 
         return $this;
     }
 
-    public function getContent(): ?string
+    public function getMetaTitle(): ?string
     {
-        return $this->content;
+        return $this->metaTitle;
     }
 
-    public function setContent(string $content): static
+    public function setMetaTitle(?string $metaTitle): static
     {
-        $this->content = $content;
+        $this->metaTitle = $metaTitle;
+
+        return $this;
+    }
+
+    public function getMetaDescription(): ?string
+    {
+        return $this->metaDescription;
+    }
+
+    public function setMetaDescription(?string $metaDescription): static
+    {
+        $this->metaDescription = $metaDescription;
+
+        return $this;
+    }
+
+    public function getIntro(): ?string
+    {
+        return $this->intro;
+    }
+
+    public function setIntro(?string $intro): static
+    {
+        $this->intro = $intro;
+
+        return $this;
+    }
+
+    public function getSteps(): array
+    {
+        return $this->steps;
+    }
+
+    public function setSteps(array $steps): static
+    {
+        $this->steps = $steps;
+
+        return $this;
+    }
+
+    public function getQuote(): ?string
+    {
+        return $this->quote;
+    }
+
+    public function setQuote(?string $quote): static
+    {
+        $this->quote = $quote;
+
+        return $this;
+    }
+
+    public function getConclusion(): ?string
+    {
+        return $this->conclusion;
+    }
+
+    public function setConclusion(?string $conclusion): static
+    {
+        $this->conclusion = $conclusion;
+
+        return $this;
+    }
+
+    public function getCta(): ?string
+    {
+        return $this->cta;
+    }
+
+    public function setCta(?string $cta): static
+    {
+        $this->cta = $cta;
 
         return $this;
     }

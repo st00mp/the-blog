@@ -57,7 +57,6 @@ export default function NewArticlePage() {
             cta: cleanHTML(cta),
         };
 
-
         console.log("[API POST /api/articles] payload:", payload);
 
         try {
@@ -103,7 +102,7 @@ export default function NewArticlePage() {
                 <div className="relative">
                     <select
                         className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 text-md text-white appearance-none pr-10 relative focus:outline-none focus:ring-0 focus:border-zinc-700"
-                        value={category} defaultValue=""
+                        value={category}
                         onChange={(e) => setCategory(e.target.value)}
                     >
                         <option value="">Choisir une catégorie</option>

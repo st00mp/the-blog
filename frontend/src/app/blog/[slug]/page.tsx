@@ -3,7 +3,11 @@ export async function generateStaticParams() {
     // console.log("BACKEND_API_URL =", process.env.BACKEND_API_URL); // ⬅️ debug important
     const API_URL = process.env.BACKEND_API_URL;
 
-    const res = await fetch(`${API_URL}/api/articles`);
+    const res = await fetch(`${API_URL}/api/articles`, {
+        // Le nouvel article n’apparaîtra pas tout de suite, sauf si rebuild du site 
+        next: { revalidate: 60 },
+    });
+
     const articles = await res.json();
 
     // On retourne un tableau d'objets { slug }
@@ -11,15 +15,15 @@ export async function generateStaticParams() {
         slug: article.slug,
     }));
 }
+type Props = {
+    params: { slug: string };
+};
 
 // Étape 2 : Composant de page dynamique
 import { Button } from "@/components/ui/button";
 import { ClockIcon } from "lucide-react";
 import { Article } from "@/types/article";
 
-type Props = {
-    params: { slug: string };
-};
 
 export default async function BlogPostPage({ params }: Props) {
     const API_URL = process.env.BACKEND_API_URL;
@@ -27,8 +31,8 @@ export default async function BlogPostPage({ params }: Props) {
     try {
         // 1) On fetch l'article via son slug
         const res = await fetch(`${API_URL}/api/articles/${params.slug}`, {
-            // Si besoin, mode: "no-cors", cache, etc.
-            // On peut préciser: next: { revalidate: 60 } pour le revalidate
+            // Revalidation du contenu des articles (pour edit article, commentaires, ...)
+            next: { revalidate: 60 },
         });
 
         if (!res.ok) {

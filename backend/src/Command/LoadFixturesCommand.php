@@ -2,10 +2,12 @@
 
 namespace App\Command;
 
+use App\Entity\Article;
 use App\Factory\ArticleFactory;
 use App\Factory\CommentFactory;
 use App\Factory\MediaFactory;
 use App\Factory\UserFactory;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,54 +16,53 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'app:load-fixtures',
-    description: 'Charge les données fictives via Foundry',
+    description: 'Réinitialise et charge des données fictives via Foundry',
 )]
 class LoadFixturesCommand extends Command
 {
+    public function __construct(private EntityManagerInterface $em)
+    {
+        parent::__construct();
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
-        $io->title('Génération des données via Foundry 🧪');
+        $io->title('🎯 Réinitialisation de la base + génération des données via Foundry');
 
+        // 🔥 Purge la base de données (attention, irréversible)
+        $connection = $this->em->getConnection();
+        $platform = $connection->getDatabasePlatform();
+        $connection->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+        foreach (['comment', 'media', 'article', 'user'] as $table) {
+            $connection->executeStatement($platform->getTruncateTableSQL($table, true));
+        }
+        $connection->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+        $io->warning('Base de données vidée');
+
+        // 👥 Utilisateurs
         $io->section('Utilisateurs');
-        UserFactory::createMany(5);
+        $users = UserFactory::createMany(5);
 
+        // 📝 Articles
         $io->section('Articles');
-        ArticleFactory::createMany(10);
+        ArticleFactory::createMany(10, fn() => [
+            'author' => $users[array_rand($users)],
+        ]);
 
+        // 📸 Médias
         $io->section('Médias');
         MediaFactory::createMany(8);
 
+        // 💬 Commentaires imbriqués
         $io->section('Commentaires');
+        $root = CommentFactory::createMany(10, ['parent' => null]);
+        $lvl1 = CommentFactory::createMany(10, fn() => ['parent' => $root[array_rand($root)]]);
+        $lvl2 = CommentFactory::createMany(5, fn() => ['parent' => $lvl1[array_rand($lvl1)]]);
+        CommentFactory::createMany(3, fn() => ['parent' => $lvl2[array_rand($lvl2)]]);
 
-        // Étape 1 : commentaires racine
-        $rootComments = CommentFactory::createMany(10, [
-            'parent' => null,
-        ]);
-
-        // Étape 2 : réponses à des commentaires racine
-        $level1Comments = CommentFactory::createMany(10, function () use ($rootComments) {
-            return [
-                'parent' => $rootComments[array_rand($rootComments)],
-            ];
-        });
-
-        // Étape 3 : réponses à des réponses (niveau 2)
-        $level2Comments = CommentFactory::createMany(5, function () use ($level1Comments) {
-            return [
-                'parent' => $level1Comments[array_rand($level1Comments)],
-            ];
-        });
-
-        // (Optionnel) Étape 4 : encore un niveau si tu veux du nested deep
-        CommentFactory::createMany(3, function () use ($level2Comments) {
-            return [
-                'parent' => $level2Comments[array_rand($level2Comments)],
-            ];
-        });
-
-        $io->success('Fixtures imbriquées générées avec succès ✅');
+        $io->success('🎉 Données fictives générées avec succès !');
         return Command::SUCCESS;
     }
 }

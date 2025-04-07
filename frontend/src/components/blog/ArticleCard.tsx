@@ -1,8 +1,24 @@
 import Link from "next/link"
-import { ArticleCardProps } from "@/types/article-card"
 
 function truncate(text: string, max: number) {
     return text.length > max ? text.slice(0, max).trim() + "…" : text
+}
+
+type Article = {
+    id: number
+    title: string
+    intro: string
+    slug: string
+    category: string
+    author: {
+        name: string
+    }
+    created_at: string
+    updated_at: string
+}
+
+type ArticleCardProps = {
+    article: Article
 }
 
 export function ArticleCard({ article }: ArticleCardProps) {
@@ -23,7 +39,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
                 <div className="flex justify-between text-xs text-white/60 mb-2">
                     <span className="capitalize">{article.category ?? "Uncategorized"}</span>
                     <span>
-                        {new Date(article.date).toLocaleDateString("en-US", {
+                        {new Date(article.updated_at).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                         })}
@@ -37,12 +53,12 @@ export function ArticleCard({ article }: ArticleCardProps) {
 
                 {/* Extrait */}
                 <p className="text-sm text-white/70 leading-relaxed mb-4">
-                    {truncate(article.excerpt, 130)}
+                    {truncate(article.intro, 130)}
                 </p>
 
                 {/* Auteur */}
                 <div className="text-xs text-white/50 mt-auto">
-                    {article.author}
+                    {article.author.name}
                 </div>
             </div>
         </Link>
