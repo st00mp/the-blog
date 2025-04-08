@@ -49,13 +49,21 @@ class Article
     #[Groups(['article:detail'])]
     private ?string $quote = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['article:detail'])]
-    private ?string $conclusion = null;
+    private ?string $conclusionTitle = null;
+
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    #[Groups(['article:detail'])]
+    private ?array $conclusionDescription = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(['article:detail'])]
-    private ?string $cta = null;
+    private ?string $ctaDescription = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['article:detail'])]
+    private ?string $ctaButton = null;
 
     #[ORM\PrePersist]
     #[ORM\PreUpdate]
@@ -191,27 +199,47 @@ class Article
         return $this;
     }
 
-    public function getConclusion(): ?string
+    public function getConclusionTitle(): ?string
     {
-        return $this->conclusion;
+        return $this->conclusionTitle;
     }
 
-    public function setConclusion(?string $conclusion): static
+    public function setConclusionTitle(?string $conclusionTitle): static
     {
-        $this->conclusion = $conclusion;
-
+        $this->conclusionTitle = $conclusionTitle;
         return $this;
     }
 
-    public function getCta(): ?string
+    public function getConclusionDescription(): ?array
     {
-        return $this->cta;
+        return $this->conclusionDescription;
     }
 
-    public function setCta(?string $cta): static
+    public function setConclusionDescription(?array $conclusionDescription): static
     {
-        $this->cta = $cta;
+        $this->conclusionDescription = $conclusionDescription;
+        return $this;
+    }
 
+    public function getCtaDescription(): ?string
+    {
+        return $this->ctaDescription;
+    }
+
+    public function setCtaDescription(?string $ctaDescription): static
+    {
+        $this->ctaDescription = $ctaDescription;
+        return $this;
+    }
+
+    public function getCtaButton(): ?string
+    {
+        return $this->ctaButton;
+    }
+
+    public function setCtaButton(?string $ctaButton): static
+    {
+        $this->ctaButton = $ctaButton;
         return $this;
     }
 

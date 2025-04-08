@@ -6,7 +6,7 @@ type StepBlockProps = {
     stepNumber: number;
     title: string;
     onChangeTitle: (val: string) => void;
-    content: string;
+    content: any;
     onChangeContent: (val: string) => void;
     titlePlaceholder: string;
     tooltip: string;

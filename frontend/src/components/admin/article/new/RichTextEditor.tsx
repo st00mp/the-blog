@@ -23,8 +23,8 @@ import { Bold, Italic, Strikethrough, List, ListOrdered, Plus, ImagesIcon, X, Ta
 
 // Type
 type Props = {
-    value: string;
-    onChange: (value: string) => void;
+    value: any;
+    onChange: (value: any) => void;
     placeholder?: string;
 };
 
@@ -84,13 +84,13 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
         },
         immediatelyRender: false,
         onUpdate: ({ editor }) => {
-            onChange(editor.getHTML());
+            onChange(editor.getJSON())
         },
     });
 
     useEffect(() => {
-        if (editor && value !== editor.getHTML()) {
-            editor.commands.setContent(value || "", false);
+        if (editor && JSON.stringify(editor.getJSON()) !== JSON.stringify(value)) {
+            editor.commands.setContent(value || {}, false);
         }
     }, [value]);
 

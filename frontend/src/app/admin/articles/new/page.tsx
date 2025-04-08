@@ -7,6 +7,7 @@ import { RichTextEditor } from "@/components/admin/article/new/RichTextEditor";
 import { FieldLabel } from "@/components/admin/article/new/FieldLabel";
 import { ChevronDown } from "lucide-react";
 
+// États pour gérer les champs du formulaire d'article
 export default function NewArticlePage() {
     const [category, setCategory] = useState("");
     const [title, setTitle] = useState("");
@@ -16,47 +17,74 @@ export default function NewArticlePage() {
     });
     const [intro, setIntro] = useState("");
     const [steps, setSteps] = useState([
-        { title: "", content: "" },
-        { title: "", content: "" },
-        { title: "", content: "" }
+        { title: "", content: {} },
+        { title: "", content: {} },
+        { title: "", content: {} }
     ]);
     const [quote, setQuote] = useState("");
-    const [conclusion, setConclusion] = useState("");
-    const [cta, setCta] = useState("");
+    const [conclusionTitle, setConclusionTitle] = useState("");
+    const [conclusionDescription, setConclusionDescription] = useState({});
+    const [ctaDescription, setCtaDescription] = useState("");
+    const [ctaButton, setCtaButton] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
-    const handleStepChange = (index: number, field: "title" | "content", value: string) => {
+    // Fonction pour mettre à jour une étape du contenu (titre ou contenu riche)
+    const handleStepChange = (index: number, field: "title" | "content", value: any) => {
         const updated = [...steps];
         updated[index][field] = value;
         setSteps(updated);
     };
 
+    // Fonction déclenchée lors de la soumission du formulaire (POST vers l'API)
     const handleSubmit = async () => {
+        if (!title.trim()) {
+            alert("Le titre est obligatoire.");
+            return;
+        }
+
         setIsSaving(true);
 
-        const cleanHTML = (html: string) => {
-            return html
-                .replace(/<p>(&nbsp;|\s)*<\/p>/g, "") // supprime aussi les paragraphes vides contenant juste des `&nbsp;`
-                .trim(); // optionnel : supprime les espaces en début/fin
+        type NewArticlePayload = {
+            category: string;
+            title: string;
+            meta: {
+                title: string;
+                description: string;
+            };
+            intro: string;
+            steps: { title: string; content: any }[];
+            quote: string;
+            conclusionTitle: string;
+            conclusionDescription: any;
+            ctaDescription: string;
+            ctaButton: string;
         };
 
-        // Appliquer à chaque step :
-        const cleanedSteps = steps.map(step => ({
-            ...step,
-            content: cleanHTML(step.content)
-        }));
-
-        const payload = {
+        const payload: NewArticlePayload = {
             category,
             title,
             meta,
-            intro: cleanHTML(intro),
-            steps: cleanedSteps,
-            quote: cleanHTML(quote),
-            conclusion: cleanHTML(conclusion),
-            cta: cleanHTML(cta),
+            intro,
+            steps,
+            quote,
+            conclusionTitle,
+            conclusionDescription,
+            ctaDescription,
+            ctaButton,
         };
 
+        // 	Reset de tous les champs pour plus de clarté :
+        const resetForm = () => {
+            setTitle("");
+            setMeta({ title: "", description: "" });
+            setIntro("");
+            setSteps([{ title: "", content: {} }, { title: "", content: {} }, { title: "", content: {} }]);
+            setQuote("");
+            setConclusionTitle("");
+            setConclusionDescription({});
+            setCtaDescription("");
+            setCtaButton("");
+        };
         console.log("[API POST /api/articles] payload:", payload);
 
         try {
@@ -65,15 +93,12 @@ export default function NewArticlePage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
+
             if (!res.ok) throw new Error("Erreur lors de la création de l'article");
+
             alert("Article créé avec succès !");
-            setTitle("");
-            setMeta({ title: "", description: "" });
-            setIntro("");
-            setSteps([{ title: "", content: "" }, { title: "", content: "" }, { title: "", content: "" }]);
-            setQuote("");
-            setConclusion("");
-            setCta("");
+            resetForm();
+            setIsSaving(false);
         } catch (err) {
             console.error(err);
             alert("Impossible de créer l’article");
@@ -82,22 +107,26 @@ export default function NewArticlePage() {
         }
     };
 
+    // Valeurs par défaut pour aider à la rédaction guidée des étapes
     const stepTitlePlaceholders = [
         "Préparer votre environnement",
         "Appliquer la stratégie",
         "Évaluer les résultats",
     ];
 
+    // Valeurs par défaut pour aider à la rédaction guidée des étapes
     const stepPlaceholders = [
         "- Qu’est-ce que [Mot-clé] ?\n- Pourquoi ce sujet est important ?\n- Chiffres-clés ou contexte actuel",
         "- Astuces concrètes\n- Étapes détaillées (avec H3 si besoin)\n- Comparaisons, tableaux, visuels",
         "- FAQ\n- “Est-ce que ça marche aussi pour… ?”\n- “Et si je n’ai pas de budget / d’expérience ?”",
     ];
 
+    // Formulaire principal pour la création d'un nouvel article
     return (
         <div className="max-w-4xl mx-auto py-8 px-4 text-zinc-100">
             <h1 className="text-3xl font-bold mb-8 text-center">Rédaction guidée d’un article de blog</h1>
 
+            {/* Section : Choix de la catégorie */}
             <ArticleSection title="Catégorie de l'article" tooltip="Classer cet article dans une thématique">
                 <div className="relative">
                     <select
@@ -123,6 +152,7 @@ export default function NewArticlePage() {
 
             </ArticleSection >
 
+            {/* Section : Titre de l’article et SEO */}
             <ArticleSection title="Titre de l’article" tooltip="Titre affiché en haut + SEO">
                 <div className="space-y-6">
 
@@ -170,6 +200,7 @@ export default function NewArticlePage() {
                 </div>
             </ArticleSection>
 
+            {/* Section : Introduction de l’article */}
             <ArticleSection title="Introduction" badge="<p>" tooltip="Contexte, promesse, plan">
                 <textarea
                     className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 text-md focus:outline-none focus:ring-0 focus:border-zinc-700"
@@ -180,6 +211,7 @@ export default function NewArticlePage() {
                 />
             </ArticleSection>
 
+            {/* Section : Étapes principales de l’article */}
             <div className="space-y-10 border-l-[2px] border-white/10 pl-6 mt-10">
                 {steps.map((step, i) => (
                     <StepBlock
@@ -201,6 +233,7 @@ export default function NewArticlePage() {
                 ))}
             </div>
 
+            {/* Section : Citation ou punchline */}
             <ArticleSection title="Citation ou punchline" badge="<blockquote>" tooltip="Citation ou étude marquante">
                 <textarea
                     className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 text-md focus:outline-none focus:ring-0 focus:border-zinc-700"
@@ -211,26 +244,58 @@ export default function NewArticlePage() {
                 />
             </ArticleSection>
 
-            <ArticleSection title="Conclusion" badge="H2" tooltip="Résumé final, ouverture">
-                <textarea
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 text-md focus:outline-none focus:ring-0 focus:border-zinc-700"
-                    value={conclusion}
-                    onChange={(e) => setConclusion(e.target.value)}
+            {/* Section : Conclusion avec titre personnalisé */}
+            <ArticleSection title="Conclusion" tooltip="Résumé final, ouverture">
+                {/* Titre de la conclusion (H1) */}
+                <div>
+                    <FieldLabel badge="H3">Titre conclusion</FieldLabel>
+                    <div className="mt-3">
+                        <input
+                            type="text"
+                            className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 text-md focus:outline-none focus:ring-0 focus:border-zinc-700"
+                            value={conclusionTitle}
+                            onChange={(e) => setConclusionTitle(e.target.value)}
+                            placeholder="Titre de la conclusion"
+                        />
+                    </div>
+                </div>
+
+                <RichTextEditor
+                    value={conclusionDescription}
+                    onChange={(val) => setConclusionDescription(val)}
                     placeholder={`- Résumé des 2-3 grandes idées\n- Astuce ou mot de la fin\n- Question ouverte pour générer des commentaires`}
-                    rows={4}
                 />
             </ArticleSection>
 
+            {/* Section : Call To Action (description + bouton) */}
             <ArticleSection title="Call to Action (optionnel)" badge="CTA" tooltip="Inviter à agir">
-                <textarea
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 text-md focus:outline-none focus:ring-0 focus:border-zinc-700"
-                    value={cta}
-                    onChange={(e) => setCta(e.target.value)}
-                    placeholder={`- “Télécharger le guide PDF”\n- “Tester notre outil gratuit”\n- “S’abonner à la newsletter”`}
-                    rows={4}
-                />
+                <div className="space-y-4">
+                    <div>
+                        <FieldLabel badge="texte">Description CTA</FieldLabel>
+                        <textarea
+                            className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 text-md focus:outline-none focus:ring-0 focus:border-zinc-700"
+                            value={ctaDescription}
+                            onChange={(e) => setCtaDescription(e.target.value)}
+                            placeholder="Ex: Bénéficiez de notre outil gratuitement pendant 7 jours"
+                            rows={3}
+                            maxLength={160}
+                        />
+                    </div>
+                    <div>
+                        <FieldLabel badge="bouton">Texte du bouton</FieldLabel>
+                        <input
+                            type="text"
+                            className="w-full bg-zinc-800 border border-zinc-700 rounded-sm p-3 text-md focus:outline-none focus:ring-0 focus:border-zinc-700"
+                            value={ctaButton}
+                            onChange={(e) => setCtaButton(e.target.value)}
+                            placeholder="Ex: Démarrer maintenant"
+                            maxLength={30}
+                        />
+                    </div>
+                </div>
             </ArticleSection>
 
+            {/* Boutons de validation */}
             <div className="flex justify-end gap-4 mt-8">
                 <button className="px-4 py-2 bg-zinc-700 rounded-md hover:bg-zinc-600">Annuler</button>
                 <button className="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-500" onClick={handleSubmit} disabled={isSaving}>

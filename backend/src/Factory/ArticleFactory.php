@@ -28,38 +28,82 @@ final class ArticleFactory extends PersistentProxyObjectFactory
             'title' => self::faker()->sentence(6),
             'intro' => self::faker()->paragraph(2),
             'quote' => self::faker()->sentence(),
-            'conclusion' => self::faker()->paragraph(2),
-            'cta' => self::faker()->sentence(),
+            'conclusionTitle' => self::faker()->sentence(4),
+
+            // Simuler un contenu Tiptap minimal en JSON (pas du HTML)
+            'conclusionDescription' => [
+                'type' => 'doc',
+                'content' => [
+                    [
+                        'type' => 'paragraph',
+                        'content' => [
+                            ['type' => 'text', 'text' => self::faker()->sentence(10)]
+                        ]
+                    ]
+                ]
+            ],
+
+            'ctaDescription' => self::faker()->sentence(10),
+            'ctaButton' => self::faker()->word(),
             'category' => self::faker()->randomElement([
-                'agents-ia',
-                'llm',
-                'prompting',
-                'autonomie',
-                'infrastructure',
-                'veille',
-                'tuto',
+                'Agents IA',
+                'Grands modèles de langage',
+                'Prompt Engineering',
+                'Autonomie des IA',
+                'Infra & orchestration',
+                'Veille et innovations',
+                'Tutos & démos',
             ]),
             'metaTitle' => self::faker()->sentence(6),
             'metaDescription' => self::faker()->text(160),
             'steps' => [
                 [
                     'title' => self::faker()->sentence(4),
-                    'content' => '<p>' . self::faker()->paragraph(2) . '</p>',
+                    'content' => [
+                        'type' => 'doc',
+                        'content' => [
+                            [
+                                'type' => 'paragraph',
+                                'content' => [
+                                    ['type' => 'text', 'text' => self::faker()->paragraph(2)]
+                                ]
+                            ]
+                        ]
+                    ]
                 ],
                 [
                     'title' => self::faker()->sentence(4),
-                    'content' => '<p>' . self::faker()->paragraph(2) . '</p>',
+                    'content' => [
+                        'type' => 'doc',
+                        'content' => [
+                            [
+                                'type' => 'paragraph',
+                                'content' => [
+                                    ['type' => 'text', 'text' => self::faker()->paragraph(2)]
+                                ]
+                            ]
+                        ]
+                    ]
                 ],
                 [
                     'title' => self::faker()->sentence(4),
-                    'content' => '<p>' . self::faker()->paragraph(2) . '</p>',
+                    'content' => [
+                        'type' => 'doc',
+                        'content' => [
+                            [
+                                'type' => 'paragraph',
+                                'content' => [
+                                    ['type' => 'text', 'text' => self::faker()->paragraph(2)]
+                                ]
+                            ]
+                        ]
+                    ]
                 ],
             ],
             'created_at' => \DateTimeImmutable::createFromMutable(self::faker()->dateTime()),
             'updated_at' => \DateTimeImmutable::createFromMutable(self::faker()->dateTime()),
         ];
     }
-
     protected function initialize(): static
     {
         return $this;
