@@ -1,36 +1,45 @@
 "use client"
 
-import { useState } from "react"
 import { cn } from "@/lib/utils"
 
-const categories = [
-    "All Posts",
-    "Engineering",
-    "Community",
-    "Company News",
-    "Customers",
-    "v0",
-    "Changelog",
-    "Press",
-]
+type Category = {
+    id: number
+    name: string
+}
 
-export function CategoryFilter() {
-    const [selected, setSelected] = useState("All Posts")
+type CategoryFilterProps = {
+    categories: Category[]
+    selected: Category | null
+    onSelect: (category: Category | null) => void
+}
 
+export function CategoryFilter({ categories, selected, onSelect }: CategoryFilterProps) {
     return (
         <div className="flex flex-wrap justify-start gap-4 mt-10 overflow-x-auto">
+            <button
+                key="all"
+                onClick={() => onSelect(null)}
+                className={cn(
+                    "text-sm px-4 py-2 rounded-full font-medium transition-colors",
+                    selected === null
+                        ? "bg-white text-black"
+                        : "text-zinc-400 hover:text-white"
+                )}
+            >
+                All Posts
+            </button>
             {categories.map((category) => (
                 <button
-                    key={category}
-                    onClick={() => setSelected(category)}
+                    key={category.id}
+                    onClick={() => onSelect(category)}
                     className={cn(
                         "text-sm px-4 py-2 rounded-full font-medium transition-colors",
-                        selected === category
+                        selected?.id === category.id
                             ? "bg-white text-black"
                             : "text-zinc-400 hover:text-white"
                     )}
                 >
-                    {category}
+                    {category.name}
                 </button>
             ))}
         </div>

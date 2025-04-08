@@ -12,7 +12,6 @@ import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
-import HorizontalRule from "@tiptap/extension-horizontal-rule";
 
 type Props = {
     content: any; // JSON provenant de ton article
@@ -21,6 +20,7 @@ type Props = {
 export default function TiptapRenderer({ content }: Props) {
     const editor = useEditor({
         editable: false,
+        content,
         extensions: [
             StarterKit,
             Image,
@@ -35,9 +35,12 @@ export default function TiptapRenderer({ content }: Props) {
             TableRow,
             TableCell,
             TableHeader,
-            HorizontalRule,
         ],
-        content,
+        editorProps: {
+            attributes: { class: "prose" },
+        },
+        injectCSS: false,
+        immediatelyRender: false,
     });
 
     if (!editor) return null;

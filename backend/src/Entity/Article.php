@@ -25,9 +25,10 @@ class Article
     #[Groups(['article:list', 'article:detail'])]
     private ?string $title = null;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
     #[Groups(['article:list', 'article:detail'])]
-    private ?string $category = null;
+    private ?Category $category = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['article:detail'])]
@@ -127,15 +128,14 @@ class Article
         return $this;
     }
 
-    public function getCategory(): ?string
+    public function getCategory(): ?Category
     {
         return $this->category;
     }
 
-    public function setCategory(string $category): static
+    public function setCategory(?Category $category): static
     {
         $this->category = $category;
-
         return $this;
     }
 

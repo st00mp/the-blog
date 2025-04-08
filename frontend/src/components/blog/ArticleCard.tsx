@@ -9,7 +9,10 @@ type Article = {
     title: string
     intro: string
     slug: string
-    category: string
+    category: {
+        id: number
+        name: string
+    }
     author: {
         name: string
     }
@@ -24,21 +27,11 @@ type ArticleCardProps = {
 export function ArticleCard({ article }: ArticleCardProps) {
     return (
         <Link href={`/blog/${article.slug}`}>
-            <div
-                className="
-                    border border-white/10
-                    hover:bg-white/5
-                    transition-colors
-                    flex flex-col
-                    p-4 sm:p-6 md:p-8
-                    gap-3
-                    h-full
-                "
-            >
+            <div className="border border-white/10 hover:bg-white/5 transition-colors flex flex-col p-4 sm:p-6 md:p-8 gap-3 h-full">
+
                 {/* Catégorie + Date */}
                 <div className="flex justify-between text-xs text-white/60 mb-2">
-                    <span className="capitalize">{article.category ?? "Uncategorized"}</span>
-                    <span>
+                    <span>{article.category?.name ?? "Uncategorized"}</span>                    <span>
                         {new Date(article.updated_at).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",

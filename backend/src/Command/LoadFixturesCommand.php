@@ -45,10 +45,28 @@ class LoadFixturesCommand extends Command
         $io->section('Utilisateurs');
         $users = UserFactory::createMany(5);
 
+        // 📁 Catégories
+        $io->section('Catégories');
+        $categories = [
+            'Agents IA',
+            'Grands modèles de langage',
+            'Prompt Engineering',
+            'Autonomie des IA',
+            'Infra & orchestration',
+            'Veille et innovations',
+            'Tutos & démos',
+        ];
+        $categoryObjects = [];
+
+        foreach ($categories as $name) {
+            $categoryObjects[] = \App\Factory\CategoryFactory::new(['name' => $name])->create();
+        }
+
         // 📝 Articles
         $io->section('Articles');
         ArticleFactory::createMany(10, fn() => [
             'author' => $users[array_rand($users)],
+            'category' => $categoryObjects[array_rand($categoryObjects)],
         ]);
 
         // 📸 Médias

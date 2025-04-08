@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ArticleSection from "@/components/admin/article/new/ArticleSection";
 import { StepBlock } from "@/components/admin/article/new/StepBlock";
 import { RichTextEditor } from "@/components/admin/article/new/RichTextEditor";
@@ -14,6 +14,7 @@ const defaultTiptapContent = {
 
 // États pour gérer les champs du formulaire d'article
 export default function NewArticlePage() {
+    const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
     const [category, setCategory] = useState("");
     const [title, setTitle] = useState("");
     const [meta, setMeta] = useState({
@@ -32,6 +33,20 @@ export default function NewArticlePage() {
     const [ctaDescription, setCtaDescription] = useState("");
     const [ctaButton, setCtaButton] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch("/api/categories");
+                if (!res.ok) throw new Error("Erreur HTTP");
+                const data = await res.json();
+                setCategories(data);
+            } catch (error) {
+                console.error("Erreur lors du chargement des catégories", error);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     // Fonction pour mettre à jour une étape du contenu (titre ou contenu riche)
     const handleStepChange = (index: number, field: "title" | "content", value: any) => {
@@ -143,13 +158,11 @@ export default function NewArticlePage() {
                         onChange={(e) => setCategory(e.target.value)}
                     >
                         <option value="">Choisir une catégorie</option>
-                        <option value="agents-ia">Agents IA</option>
-                        <option value="llm">Grands modèles de langage</option>
-                        <option value="prompting">Prompt Engineering</option>
-                        <option value="autonomie">Autonomie des IA</option>
-                        <option value="infrastructure">Infra & orchestration</option>
-                        <option value="veille">Veille et innovations</option>
-                        <option value="tuto">Tutos & démos</option>
+                        {categories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                                {cat.name}
+                            </option>
+                        ))}
                     </select>
 
                     {/* Icône flèche */}

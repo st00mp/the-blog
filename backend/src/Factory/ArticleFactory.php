@@ -45,15 +45,7 @@ final class ArticleFactory extends PersistentProxyObjectFactory
 
             'ctaDescription' => self::faker()->sentence(10),
             'ctaButton' => self::faker()->word(),
-            'category' => self::faker()->randomElement([
-                'Agents IA',
-                'Grands modèles de langage',
-                'Prompt Engineering',
-                'Autonomie des IA',
-                'Infra & orchestration',
-                'Veille et innovations',
-                'Tutos & démos',
-            ]),
+            'category' => CategoryFactory::new(),
             'metaTitle' => self::faker()->sentence(6),
             'metaDescription' => self::faker()->text(160),
             'steps' => [

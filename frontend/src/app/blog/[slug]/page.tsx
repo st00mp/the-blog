@@ -26,7 +26,10 @@ import { Button } from "@/components/ui/button";
 import { ClockIcon } from "lucide-react";
 
 type Article = {
-    category: string;
+    category: {
+        id: number;
+        name: string;
+    };
     author: { name: string };
     title: string;
     intro: string;
@@ -87,8 +90,7 @@ export default async function BlogPostPage({ params }: Props) {
                                     <span className="mr-1 text-lg">&larr;</span> Blog
                                 </a>
                                 <span className="text-neutral-500">/</span>
-                                <span className="text-neutral-50 font-medium">{article.category ?? "Unknown Category"}</span>
-                            </nav>
+                                <span className="text-neutral-50 font-medium">{article.category?.name ?? "Unknown Category"}</span>                            </nav>
 
                             {/* Titre élargi uniquement */}
                             <div className="mx-auto max-w-5xl">

@@ -71,7 +71,7 @@ final class ArticleController extends AbstractController
         } catch (Throwable $e) {
             return $this->json([
                 'error' => 'Erreur serveur',
-                'message' => $e->getMessage(), // 👈 utile pour debug rapide
+                'message' => $e->getMessage(), // debug rapide
             ], 500);
         }
     }
