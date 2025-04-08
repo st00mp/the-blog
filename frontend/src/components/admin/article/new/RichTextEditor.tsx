@@ -64,7 +64,6 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
             TableRow,
             TableHeader,
             TableCell,
-            HorizontalRule,
             Placeholder.configure({
                 placeholder: ({ editor }) => {
                     if (editor.isEmpty) {

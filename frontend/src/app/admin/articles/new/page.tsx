@@ -7,6 +7,11 @@ import { RichTextEditor } from "@/components/admin/article/new/RichTextEditor";
 import { FieldLabel } from "@/components/admin/article/new/FieldLabel";
 import { ChevronDown } from "lucide-react";
 
+const defaultTiptapContent = {
+    type: "doc",
+    content: [],
+};
+
 // États pour gérer les champs du formulaire d'article
 export default function NewArticlePage() {
     const [category, setCategory] = useState("");
@@ -17,13 +22,13 @@ export default function NewArticlePage() {
     });
     const [intro, setIntro] = useState("");
     const [steps, setSteps] = useState([
-        { title: "", content: {} },
-        { title: "", content: {} },
-        { title: "", content: {} }
+        { title: "", content: defaultTiptapContent },
+        { title: "", content: defaultTiptapContent },
+        { title: "", content: defaultTiptapContent }
     ]);
     const [quote, setQuote] = useState("");
     const [conclusionTitle, setConclusionTitle] = useState("");
-    const [conclusionDescription, setConclusionDescription] = useState({});
+    const [conclusionDescription, setConclusionDescription] = useState(defaultTiptapContent);
     const [ctaDescription, setCtaDescription] = useState("");
     const [ctaButton, setCtaButton] = useState("");
     const [isSaving, setIsSaving] = useState(false);
@@ -78,17 +83,21 @@ export default function NewArticlePage() {
             setTitle("");
             setMeta({ title: "", description: "" });
             setIntro("");
-            setSteps([{ title: "", content: {} }, { title: "", content: {} }, { title: "", content: {} }]);
+            setSteps([
+                { title: "", content: defaultTiptapContent },
+                { title: "", content: defaultTiptapContent },
+                { title: "", content: defaultTiptapContent }
+            ]);
             setQuote("");
             setConclusionTitle("");
-            setConclusionDescription({});
+            setConclusionDescription(defaultTiptapContent);
             setCtaDescription("");
             setCtaButton("");
         };
         console.log("[API POST /api/articles] payload:", payload);
 
         try {
-            const res = await fetch("/api/articles", {
+            const res = await fetch(`/api/articles`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -98,7 +107,6 @@ export default function NewArticlePage() {
 
             alert("Article créé avec succès !");
             resetForm();
-            setIsSaving(false);
         } catch (err) {
             console.error(err);
             alert("Impossible de créer l’article");

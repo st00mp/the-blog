@@ -1,14 +1,14 @@
-// app/api/articles/route.ts
+export async function POST(request: Request) {
+    const body = await request.text();
 
-import { NextResponse } from "next/server";
+    const res = await fetch('http://nginx/api/articles', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body,
+    });
 
-export async function POST(req: Request) {
-    const body = await req.json();
-
-    console.log("[API POST /api/articles] payload:", body);
-
-    // Tu peux faire un appel à ton backend Symfony ici
-    // await fetch("https://ton-backend/article", { method: 'POST', body: JSON.stringify(body), ... });
-
-    return NextResponse.json({ success: true });
+    const data = await res.json();
+    return new Response(JSON.stringify(data), { status: res.status });
 }
