@@ -1,8 +1,9 @@
-"use client"
-
-import { useEffect, useState } from "react"
+// File: frontend/src/app/blog/page.tsx
 import { ArticleCard } from "@/components/blog/ArticleCard"
-import { CategoryFilter } from "@/components/blog/layout/CategoryFilter"
+import BlogClient from "@/components/blog/BlogClient"
+
+// ISR toutes les 60s pour régénération automatique
+export const revalidate = 60
 
 type Category = {
     id: number
@@ -17,60 +18,32 @@ type Article = {
     category: Category
     updated_at: string
     created_at: string
-    author: {
-        name: string
-    }
+    author: { name: string }
 }
 
-export default function BlogPage() {
-    const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+export default async function BlogPage() {
+    const API_URL = process.env.BACKEND_API_URL
 
-    const [articles, setArticles] = useState<Article[]>([])
-    const [categories, setCategories] = useState<Category[]>([])
-    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const articleRes = await fetch(`/api/articles`)
-                const categoryRes = await fetch(`/api/categories`)
-                if (!articleRes.ok || !categoryRes.ok) throw new Error("Erreur HTTP")
-                const fetchedArticles = await articleRes.json()
-                const fetchedCategories = await categoryRes.json()
-
-                setArticles(
-                    fetchedArticles.sort(
-                        (a: Article, b: Article) =>
-                            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-                    )
-                )
-                setCategories(fetchedCategories)
-            } catch (error) {
-                console.error("❌ Erreur lors du chargement des données :", error)
-            }
-        }
-
-        fetchData()
-    }, [API_URL])
-
-    const filteredArticles = selectedCategory
-        ? articles.filter((a) => a.category.id === selectedCategory.id)
-        : articles
+    // Fetch côté serveur au build (SSG) ou ISR
+    const [articles, categories] = await Promise.all([
+        fetch(`${API_URL}/api/articles`).then(res => {
+            if (!res.ok) throw new Error("Erreur HTTP articles")
+            return res.json() as Promise<Article[]>
+        }),
+        fetch(`${API_URL}/api/categories`).then(res => {
+            if (!res.ok) throw new Error("Erreur HTTP categories")
+            return res.json() as Promise<Category[]>
+        }),
+    ])
 
     return (
         <main className="min-h-screen bg-black text-white py-10">
             <div className="max-w-7xl mx-auto px-6 sm:px-10 md:px-16 lg:px-20">
-                <CategoryFilter
-                    categories={categories}
-                    selected={selectedCategory}
-                    onSelect={setSelectedCategory}
+                {/* Composant client pour le filtre */}
+                <BlogClient
+                    initialArticles={articles}
+                    initialCategories={categories}
                 />
-                <br />
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                    {filteredArticles.map((article) => (
-                        <ArticleCard key={article.id} article={article} />
-                    ))}
-                </div>
             </div>
         </main>
     )
