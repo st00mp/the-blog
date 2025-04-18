@@ -26,10 +26,20 @@ type Article = {
 }
 
 export async function generateStaticParams() {
-    const API_URL = process.env.BACKEND_API_URL
+    const API_URL = process.env.BACKEND_API_URL!
+    if (!API_URL) {
+        throw new Error("BACKEND_API_URL must be defined")
+    }
     const res = await fetch(`${API_URL}/api/articles`, { next: { revalidate: 60 } })
-    const articles = await res.json() as { slug: string }[]
-    return articles.map(a => ({ slug: a.slug }))
+    if (!res.ok) {
+        throw new Error(`Erreur HTTP articles: ${res.status}`)
+    }
+    const body = await res.json()
+    // Support both plain array and { data, meta } shape
+    const articlesList = Array.isArray(body) ? body : body.data
+    return articlesList.map((article: { slug: string }) => ({
+        slug: article.slug,
+    }))
 }
 
 export async function generateMetadata({ params }: Props) {

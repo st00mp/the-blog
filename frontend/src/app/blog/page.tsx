@@ -1,5 +1,4 @@
 // File: frontend/src/app/blog/page.tsx
-import { ArticleCard } from "@/components/blog/ArticleCard"
 import BlogClient from "@/components/blog/BlogClient"
 
 // ISR toutes les 60s pour régénération automatique
@@ -21,17 +20,29 @@ type Article = {
     author: { name: string }
 }
 
-export default async function BlogPage() {
-    const API_URL = process.env.BACKEND_API_URL
+export default async function BlogPage({
+    searchParams,
+}: {
+    searchParams: { search?: string }
+}) {
+    const API_URL = process.env.BACKEND_API_URL!
+    if (!API_URL) {
+        throw new Error("BACKEND_API_URL must be defined in .env.local")
+    }
+
+    // Construction de l'URL avec paramètre de recherche
+    const url = new URL(`${API_URL}/api/articles`)
+    if (searchParams.search) url.searchParams.set('search', searchParams.search)
 
     // Fetch côté serveur au build (SSG) ou ISR
-    const [articles, categories] = await Promise.all([
-        fetch(`${API_URL}/api/articles`).then(res => {
-            if (!res.ok) throw new Error("Erreur HTTP articles")
-            return res.json() as Promise<Article[]>
+    const [rawArticles, categories] = await Promise.all([
+        fetch(url.toString(), { next: { revalidate: 60 } }).then(async res => {
+            if (!res.ok) throw new Error(`Erreur HTTP articles: ${res.status}`)
+            const json = await res.json() as { data: Article[] }
+            return json.data
         }),
-        fetch(`${API_URL}/api/categories`).then(res => {
-            if (!res.ok) throw new Error("Erreur HTTP categories")
+        fetch(`${API_URL}/api/categories`, { next: { revalidate: 60 } }).then(res => {
+            if (!res.ok) throw new Error(`Erreur HTTP categories: ${res.status}`)
             return res.json() as Promise<Category[]>
         }),
     ])
@@ -39,10 +50,10 @@ export default async function BlogPage() {
     return (
         <main className="min-h-screen bg-black text-white py-10">
             <div className="max-w-7xl mx-auto px-6 sm:px-10 md:px-16 lg:px-20">
-                {/* Composant client pour le filtre */}
                 <BlogClient
-                    initialArticles={articles}
+                    initialArticles={rawArticles}
                     initialCategories={categories}
+                    initialSearch={searchParams.search ?? ''}
                 />
             </div>
         </main>

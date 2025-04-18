@@ -4,6 +4,17 @@ function truncate(text: string, max: number) {
     return text.length > max ? text.slice(0, max).trim() + "…" : text
 }
 
+// Tableau fixe d'abréviations de mois
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+// Formatte la date en UTC pour éviter le mismatch
+function formatDate(dateString: string) {
+    const d = new Date(dateString)
+    const month = MONTHS[d.getUTCMonth()]
+    const day = d.getUTCDate()
+    return `${month} ${day}`
+}
+
 type Article = {
     id: number
     title: string
@@ -28,15 +39,10 @@ export function ArticleCard({ article }: ArticleCardProps) {
     return (
         <Link href={`/blog/${article.slug}`}>
             <div className="border border-white/10 hover:bg-white/5 transition-colors flex flex-col p-4 sm:p-6 md:p-8 gap-3 h-full">
-
                 {/* Catégorie + Date */}
                 <div className="flex justify-between text-xs text-white/60 mb-2">
-                    <span>{article.category?.name ?? "Uncategorized"}</span>                    <span>
-                        {new Date(article.updated_at).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                        })}
-                    </span>
+                    <span>{article.category?.name ?? "Uncategorized"}</span>
+                    <span>{formatDate(article.updated_at)}</span>
                 </div>
 
                 {/* Titre */}

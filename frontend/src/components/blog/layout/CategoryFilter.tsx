@@ -11,11 +11,12 @@ type CategoryFilterProps = {
     categories: Category[]
     selected: Category | null
     onSelect: (category: Category | null) => void
+    className?: string
 }
 
-export function CategoryFilter({ categories, selected, onSelect }: CategoryFilterProps) {
+export function CategoryFilter({ categories, selected, onSelect, className = '' }: CategoryFilterProps) {
     return (
-        <div className="flex flex-wrap justify-start gap-4 mt-10 overflow-x-auto">
+        <div className={cn("flex flex-wrap justify-start gap-4 mt-10 overflow-x-auto", className)}>
             <button
                 key="all"
                 onClick={() => onSelect(null)}

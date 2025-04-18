@@ -53,6 +53,22 @@ class User
     #[ORM\OneToMany(targetEntity: Comment::class, mappedBy: 'author')]
     private Collection $comment;
 
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $now = new \DateTimeImmutable();
+        // créé si pas déjà défini
+        $this->created_at = $this->createdAt ?? $now;
+        // toujours mis à jour
+        $this->updated_at = $now;
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updated_at = new \DateTimeImmutable();
+    }
+
     public function __construct()
     {
         $this->article = new ArrayCollection();

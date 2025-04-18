@@ -15,12 +15,40 @@ use Throwable;
 
 final class ArticleController extends AbstractController
 {
-    // GET /api/articles
+    // GET /api/articles?search=mot&page=1&limit=10
     #[Route('/api/articles', name: 'api_articles', methods: ['GET'])]
-    public function list(ArticleRepository $repo): JsonResponse
+    public function list(Request $request, ArticleRepository $repo): JsonResponse
     {
-        $articles = $repo->findAll();
-        return $this->json($articles, 200, [], ['groups' => 'article:list']);
+        // 1. Récupère les paramètres
+        $search = $request->query->get('search', '');
+        $page   = max(1, (int) $request->query->get('page', 1));
+        $limit  = max(1, (int) $request->query->get('limit', 10));
+
+        // 2. Choix méthode repo
+        if ($search !== '') {
+            // Tu dois avoir implémenté searchByKeyword() dans ArticleRepository
+            $all = $repo->searchByKeyword($search);
+        } else {
+            // trouve tous les articles triés
+            $all = $repo->findBy([], ['updated_at' => 'DESC']);
+        }
+
+        // 3. Pagination “à la main” ou via Paginator
+        $total = count($all);
+        $totalPages = (int) ceil($total / $limit);
+        $offset = ($page - 1) * $limit;
+        $pageItems = array_slice($all, $offset, $limit);
+
+        // 4. Réponse JSON avec meta
+        return $this->json([
+            'data' => $pageItems,
+            'meta' => [
+                'page'       => $page,
+                'limit'      => $limit,
+                'total'      => $total,
+                'totalPages' => $totalPages,
+            ],
+        ], 200, [], ['groups' => 'article:list']);
     }
 
     // GET /api/articles/{slug}
@@ -36,6 +64,7 @@ final class ArticleController extends AbstractController
     #[Route('/api/articles', name: 'api_article_create', methods: ['POST'])]
     public function create(Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
     {
+
         try {
             $data = json_decode($request->getContent(), true);
 

@@ -67,13 +67,20 @@ class Article
     private ?string $ctaButton = null;
 
     #[ORM\PrePersist]
-    #[ORM\PreUpdate]
-    public function generateSlug(): void
+    public function onPrePersist(): void
     {
+        $now = new \DateTimeImmutable();
         if (!$this->slug && $this->title) {
-            $slugify = new Slugify();
-            $this->slug = $slugify->slugify($this->title);
+            $this->slug = (new Slugify())->slugify($this->title);
         }
+        $this->created_at  = $this->createdAt  ?? $now;
+        $this->updated_at  = $now;
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updated_at = new \DateTimeImmutable();
     }
 
     #[ORM\Column(length: 255, unique: true, updatable: false)]
@@ -300,22 +307,22 @@ class Article
         return $this->comments;
     }
 
-    public function addComments(Comment $comment): static
+    public function addComment(Comment $c): static
     {
-        if (!$this->comments->contains($comment)) {
-            $this->comments->add($comment);
-            $comment->setArticle($this);
+        if (!$this->comments->contains($c)) {
+            $this->comments->add($c);
+            $c->setArticle($this);
         }
 
         return $this;
     }
 
-    public function removeComments(Comment $comment): static
+    public function removeComment(Comment $c): static
     {
-        if ($this->comments->removeElement($comment)) {
+        if ($this->comments->removeElement($c)) {
             // set the owning side to null (unless already changed)
-            if ($comment->getArticle() === $this) {
-                $comment->setArticle(null);
+            if ($c->getArticle() === $this) {
+                $c->setArticle(null);
             }
         }
 
@@ -330,22 +337,22 @@ class Article
         return $this->media;
     }
 
-    public function addMedium(Media $medium): static
+    public function addMedia(Media $media): static
     {
-        if (!$this->media->contains($medium)) {
-            $this->media->add($medium);
-            $medium->setArticle($this);
+        if (!$this->media->contains($media)) {
+            $this->media->add($media);
+            $media->setArticle($this);
         }
 
         return $this;
     }
 
-    public function removeMedium(Media $medium): static
+    public function removeMedia(Media $media): static
     {
-        if ($this->media->removeElement($medium)) {
+        if ($this->media->removeElement($media)) {
             // set the owning side to null (unless already changed)
-            if ($medium->getArticle() === $this) {
-                $medium->setArticle(null);
+            if ($media->getArticle() === $this) {
+                $media->setArticle(null);
             }
         }
 

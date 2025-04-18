@@ -16,6 +16,21 @@ class ArticleRepository extends ServiceEntityRepository
         parent::__construct($registry, Article::class);
     }
 
+    /**
+     * Recherche d'articles par mot-clé dans le titre ou le contenu.
+     *
+     * @param string $keyword
+     * @return Article[]
+     */
+    public function searchByKeyword(string $keyword): array
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.title LIKE :kw OR a.intro LIKE :kw OR a.metaDescription LIKE :kw')->setParameter('kw', '%' . $keyword . '%')
+            ->orderBy('a.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Article[] Returns an array of Article objects
     //     */
