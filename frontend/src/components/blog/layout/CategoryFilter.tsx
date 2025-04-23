@@ -2,11 +2,13 @@
 
 import { cn } from "@/lib/utils"
 
+// Type représentant une catégorie avec un id et un nom
 type Category = {
     id: number
     name: string
 }
 
+// Props attendues par le composant CategoryFilter
 type CategoryFilterProps = {
     categories: Category[]
     selected: Category | null
@@ -14,9 +16,12 @@ type CategoryFilterProps = {
     className?: string
 }
 
+// Composant affichant les filtres de catégories sous forme de boutons (type pill)
 export function CategoryFilter({ categories, selected, onSelect, className = '' }: CategoryFilterProps) {
+    // Conteneur horizontal scrollable contenant tous les boutons de catégories
     return (
         <div className={cn("flex flex-nowrap items-center space-x-4 overflow-x-auto py-1.5", className)}>
+            {/* Bouton spécial permettant de réinitialiser le filtre (aucune catégorie sélectionnée) */}
             <button
                 key="all"
                 onClick={() => onSelect(null)}
@@ -29,6 +34,7 @@ export function CategoryFilter({ categories, selected, onSelect, className = '' 
             >
                 All Posts
             </button>
+            {/* Boutons pour chaque catégorie. Le style change si la catégorie est sélectionnée. */}
             {categories.map((category) => (
                 <button
                     key={category.id}
