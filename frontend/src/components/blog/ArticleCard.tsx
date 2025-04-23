@@ -38,7 +38,7 @@ type ArticleCardProps = {
 export function ArticleCard({ article }: ArticleCardProps) {
     return (
         <Link href={`/blog/${article.slug}`}>
-            <div className="border border-white/10 hover:bg-white/5 transition-colors flex flex-col p-4 sm:p-6 md:p-8 gap-3 h-full">
+            <div className="hover:bg-white/5 transition-colors flex flex-col p-6 gap-4 h-full">
                 {/* Catégorie + Date */}
                 <div className="flex justify-between text-xs text-white/60 mb-2">
                     <span>{article.category?.name ?? "Uncategorized"}</span>

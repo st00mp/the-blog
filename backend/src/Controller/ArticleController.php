@@ -12,36 +12,47 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\SerializerInterface;
 use Throwable;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 
 final class ArticleController extends AbstractController
 {
-    // GET /api/articles?search=mot&page=1&limit=10
+    // GET /api/articles?search=mot&page=1&limit=12
     #[Route('/api/articles', name: 'api_articles', methods: ['GET'])]
     public function list(Request $request, ArticleRepository $repo): JsonResponse
     {
         // 1. Récupère les paramètres
         $search = $request->query->get('search', '');
         $page   = max(1, (int) $request->query->get('page', 1));
-        $limit  = max(1, (int) $request->query->get('limit', 10));
+        $limit  = max(1, (int) $request->query->get('limit', 12));
+        $categoryId = $request->query->getInt('category', 0); // 0 = pas de filtre
 
-        // 2. Choix méthode repo
+        // Construction de la requête avec filtre, tri et pagination
+        $qb = $repo->createQueryBuilder('a')
+            ->addSelect('c')
+            ->leftJoin('a.category', 'c')
+            ->orderBy('a.updated_at', 'DESC');
+
         if ($search !== '') {
-            // Tu dois avoir implémenté searchByKeyword() dans ArticleRepository
-            $all = $repo->searchByKeyword($search);
-        } else {
-            // trouve tous les articles triés
-            $all = $repo->findBy([], ['updated_at' => 'DESC']);
+            $qb->andWhere('a.title LIKE :kw OR a.intro LIKE :kw')
+                ->setParameter('kw', "%{$search}%");
         }
 
-        // 3. Pagination “à la main” ou via Paginator
-        $total = count($all);
+        if ($categoryId > 0) {
+            $qb->andWhere('c.id = :cat')
+                ->setParameter('cat', $categoryId);
+        }
+
+        $qb->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        $paginator = new Paginator($qb->getQuery());
+        $total     = count($paginator);
         $totalPages = (int) ceil($total / $limit);
-        $offset = ($page - 1) * $limit;
-        $pageItems = array_slice($all, $offset, $limit);
+        $articles  = iterator_to_array($paginator->getIterator());
 
         // 4. Réponse JSON avec meta
         return $this->json([
-            'data' => $pageItems,
+            'data' => $articles,
             'meta' => [
                 'page'       => $page,
                 'limit'      => $limit,

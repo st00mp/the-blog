@@ -29,17 +29,17 @@ class LoadFixturesCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $io->title('🎯 Réinitialisation de la base + génération des données via Foundry');
+        // $io->title('🎯 Réinitialisation de la base + génération des données via Foundry');
 
-        // 🔥 Purge la base de données (attention, irréversible)
-        $connection = $this->em->getConnection();
-        $platform = $connection->getDatabasePlatform();
-        $connection->executeStatement('SET FOREIGN_KEY_CHECKS=0');
-        foreach (['comment', 'media', 'article', 'user'] as $table) {
-            $connection->executeStatement($platform->getTruncateTableSQL($table, true));
-        }
-        $connection->executeStatement('SET FOREIGN_KEY_CHECKS=1');
-        $io->warning('Base de données vidée');
+        // // 🔥 Purge la base de données (attention, irréversible)
+        // $connection = $this->em->getConnection();
+        // $platform = $connection->getDatabasePlatform();
+        // $connection->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+        // foreach (['comment', 'media', 'article', 'category', 'user'] as $table) {
+        //     $connection->executeStatement($platform->getTruncateTableSQL($table, true));
+        // }
+        // $connection->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+        // $io->warning('Base de données vidée');
 
         // 👥 Utilisateurs
         $io->section('Utilisateurs');
@@ -48,18 +48,23 @@ class LoadFixturesCommand extends Command
         // 📁 Catégories
         $io->section('Catégories');
         $categories = [
-            'Agents IA',
-            'Grands modèles de langage',
-            'Prompt Engineering',
-            'Autonomie des IA',
-            'Infra & orchestration',
-            'Veille et innovations',
-            'Tutos & démos',
+            'AI Agents',
+            'LLMs',
+            'Prompt Eng.',
+            'AI Autonomy',
+            'Infra & DevOps',
+            'Research & Innovation',
+            'Guides',
         ];
         $categoryObjects = [];
 
         foreach ($categories as $name) {
-            $categoryObjects[] = \App\Factory\CategoryFactory::new(['name' => $name])->create();
+            $existingCategory = $this->em->getRepository(\App\Entity\Category::class)->findOneBy(['name' => $name]);
+            if ($existingCategory) {
+                $categoryObjects[] = $existingCategory;
+            } else {
+                $categoryObjects[] = \App\Factory\CategoryFactory::new(['name' => $name])->create();
+            }
         }
 
         // 📝 Articles

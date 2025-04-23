@@ -23,7 +23,7 @@ type Article = {
 export default async function BlogPage({
     searchParams,
 }: {
-    searchParams: { search?: string }
+    searchParams: { search?: string, category?: string, page?: string }
 }) {
     const API_URL = process.env.BACKEND_API_URL!
     if (!API_URL) {
@@ -33,6 +33,8 @@ export default async function BlogPage({
     // Construction de l'URL avec paramètre de recherche
     const url = new URL(`${API_URL}/api/articles`)
     if (searchParams.search) url.searchParams.set('search', searchParams.search)
+    if (searchParams.category) url.searchParams.set('category', searchParams.category)
+    if (searchParams.page) url.searchParams.set('page', searchParams.page)
 
     // Fetch côté serveur au build (SSG) ou ISR
     const [rawArticles, categories] = await Promise.all([

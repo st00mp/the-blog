@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { ArticleCard } from "@/components/blog/ArticleCard"
 import { CategoryFilter } from "@/components/blog/layout/CategoryFilter"
+import { Search, X } from "lucide-react"
 
 type Category = { id: number; name: string }
 type Article = {
@@ -20,23 +21,41 @@ export default function BlogClient({
     initialArticles,
     initialCategories,
     initialSearch = "",
+    initialCategory = null,
 }: {
     initialArticles: Article[]
     initialCategories: Category[]
     initialSearch?: string
+    initialCategory?: Category | null
 }) {
     const [search, setSearch] = useState(initialSearch)
     const [articles, setArticles] = useState(initialArticles)
-    const [selectedCategory, setCat] = useState<Category | null>(null)
+    const [selectedCategory, setCat] = useState<Category | null>(initialCategory)
+    const [page, setPage] = useState<number>(1)
+    const [totalPages, setTotalPages] = useState<number>(1)
+
+    useEffect(() => {
+        setPage(1)
+    }, [search, selectedCategory])
 
     const handleSearch = async (term: string) => {
         const API = process.env.NEXT_PUBLIC_BACKEND_API_URL!
         const url = new URL(`${API}/api/articles`)
         if (term) url.searchParams.set("search", term)
+        if (selectedCategory) {
+            url.searchParams.set("category", selectedCategory.id.toString())
+        }
+        url.searchParams.set("page", page.toString())
         const res = await fetch(url.toString())
         if (res.ok) {
             const body = await res.json()
-            setArticles(body.data ?? body)
+            const newArticles = body.data ?? body;
+            if (page === 1) {
+                setArticles(newArticles);
+            } else {
+                setArticles(prev => [...prev, ...newArticles]);
+            }
+            setTotalPages(body.meta?.totalPages ?? 1)
         }
     }
 
@@ -46,20 +65,12 @@ export default function BlogClient({
             handleSearch(search)
         }, 300)
         return () => clearTimeout(tid)
-    }, [search])
-
-    // tri + filtre catégorie
-    const sorted = [...articles].sort(
-        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-    )
-    const filtered = selectedCategory
-        ? sorted.filter(a => a.category.id === selectedCategory.id)
-        : sorted
+    }, [search, selectedCategory, page])
 
     return (
         <>
             {/* Container search + filter */}
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+            <div className="flex items-center justify-between mb-8 space-x-4">
                 {/* Filtre catégories */}
                 <div className="overflow-x-auto">
                     <CategoryFilter
@@ -70,7 +81,7 @@ export default function BlogClient({
                 </div>
 
                 {/* Barre de recherche */}
-                <div className="relative w-full lg:w-1/3">
+                <div className="relative w-auto">
                     <input
                         type="text"
                         placeholder="Search posts"
@@ -82,31 +93,40 @@ export default function BlogClient({
                                 handleSearch(search)
                             }
                         }}
-                        className="w-full bg-transparent border border-white/20 placeholder-white/50 text-white rounded-full pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-56 bg-transparent border border-white/20 placeholder-white/50 text-white text-sm rounded-full pl-10 pr-10 py-1.5 focus:outline-none focus:ring-0"
                     />
-                    {/* Icône loupe */}
-                    <svg
-                        className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1111.25 3a7.5 7.5 0 015.4 12.65z"
-                        />
-                    </svg>
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={18} />
+                    {search && (
+                        <button
+                            onClick={() => setSearch("")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                            aria-label="Clear search"
+                        >
+                            <X size={18} />
+                        </button>
+                    )}
                 </div>
             </div>
 
             {/* Grille d’articles */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filtered.map(article => (
-                    <ArticleCard key={article.id} article={article} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 divide-x divide-y divide-white/10 border border-white/10">
+                {articles.map(article => (
+                    <div key={article.id}>
+                        <ArticleCard article={article} />
+                    </div>
                 ))}
             </div>
+            {/* Voir plus d'articles */}
+            {page < totalPages && (
+                <div className="flex justify-center mt-10">
+                    <button
+                        onClick={() => setPage(prev => prev + 1)}
+                        className="w-full max-w-xl border border-white/20 bg-white/5 hover:bg-white/20 hover:border-transparent focus:outline-none focus:ring-0 text-white text-sm font-normal px-8 py-3 rounded-full transition"
+                    >
+                        Show more posts
+                    </button>
+                </div>
+            )}
         </>
     )
 }
