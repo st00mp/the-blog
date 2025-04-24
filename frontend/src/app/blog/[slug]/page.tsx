@@ -3,7 +3,7 @@ import TiptapRenderer from "@/components/blog/detail/TiptapRenderer"
 import { Button } from "@/components/ui/button"
 import { ClockIcon } from "lucide-react"
 
-// ISR toutes les 60s pour la page dynamique
+// Active l'ISR (Incremental Static Regeneration) toutes les 60 secondes pour cette page
 export const revalidate = 60
 
 type Props = { params: { slug: string } }
@@ -25,11 +25,13 @@ type Article = {
     metaDescription?: string
 }
 
+// Fonction Next.js pour générer les routes dynamiques statiques à partir des slugs d'articles
 export async function generateStaticParams() {
     const API_URL = process.env.BACKEND_API_URL!
     if (!API_URL) {
         throw new Error("BACKEND_API_URL must be defined")
     }
+    // Récupère tous les slugs d'articles depuis l'API pour générer les pages dynamiquement
     const res = await fetch(`${API_URL}/api/articles`, { next: { revalidate: 60 } })
     if (!res.ok) {
         throw new Error(`Erreur HTTP articles: ${res.status}`)
@@ -42,6 +44,7 @@ export async function generateStaticParams() {
     }))
 }
 
+// Fonction Next.js pour générer les balises meta (title, description) pour le SEO
 export async function generateMetadata({ params }: Props) {
     const API_URL = process.env.BACKEND_API_URL
     const res = await fetch(`${API_URL}/api/articles/${params.slug}`, { next: { revalidate: 60 } })
@@ -52,13 +55,16 @@ export async function generateMetadata({ params }: Props) {
     }
 }
 
+// Page principale de l'article de blog, rendue côté serveur avec ISR
 export default async function BlogPostPage({ params }: Props) {
     const API_URL = process.env.BACKEND_API_URL
     try {
+        // Récupère les données de l'article via son slug depuis l'API
         const res = await fetch(`${API_URL}/api/articles/${params.slug}`, { next: { revalidate: 60 } })
         if (!res.ok) throw new Error(`Failed to fetch article: ${res.status}`)
         const article = await res.json() as Article
 
+        // Affiche le contenu complet de l'article : titre, auteur, intro, étapes, citation et conclusion
         return (
             <main className="bg-black text-white min-h-screen pt-16 pb-16 px-4 sm:px-6">
                 <div className="relative mx-auto max-w-6xl pt-5 pb-5 border border-white/10 bg-white/[0.02] shadow-sm px-4 sm:px-6">
@@ -127,6 +133,7 @@ export default async function BlogPostPage({ params }: Props) {
             </main>
         )
     } catch (error) {
+        // En cas d'erreur lors du fetch, affiche un message d'erreur
         console.error("❌ Erreur fetch article:", error)
         return (
             <main className="min-h-screen bg-black text-white py-10">
