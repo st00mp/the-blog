@@ -37,17 +37,23 @@ export default async function BlogPage({
     if (searchParams.category) url.searchParams.set('category', searchParams.category)
     if (searchParams.page) url.searchParams.set('page', searchParams.page)
 
-    // Requêtes serveur : articles et catégories, avec stratégie de revalidation ISR toutes les 60s
+    // Deux requêtes sont faites en parallèle pour optimiser le temps de chargement :
     const [rawArticles, categories] = await Promise.all([
-        fetch(url.toString(), { next: { revalidate: 60 } }).then(async res => {
-            if (!res.ok) throw new Error(`Erreur HTTP articles: ${res.status}`)
-            const json = await res.json() as { data: Article[] }
-            return json.data
-        }),
-        fetch(`${API_URL}/api/categories`, { next: { revalidate: 60 } }).then(res => {
-            if (!res.ok) throw new Error(`Erreur HTTP categories: ${res.status}`)
-            return res.json() as Promise<Category[]>
-        }),
+        // 1. Récupère les articles avec les éventuels filtres (search, category, page)
+        fetch(url.toString(), { next: { revalidate: 60 } })
+            // Vérifie la validité de la réponse et extrait les articles depuis le JSON
+            .then(async res => {
+                if (!res.ok) throw new Error(`Erreur HTTP articles: ${res.status}`)
+                const json = await res.json() as { data: Article[] }
+                return json.data
+            }),
+        // 2. Récupère toutes les catégories disponibles pour le filtre frontend
+        fetch(`${API_URL}/api/categories`, { next: { revalidate: 60 } })
+            // Vérifie la validité de la réponse et extrait la liste des catégories
+            .then(res => {
+                if (!res.ok) throw new Error(`Erreur HTTP categories: ${res.status}`)
+                return res.json() as Promise<Category[]>
+            }),
     ])
 
     // Rendu du composant BlogClient avec les données récupérées (articles, catégories, etc.)
