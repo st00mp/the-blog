@@ -67,10 +67,8 @@ export default function NewArticlePage() {
         type NewArticlePayload = {
             category: string;
             title: string;
-            meta: {
-                title: string;
-                description: string;
-            };
+            metaTitle: string;
+            metaDescription: string;
             intro: string;
             steps: { title: string; content: any }[];
             quote: string;
@@ -83,7 +81,8 @@ export default function NewArticlePage() {
         const payload: NewArticlePayload = {
             category,
             title,
-            meta,
+            metaTitle: meta.title,
+            metaDescription: meta.description,
             intro,
             steps,
             quote,

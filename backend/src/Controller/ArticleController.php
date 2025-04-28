@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\SerializerInterface;
 use Throwable;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use App\Entity\Category;
 
 final class ArticleController extends AbstractController
 {
@@ -91,12 +92,23 @@ final class ArticleController extends AbstractController
                 return $this->json(['error' => 'Titre manquant'], 400);
             }
 
-            // Hydrate l’objet Article avec les données du payload
+            // 1. Récupération de la catégorie
+            $categoryId = $data['category'] ?? null;
+            if (!$categoryId) {
+                return $this->json(['error' => 'Catégorie manquante'], 400);
+            }
+            /** @var Category|null $category */
+            $category = $em->getRepository(Category::class)->find($categoryId);
+            if (!$category) {
+                return $this->json(['error' => 'Catégorie invalide'], 400);
+            }
+
+            // 2. Hydratation de l'article
             $article = new Article();
             $article->setTitle($data['title']);
-            $article->setCategory($data['category'] ?? 'null');
-            $article->setMetaTitle($data['meta']['title'] ?? null);
-            $article->setMetaDescription($data['meta']['description'] ?? null);
+            $article->setCategory($category); // <-- on passe l'entité Category
+            $article->setMetaTitle($data['metaTitle'] ?? null);
+            $article->setMetaDescription($data['metaDescription'] ?? null);
             $article->setIntro($data['intro'] ?? null);
             $article->setSteps($data['steps'] ?? []);
             $article->setQuote($data['quote'] ?? null);
@@ -105,14 +117,14 @@ final class ArticleController extends AbstractController
             $article->setCtaDescription($data['ctaDescription'] ?? null);
             $article->setCtaButton($data['ctaButton'] ?? null);
 
-            // Associe un auteur (à adapter en fonction de l’authentification future)
+            // 3. Auteur et dates
             $user = $em->getRepository(User::class)->find(1);
             $article->setAuthor($user);
-
             $now = new \DateTimeImmutable();
             $article->setCreatedAt($now);
             $article->setUpdatedAt($now);
 
+            // 4. Persistance
             $em->persist($article);
             $em->flush();
 
