@@ -73,8 +73,8 @@ class Article
         if (!$this->slug && $this->title) {
             $this->slug = (new Slugify())->slugify($this->title);
         }
-        $this->created_at  = $this->createdAt  ?? $now;
-        $this->updated_at  = $now;
+        $this->created_at = $now;
+        $this->updated_at = $now;
     }
 
     #[ORM\PreUpdate]
