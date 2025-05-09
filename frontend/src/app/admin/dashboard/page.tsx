@@ -80,8 +80,8 @@ export default function AdminDashboardPage() {
       <div className="flex min-h-screen bg-black text-zinc-200">
 
         {/* Contenu principal */}
-        <div className="flex-1 p-8">
-          <div className="flex justify-between items-center mb-8">
+        <div className="flex-1 w-full">
+          <div className="flex justify-between items-center mb-10">
             <h1 className="text-3xl font-bold">Tableau de bord</h1>
             <Button asChild className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200">
               <Link href="/admin/articles/new">
@@ -91,38 +91,38 @@ export default function AdminDashboardPage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <Card className="bg-zinc-900 border border-zinc-800">
-              <CardHeader className="pb-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-13">
+            <Card className="bg-zinc-900 border border-zinc-800 min-h-[10rem]">
+              <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Articles publiés</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-2 pb-5">
                 <p className="text-3xl font-bold">{articles.filter(a => a.status === 'published').length}</p>
               </CardContent>
             </Card>
-            <Card className="bg-zinc-900 border border-zinc-800">
-              <CardHeader className="pb-2">
+            <Card className="bg-zinc-900 border border-zinc-800 min-h-[10rem]">
+              <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Brouillons</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-2 pb-5">
                 <p className="text-3xl font-bold">{articles.filter(a => a.status === 'draft').length}</p>
               </CardContent>
             </Card>
-            <Card className="bg-zinc-900 border border-zinc-800">
-              <CardHeader className="pb-2">
+            <Card className="bg-zinc-900 border border-zinc-800 min-h-[10rem]">
+              <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Total</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-2 pb-5">
                 <p className="text-3xl font-bold">{articles.length}</p>
               </CardContent>
             </Card>
           </div>
 
-          <Card className="bg-zinc-900 border border-zinc-800">
-            <CardHeader>
+          <Card className="bg-zinc-900 border border-zinc-800 mt-13">
+            <CardHeader className="pb-4">
               <CardTitle>Vos articles</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
               <AdminArticlesTable articles={articles} onDelete={handleDeleteArticle} />
             </CardContent>
           </Card>

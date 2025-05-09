@@ -145,8 +145,8 @@ export default function NewArticlePage() {
 
     // Formulaire principal pour la création d'un nouvel article
     return (
-        <div className="max-w-4xl mx-auto py-8 px-4 text-zinc-100">
-            <h1 className="text-3xl font-bold mb-8 text-center">Rédaction guidée d’un article de blog</h1>
+        <div className="w-full text-zinc-100">
+            <h1 className="text-3xl font-bold mb-10">Rédaction guidée d'un article de blog</h1>
 
             {/* Section : Choix de la catégorie */}
             <ArticleSection title="Catégorie de l'article" tooltip="Classer cet article dans une thématique">
@@ -232,7 +232,7 @@ export default function NewArticlePage() {
             </ArticleSection>
 
             {/* Section : Étapes principales de l’article */}
-            <div className="space-y-10 border-l-[2px] border-white/10 pl-6 mt-10">
+            <div className="space-y-13 border-l-[2px] border-zinc-800 pl-8 mt-13">
                 {steps.map((step, i) => (
                     <StepBlock
                         key={i}
@@ -316,9 +316,9 @@ export default function NewArticlePage() {
             </ArticleSection>
 
             {/* Boutons de validation */}
-            <div className="flex justify-end gap-4 mt-8">
-                <button className="px-4 py-2 bg-zinc-700 rounded-md hover:bg-zinc-600">Annuler</button>
-                <button className="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-500" onClick={handleSubmit} disabled={isSaving}>
+            <div className="flex justify-end gap-5 mt-13">
+                <button className="px-5 py-2.5 bg-zinc-800 text-zinc-200 rounded-md hover:bg-zinc-700 transition-colors">Annuler</button>
+                <button className="px-5 py-2.5 bg-zinc-100 text-zinc-900 rounded-md hover:bg-zinc-200 transition-colors" onClick={handleSubmit} disabled={isSaving}>
                     {isSaving ? "Enregistrement..." : "Publier l’article"}
                 </button>
             </div>
