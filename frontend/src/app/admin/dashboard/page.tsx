@@ -2,19 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { FileEdit, Trash2, Plus, Home, FilePen, Settings, LogOut } from "lucide-react"
+import { Plus } from "lucide-react"
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AdminArticlesTable } from "@/components/admin/article/ArticlesTable"
@@ -76,61 +65,46 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen bg-black text-zinc-200">
-
-        {/* Contenu principal */}
-        <div className="flex-1 w-full">
-          <div className="flex justify-between items-center mb-10">
-            <h1 className="text-3xl font-bold">Tableau de bord</h1>
-            <Button asChild className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200">
-              <Link href="/admin/articles/new">
-                <Plus size={16} className="mr-2" />
-                Nouvel article
-              </Link>
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-13">
-            <Card className="bg-zinc-900 border border-zinc-800 min-h-[10rem]">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Articles publiés</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-2 pb-5">
-                <p className="text-3xl font-bold">{articles.filter(a => a.status === 'published').length}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-zinc-900 border border-zinc-800 min-h-[10rem]">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Brouillons</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-2 pb-5">
-                <p className="text-3xl font-bold">{articles.filter(a => a.status === 'draft').length}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-zinc-900 border border-zinc-800 min-h-[10rem]">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Total</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-2 pb-5">
-                <p className="text-3xl font-bold">{articles.length}</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="bg-zinc-900 border border-zinc-800 mt-13">
-            <CardHeader className="pb-4">
-              <CardTitle>Vos articles</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <AdminArticlesTable articles={articles} onDelete={handleDeleteArticle} />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Trigger for mobile sidebar */}
-        <SidebarTrigger className="fixed bottom-4 right-4 lg:hidden bg-zinc-800 text-zinc-200" />
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Tableau de bord</h1>
       </div>
-    </SidebarProvider>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="bg-zinc-900 border border-zinc-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Articles publiés</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{articles.filter(a => a.status === 'published').length}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border border-zinc-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Brouillons</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{articles.filter(a => a.status === 'draft').length}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border border-zinc-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Total</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{articles.length}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="bg-zinc-900 border border-zinc-800">
+        <CardHeader>
+          <CardTitle>Vos articles</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AdminArticlesTable articles={articles} onDelete={handleDeleteArticle} />
+        </CardContent>
+      </Card>
+    </div>
   );
 }

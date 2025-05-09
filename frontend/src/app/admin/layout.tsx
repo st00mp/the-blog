@@ -1,65 +1,113 @@
+"use client"
 
+import { usePathname } from "next/navigation"
+import React from "react"
 
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
-import { SidebarProvider } from "@/components/ui/sidebar"
-import { Home, FilePen, Settings, LogOut } from "lucide-react"
-import Link from "next/link"
+import { AdminSidebar } from "@/components/admin-sidebar"
+import { SearchForm } from "@/components/search-form"
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator
+} from "@/components/ui/breadcrumb"
+import {
+    SidebarProvider,
+    SidebarTrigger
+} from "@/components/ui/sidebar"
 
 export default function AdminLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
+    const pathname = usePathname()
+
+    // Fonction pour générer les breadcrumbs basés sur le pathname
+    const getBreadcrumbs = () => {
+        const paths = pathname.split('/').filter(Boolean)
+        const breadcrumbs = []
+
+        // Ajout de l'accueil
+        breadcrumbs.push({
+            label: 'Admin',
+            path: '/admin',
+            isCurrent: paths.length === 1 && paths[0] === 'admin'
+        })
+
+        // Ajout des chemins intermédiaires
+        let currentPath = ''
+        for (let i = 1; i < paths.length; i++) {
+            currentPath += `/${paths[i]}`
+            const isCurrent = i === paths.length - 1
+
+            breadcrumbs.push({
+                label: paths[i].charAt(0).toUpperCase() + paths[i].slice(1),
+                path: `/admin${currentPath}`,
+                isCurrent
+            })
+        }
+
+        return breadcrumbs
+    }
+
+    const breadcrumbs = getBreadcrumbs()
+
     return (
-        <SidebarProvider className="bg-black">
-            <Sidebar className="flex flex-col h-full">
-                <SidebarHeader className="p-5 flex-shrink-0">
-                    <h2 className="text-xl font-bold">Admin</h2>
-                </SidebarHeader>
-                <SidebarContent className="px-3 py-2 flex-grow overflow-y-auto">
-                    <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton isActive asChild>
-                                <Link href="/admin/dashboard">
-                                    <Home className="mr-2" size={18} />
-                                    <span>Tableau de bord</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild>
-                                <Link href="/admin/articles">
-                                    <FilePen className="mr-2" size={18} />
-                                    <span>Articles</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild>
-                                <Link href="/admin/settings">
-                                    <Settings className="mr-2" size={18} />
-                                    <span>Paramètres</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarContent>
-                <div className="flex-shrink-0 p-5 border-t border-zinc-800">
-                    <SidebarFooter className="p-0">
-                        <SidebarMenuButton asChild>
-                            <Link href="/" className="flex items-center text-zinc-400 hover:text-zinc-200">
-                                <LogOut className="mr-2" size={18} />
-                                <span>Retour au site</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarFooter>
+        <SidebarProvider>
+            <div className="flex min-h-screen bg-zinc-950">
+                {/* Sidebar personnalisée avec le style sombre */}
+                <AdminSidebar
+                    className="bg-[#0a0a0a] border-r border-zinc-800"
+                    collapsible="icon"
+                />
+
+                <div className="flex-1 flex flex-col">
+                    {/* Header noir (#000000) comme demandé */}
+                    <header className="h-14 border-b border-zinc-800 bg-black flex items-center px-6">
+                        <SidebarTrigger className="mr-2 text-zinc-400 hover:text-zinc-200" />
+                        <div className="flex-1 flex items-center justify-between">
+                            <h1 className="text-lg font-medium text-zinc-100">Admin</h1>
+                            <div className="w-64">
+                                <SearchForm className="w-full" />
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="flex-1 flex flex-col">
+                        {/* Fil d'Ariane */}
+                        <div className="px-6 py-3 border-b border-zinc-800">
+                            <Breadcrumb>
+                                <BreadcrumbList>
+                                    {breadcrumbs.map((item, index) => (
+                                        <React.Fragment key={item.path}>
+                                            <BreadcrumbItem>
+                                                {item.isCurrent ? (
+                                                    <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                                                ) : (
+                                                    <BreadcrumbLink href={item.path}>
+                                                        {item.label}
+                                                    </BreadcrumbLink>
+                                                )}
+                                            </BreadcrumbItem>
+                                            {index < breadcrumbs.length - 1 && (
+                                                <BreadcrumbSeparator />
+                                            )}
+                                        </React.Fragment>
+                                    ))}
+                                </BreadcrumbList>
+                            </Breadcrumb>
+                        </div>
+
+                        {/* Contenu principal */}
+                        <main className="flex-1 p-6">
+                            {children}
+                        </main>
+                    </div>
                 </div>
-            </Sidebar>
-            <main className="flex-1 min-h-screen flex justify-center">
-                <div className="w-full max-w-[calc(100%-18rem-4rem)] px-8 py-6">
-                    {children}
-                </div>
-            </main>
+            </div>
         </SidebarProvider>
     )
 }
