@@ -149,7 +149,7 @@ export function AdminArticlesTable({ articles, onDelete }: ArticlesTableProps) {
               </td>
             </tr>
           ))}
-          
+
           {articles.length === 0 && (
             <tr className="border-b border-zinc-800 bg-zinc-900">
               <td colSpan={4} className="px-6 py-8 text-center text-zinc-400">

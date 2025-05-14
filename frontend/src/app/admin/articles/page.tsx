@@ -98,34 +98,36 @@ export default function ArticlesPage() {
   // Fonction pour filtrer les articles
   const filteredArticles = articles.filter(article => {
     // Filtre par terme de recherche
-    const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         article.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
+
     // Filtre par statut
     const matchesStatus = statusFilter === "all" || article.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Articles</h1>
-        <Button asChild className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200">
-          <Link href="/admin/articles/new">
-            <Plus size={16} className="mr-2" />
-            Nouvel article
-          </Link>
-        </Button>
-      </div>
-
       <Card className="bg-zinc-900 border border-zinc-800">
-        <CardHeader>
-          <CardTitle>Filtres</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+            <div className="flex items-baseline gap-3">
+              <CardTitle>Liste des articles</CardTitle>
+              <span className="text-sm text-zinc-400">
+                ({filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''})
+              </span>
+            </div>
+            <Button asChild size="sm" className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200">
+              <Link href="/admin/articles/new">
+                <Plus size={16} className="mr-2" />
+                Nouvel article
+              </Link>
+            </Button>
+          </div>
+
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
+            <div className="w-full md:w-80 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400" size={18} />
               <Input
                 placeholder="Rechercher un article..."
@@ -150,20 +152,11 @@ export default function ArticlesPage() {
               </Select>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-zinc-900 border border-zinc-800">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Liste des articles</CardTitle>
-          <div className="text-sm text-zinc-400">
-            {filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''}
-          </div>
         </CardHeader>
         <CardContent>
-          <AdminArticlesTable 
-            articles={filteredArticles} 
-            onDelete={handleDeleteArticle} 
+          <AdminArticlesTable
+            articles={filteredArticles}
+            onDelete={handleDeleteArticle}
           />
         </CardContent>
       </Card>

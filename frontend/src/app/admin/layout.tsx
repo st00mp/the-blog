@@ -25,6 +25,14 @@ export default function AdminLayout({
 }) {
     const pathname = usePathname()
 
+    // Fonction pour obtenir le titre de la page actuelle
+    const getPageTitle = () => {
+        if (pathname.includes('/dashboard')) return 'Tableau de bord'
+        if (pathname.includes('/articles')) return 'Articles'
+        if (pathname.includes('/settings')) return 'Paramètres'
+        return 'Admin' // Titre par défaut
+    }
+
     // Fonction pour générer les breadcrumbs basés sur le pathname
     const getBreadcrumbs = () => {
         const paths = pathname.split('/').filter(Boolean)
@@ -56,53 +64,26 @@ export default function AdminLayout({
     const breadcrumbs = getBreadcrumbs()
 
     return (
-        <SidebarProvider>
-            <div className="flex min-h-screen bg-zinc-950">
+        <SidebarProvider className="w-full">
+            <div className="flex min-h-screen w-full">
                 {/* Sidebar personnalisée avec le style sombre */}
                 <AdminSidebar
                     className="bg-[#0a0a0a] border-r border-zinc-800"
                     collapsible="icon"
                 />
 
-                <div className="flex-1 flex flex-col">
+                <div className="flex-1 flex flex-col w-full">
                     {/* Header noir (#000000) comme demandé */}
                     <header className="h-14 border-b border-zinc-800 bg-black flex items-center px-6">
                         <SidebarTrigger className="mr-2 text-zinc-400 hover:text-zinc-200" />
                         <div className="flex-1 flex items-center justify-between">
-                            <h1 className="text-lg font-medium text-zinc-100">Admin</h1>
-                            <div className="w-64">
-                                <SearchForm className="w-full" />
-                            </div>
+                            <h1 className="text-lg font-medium text-zinc-100">{getPageTitle()}</h1>
                         </div>
                     </header>
 
                     <div className="flex-1 flex flex-col">
-                        {/* Fil d'Ariane */}
-                        <div className="px-6 py-3 border-b border-zinc-800">
-                            <Breadcrumb>
-                                <BreadcrumbList>
-                                    {breadcrumbs.map((item, index) => (
-                                        <React.Fragment key={item.path}>
-                                            <BreadcrumbItem>
-                                                {item.isCurrent ? (
-                                                    <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                                                ) : (
-                                                    <BreadcrumbLink href={item.path}>
-                                                        {item.label}
-                                                    </BreadcrumbLink>
-                                                )}
-                                            </BreadcrumbItem>
-                                            {index < breadcrumbs.length - 1 && (
-                                                <BreadcrumbSeparator />
-                                            )}
-                                        </React.Fragment>
-                                    ))}
-                                </BreadcrumbList>
-                            </Breadcrumb>
-                        </div>
-
                         {/* Contenu principal */}
-                        <main className="flex-1 p-6">
+                        <main className="flex-1 py-6 px-10">
                             {children}
                         </main>
                     </div>

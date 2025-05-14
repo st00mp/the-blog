@@ -156,7 +156,7 @@ export default function SettingsPage() {
         <div className="w-full">
             {/* En-tête de la page */}
             <div className="flex justify-between items-center mb-10">
-                <h1 className="text-3xl font-bold">Paramètres</h1>
+                <h1 className="sr-only">Paramètres</h1>
             </div>
 
             <Accordion type="multiple" defaultValue={[]} className="space-y-5">
