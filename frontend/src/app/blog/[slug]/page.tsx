@@ -93,16 +93,22 @@ export default async function BlogPostPage({ params }: Props) {
                                 </div>
                                 <span>{new Date(article.updated_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
                             </div>
-                            <div className="mt-6 mb-10 flex flex-col md:flex-row items-start md:items-center justify-between rounded-md border border-white/10 bg-white/5 px-10 py-6 gap-6 shadow-sm">
-                                <div className="space-y-1">
-                                    <p className="text-base md:text-2xl font-semibold text-white">
-                                        {article.ctaDescription}
-                                    </p>
+                            {(article.ctaDescription || article.ctaButton) && (
+                                <div className="mt-6 mb-10 flex flex-col md:flex-row items-start md:items-center justify-between rounded-md border border-white/10 bg-white/5 px-10 py-6 gap-6 shadow-sm">
+                                    {article.ctaDescription && (
+                                        <div className="space-y-1">
+                                            <p className="text-base md:text-2xl font-semibold text-white">
+                                                {article.ctaDescription}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {article.ctaButton && (
+                                        <Button variant="ghost" className="bg-white text-black text-sm px-6 py-3 rounded-full hover:bg-zinc-300">
+                                            {article.ctaButton}
+                                        </Button>
+                                    )}
                                 </div>
-                                <Button variant="ghost" className="bg-white text-black text-sm px-6 py-3 rounded-full hover:bg-zinc-300">
-                                    {article.ctaButton}
-                                </Button>
-                            </div>
+                            )}
                             <p className="text-white/90 text-xl leading-relaxed mt-10 mb-6">{article.intro}</p>
                         </header>
                         <section className="mx-auto w-full max-w-3xl px-4 pb-8">
@@ -123,8 +129,12 @@ export default async function BlogPostPage({ params }: Props) {
                             )}
                             {(article.conclusionTitle || article.conclusionDescription) && (
                                 <footer className="mt-10 bg-white/5 p-6 rounded-md shadow-sm">
-                                    <h3 className="text-xl font-semibold mb-2 text-white">{article.conclusionTitle}</h3>
-                                    <TiptapRenderer content={article.conclusionDescription} />
+                                    {article.conclusionTitle && (
+                                        <h3 className="text-xl font-semibold mb-2 text-white">{article.conclusionTitle}</h3>
+                                    )}
+                                    {article.conclusionDescription && (
+                                        <TiptapRenderer content={article.conclusionDescription} />
+                                    )}
                                 </footer>
                             )}
                         </section>
