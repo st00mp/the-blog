@@ -65,9 +65,10 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="sr-only">Tableau de bord</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-white">Tableau de bord</h1>
+        <p className="text-zinc-400 mt-1">Vue d'ensemble de votre activité</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

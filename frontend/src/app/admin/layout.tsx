@@ -83,8 +83,10 @@ export default function AdminLayout({
 
                     <div className="flex-1 flex flex-col">
                         {/* Contenu principal */}
-                        <main className="flex-1 py-6 px-10">
-                            {children}
+                        <main className="flex-1 p-6">
+                            <div className="max-w-7xl mx-auto w-full">
+                                {children}
+                            </div>
                         </main>
                     </div>
                 </div>

@@ -8,9 +8,13 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+
+
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     public const ROLES = ['admin', 'editor', 'user'];
 
@@ -19,6 +23,9 @@ class User
     #[ORM\Column]
     #[Groups(['article:list', 'article:detail'])]
     private ?int $id = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $auth_user_id = null;
 
     #[ORM\Column(length: 100)]
     #[Groups(['article:list', 'article:detail'])]
@@ -40,6 +47,9 @@ class User
 
     #[ORM\Column]
     private ?\DateTimeImmutable $updated_at = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $lastLoginAt = null;
 
     /**
      * @var Collection<int, Article>
@@ -80,6 +90,18 @@ class User
         return $this->id;
     }
 
+    public function getAuthUserId(): ?string
+    {
+        return $this->auth_user_id;
+    }
+
+    public function setAuthUserId(?string $auth_user_id): static
+    {
+        $this->auth_user_id = $auth_user_id;
+
+        return $this;
+    }
+
     public function getName(): ?string
     {
         return $this->name;
@@ -107,6 +129,26 @@ class User
     public function getPasswordHash(): ?string
     {
         return $this->password_hash;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password_hash;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        return ['ROLE_' . strtoupper($this->role ?? 'USER')];
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Optionnel : nettoie des infos sensibles si nécessaire
     }
 
     public function setPasswordHash(string $password_hash): static
@@ -152,6 +194,18 @@ class User
     public function setUpdatedAt(\DateTimeImmutable $updated_at): static
     {
         $this->updated_at = $updated_at;
+
+        return $this;
+    }
+
+    public function getLastLoginAt(): ?\DateTimeImmutable
+    {
+        return $this->lastLoginAt;
+    }
+
+    public function setLastLoginAt(?\DateTimeImmutable $lastLoginAt): self
+    {
+        $this->lastLoginAt = $lastLoginAt;
 
         return $this;
     }

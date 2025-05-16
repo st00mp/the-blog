@@ -108,12 +108,17 @@ export default function ArticlesPage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-white">Articles</h1>
+        <p className="text-zinc-400 mt-1">Gérez les articles de votre blog</p>
+      </div>
+
       <Card className="bg-zinc-900 border border-zinc-800">
-        <CardHeader className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-baseline gap-3">
-              <CardTitle>Liste des articles</CardTitle>
+              <CardTitle className="text-lg">Liste des articles</CardTitle>
               <span className="text-sm text-zinc-400">
                 ({filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''})
               </span>

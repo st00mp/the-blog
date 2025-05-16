@@ -21,6 +21,7 @@
     "@radix-ui/react-slot": "^1.2.2",
     "@radix-ui/react-switch": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.2.6",
+    "@radix-ui/react-visually-hidden": "^1.2.2",
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tanstack/react-table": "^8.21.2",
     "@tiptap/core": "^2.11.7",

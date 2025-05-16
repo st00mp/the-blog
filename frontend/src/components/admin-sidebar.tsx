@@ -3,9 +3,10 @@
 import * as React from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Home, FilePen, Settings, LogOut } from "lucide-react"
+import { Home, FilePen, Settings, LogOut, LayoutDashboard } from "lucide-react"
 
-import {
+import { useAuth } from "@/contexts/AuthContext"
+import { 
     Sidebar,
     SidebarContent,
     SidebarFooter,
@@ -22,6 +23,12 @@ const adminNavigation = [
     {
         title: "Navigation",
         items: [
+            {
+                title: "Administration",
+                url: "/admin",
+                icon: LayoutDashboard,
+                adminOnly: true
+            },
             {
                 title: "Tableau de bord",
                 url: "/admin/dashboard",
@@ -43,6 +50,7 @@ const adminNavigation = [
 
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const pathname = usePathname()
+    const { user } = useAuth()
 
     const isActive = (path: string) => {
         return pathname.startsWith(path)
@@ -57,20 +65,28 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                         <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                {group.items.map((item) => (
-                                    <SidebarMenuItem key={item.title}>
-                                        <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                                            <Link href={item.url} className="flex items-center">
-                                                <item.icon className="mr-2" size={18} />
-                                                <span>{item.title}</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                ))}
+                                {group.items.map((item) => {
+                                    // Ne pas afficher les éléments adminOnly si l'utilisateur n'est pas admin
+                                    if (item.adminOnly && user?.role !== 'admin') {
+                                        return null;
+                                    }
+                                    
+                                    return (
+                                        <SidebarMenuItem key={item.title}>
+                                            <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                                                <Link href={item.url} className="flex items-center">
+                                                    <item.icon className="mr-2" size={18} />
+                                                    <span>{item.title}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    );
+                                })}
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
                 ))}
+
             </SidebarContent>
             <SidebarFooter className="p-4 border-t border-zinc-800">
                 <SidebarMenuButton asChild>
