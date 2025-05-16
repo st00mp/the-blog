@@ -70,11 +70,11 @@ export function LoginForm({
       login(userData.user)
 
       // Si la connexion réussit et qu'une fonction onSuccess est fournie, on l'appelle
-      // Sinon, on redirige vers la page d'accueil
+      // Sinon, on redirige vers la page des paramètres du compte
       if (onSuccess) {
         onSuccess()
       } else {
-        router.push("/")
+        router.push("/account/settings")
         router.refresh() // Pour s'assurer que les données utilisateur sont à jour
       }
     } catch (err) {

@@ -18,31 +18,60 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Structure de navigation pour l'admin
+// Types pour les rôles
+type Role = 'admin' | 'editor' | 'user'
+
+// Hiérarchie des rôles
+const ROLE_HIERARCHY: Record<Role, number> = {
+  'admin': 3,
+  'editor': 2,
+  'user': 1
+}
+
+// Vérifie si l'utilisateur a le rôle requis
+const hasRequiredRole = (userRole: Role | undefined, requiredRole: Role): boolean => {
+  if (!userRole) return false
+  return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[requiredRole]
+}
+
+// Structure de navigation
 const adminNavigation = [
     {
-        title: "Navigation",
+        title: "Administration",
         items: [
             {
-                title: "Administration",
+                title: "Tableau de bord",
                 url: "/admin",
                 icon: LayoutDashboard,
-                adminOnly: true
+                requiredRole: 'admin' as Role
             },
+        ],
+    },
+    {
+        title: "Édition",
+        items: [
             {
                 title: "Tableau de bord",
-                url: "/admin/dashboard",
+                url: "/editor/dashboard",
                 icon: Home,
+                requiredRole: 'editor' as Role
             },
             {
                 title: "Articles",
-                url: "/admin/articles",
+                url: "/editor/articles",
                 icon: FilePen,
+                requiredRole: 'editor' as Role
             },
+        ],
+    },
+    {
+        title: "Compte",
+        items: [
             {
                 title: "Paramètres",
-                url: "/admin/settings",
+                url: "/account/settings",
                 icon: Settings,
+                requiredRole: 'user' as Role
             },
         ],
     },
@@ -66,8 +95,8 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                         <SidebarGroupContent>
                             <SidebarMenu>
                                 {group.items.map((item) => {
-                                    // Ne pas afficher les éléments adminOnly si l'utilisateur n'est pas admin
-                                    if (item.adminOnly && user?.role !== 'admin') {
+                                    // Vérifier si l'utilisateur a le rôle requis pour voir cet élément
+                                    if (!hasRequiredRole(user?.role as Role | undefined, item.requiredRole)) {
                                         return null;
                                     }
                                     

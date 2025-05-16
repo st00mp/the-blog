@@ -4,16 +4,31 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
 
+type Role = 'admin' | 'editor' | 'user'
+
+// Définition de la hiérarchie des rôles
+const ROLE_HIERARCHY: Record<Role, number> = {
+  'admin': 3,
+  'editor': 2,
+  'user': 1
+}
+
 type RouteGuardProps = {
   children: React.ReactNode
   requireAuth?: boolean
-  requireRole?: string
+  requireRole?: Role
+}
+
+// Fonction utilitaire pour vérifier les droits d'accès
+const hasRequiredRole = (userRole: Role | undefined, requiredRole: Role): boolean => {
+  if (!userRole) return false
+  return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[requiredRole]
 }
 
 export function RouteGuard({ 
   children, 
   requireAuth = false,
-  requireRole
+  requireRole = 'user' // Par défaut, seul l'accès utilisateur est requis
 }: RouteGuardProps) {
   const { user, isLoading, isAuthenticated } = useAuth()
   const router = useRouter()
@@ -28,8 +43,8 @@ export function RouteGuard({
       return
     }
 
-    // Si un rôle spécifique est requis et l'utilisateur n'a pas ce rôle
-    if (requireRole && user?.role !== requireRole) {
+    // Si un rôle spécifique est requis et l'utilisateur n'a pas les droits nécessaires
+    if (requireRole && !hasRequiredRole(user?.role as Role | undefined, requireRole)) {
       router.push("/")
       return
     }
@@ -45,8 +60,8 @@ export function RouteGuard({
     return null
   }
 
-  // Si un rôle spécifique est requis et l'utilisateur n'a pas ce rôle, ne rien afficher
-  if (requireRole && user?.role !== requireRole) {
+  // Si un rôle spécifique est requis et l'utilisateur n'a pas les droits nécessaires, ne rien afficher
+  if (requireRole && !hasRequiredRole(user?.role as Role | undefined, requireRole)) {
     return null
   }
 
