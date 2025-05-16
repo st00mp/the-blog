@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { Plus, Filter, Search } from "lucide-react"
 
@@ -89,80 +89,160 @@ export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>(MOCK_ARTICLES);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isLoading, setIsLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Fonction pour supprimer un article
-  const handleDeleteArticle = (id: string) => {
+  // Simuler un chargement
+  useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Fonction pour supprimer un article avec feedback visuel
+  const handleDeleteArticle = async (id: string) => {
+    setDeletingId(id);
+    // Simuler une requête API
+    await new Promise(resolve => setTimeout(resolve, 800));
     setArticles(articles.filter(article => article.id !== id));
+    setDeletingId(null);
   };
 
   // Fonction pour filtrer les articles
-  const filteredArticles = articles.filter(article => {
-    // Filtre par terme de recherche
-    const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredArticles = useMemo(() => {
+    return articles.filter(article => {
+      const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === "all" || article.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [articles, searchTerm, statusFilter]);
 
-    // Filtre par statut
-    const matchesStatus = statusFilter === "all" || article.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
+  // Fonction pour réinitialiser les filtres
+  const resetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Articles</h1>
-        <p className="text-zinc-400 mt-1">Gérez les articles de votre blog</p>
+      {/* En-tête */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Articles</h1>
+          <p className="text-zinc-400 mt-1">Gérez et suivez vos publications</p>
+        </div>
+        <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white transition-colors">
+          <Link href="/editor/articles/new" className="flex items-center">
+            <Plus size={16} className="mr-2" />
+            Nouvel article
+          </Link>
+        </Button>
       </div>
 
-      <Card className="bg-zinc-900 border border-zinc-800">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-baseline gap-3">
-              <CardTitle className="text-lg">Liste des articles</CardTitle>
-              <span className="text-sm text-zinc-400">
-                ({filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''})
+      {/* Carte principale */}
+      <Card className="bg-zinc-900 border border-zinc-800 overflow-hidden p-6">
+        {/* En-tête avec filtres */}
+        <CardHeader className="pb-4 px-6 pt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-lg font-semibold text-white">Liste des articles</h2>
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-800/50 text-zinc-300 border border-zinc-700">
+                {filteredArticles.length} {filteredArticles.length <= 1 ? 'article' : 'articles'}
               </span>
             </div>
-            <Button asChild size="sm" className="bg-zinc-100 text-zinc-900 hover:bg-zinc-200">
-              <Link href="/admin/articles/new">
-                <Plus size={16} className="mr-2" />
-                Nouvel article
-              </Link>
-            </Button>
-          </div>
 
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="w-full md:w-80 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400" size={18} />
-              <Input
-                placeholder="Rechercher un article..."
-                className="pl-10 bg-zinc-800 border-zinc-700 text-zinc-200"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="w-full md:w-64">
-              <Select
-                value={statusFilter}
-                onValueChange={setStatusFilter}
-              >
-                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-200">
-                  <SelectValue placeholder="Filtrer par statut" />
-                </SelectTrigger>
-                <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-200">
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="published">Publiés</SelectItem>
-                  <SelectItem value="draft">Brouillons</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-3 flex-1 justify-end">
+              {(searchTerm || statusFilter !== 'all') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetFilters}
+                  className="text-xs text-blue-400 hover:text-blue-300 hover:bg-transparent whitespace-nowrap"
+                >
+                  Réinitialiser les filtres
+                </Button>
+              )}
+
+              <div className="relative w-full max-w-xs">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-zinc-400" />
+                </div>
+                <Input
+                  placeholder="Rechercher..."
+                  className="pl-10 bg-zinc-800/50 border-zinc-700 text-zinc-200 placeholder-zinc-500 focus-visible:ring-1 focus-visible:ring-blue-500/50 h-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="w-40">
+                <Select
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                >
+                  <SelectTrigger className="bg-zinc-800/50 border-zinc-700 text-zinc-200 h-9">
+                    <div className="flex items-center">
+                      <Filter className="h-4 w-4 mr-2 text-zinc-400" />
+                      <SelectValue placeholder="Statut" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-200">
+                    <SelectItem value="all">Tous les statuts</SelectItem>
+                    <SelectItem value="published" className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                      Publiés
+                    </SelectItem>
+                    <SelectItem value="draft" className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
+                      Brouillons
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <AdminArticlesTable
-            articles={filteredArticles}
-            onDelete={handleDeleteArticle}
-          />
+
+        {/* Contenu */}
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center p-12">
+              <div className="animate-pulse flex flex-col items-center space-y-2">
+                <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-sm text-zinc-400">Chargement des articles...</p>
+              </div>
+            </div>
+          ) : filteredArticles.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center">
+              <div className="p-4 bg-zinc-800/50 rounded-full mb-4">
+                <Search className="h-8 w-8 text-zinc-400" />
+              </div>
+              <h3 className="text-lg font-medium text-white mb-1">Aucun article trouvé</h3>
+              <p className="text-sm text-zinc-400 max-w-md">
+                {searchTerm || statusFilter !== 'all'
+                  ? 'Essayez de modifier vos critères de recherche ou réinitialisez les filtres.'
+                  : 'Commencez par créer votre premier article.'}
+              </p>
+              {(searchTerm || statusFilter !== 'all') && (
+                <Button
+                  variant="outline"
+                  className="mt-4 border-zinc-700 text-zinc-300 hover:bg-zinc-800/50"
+                  onClick={resetFilters}
+                >
+                  Réinitialiser les filtres
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-hidden">
+              <AdminArticlesTable
+                articles={filteredArticles}
+                onDelete={handleDeleteArticle}
+                isDeleting={deletingId !== null}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

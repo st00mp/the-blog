@@ -30,13 +30,13 @@ const navItems = [
 function UserMenu() {
     const { user, logout } = useAuth()
     const router = useRouter()
-    
+
     const handleLogout = async () => {
         await logout()
         router.push("/")
         router.refresh()
     }
-    
+
     // Obtenir les initiales de l'utilisateur pour l'avatar
     const getInitials = (name: string) => {
         if (!name) return "UN"
@@ -44,15 +44,14 @@ function UserMenu() {
         if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase()
         return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase()
     }
-    
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <button className="focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 rounded-full" aria-label="Menu utilisateur">
-                    <Avatar className="h-9 w-9 border border-zinc-700 cursor-pointer hover:border-zinc-500 transition-colors">
-                        <AvatarImage src="/avatars/user-avatar.png" alt="Avatar utilisateur" />
-                        <AvatarFallback className="bg-zinc-800 text-zinc-300">{user ? getInitials(user.name) : "UN"}</AvatarFallback>
-                    </Avatar>
+                    <div className="h-9 w-9 flex items-center justify-center rounded-full border border-zinc-700 cursor-pointer hover:border-zinc-500 transition-colors bg-zinc-800">
+                        <User className="h-5 w-5 text-zinc-300" />
+                    </div>
                 </button>
             </DropdownMenuTrigger>
             <AnimatePresence>
@@ -76,35 +75,44 @@ function UserMenu() {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-zinc-800 my-1" />
                         <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
-                            <a href="/admin/settings">
+                            <a href="/account/settings">
                                 <User className="h-4 w-4" />
                                 <span>Profil</span>
                                 <span className="sr-only">Accéder à votre profil</span>
                             </a>
                         </DropdownMenuItem>
-                        {/* Option Tableau de bord pour les éditeurs */}
+                        {/* Option Éditeur pour les éditeurs */}
                         {user?.role === "editor" && (
                             <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
-                                <a href="/admin/dashboard">
+                                <a href="/editor/dashboard">
                                     <LayoutDashboard className="h-4 w-4" />
-                                    <span>Tableau de bord</span>
-                                    <span className="sr-only">Accéder au tableau de bord</span>
+                                    <span>Éditeur</span>
+                                    <span className="sr-only">Accéder à l'éditeur d'articles</span>
                                 </a>
                             </DropdownMenuItem>
                         )}
-                        
+
                         {/* Option Administration pour les admins */}
                         {user?.role === "admin" && (
-                            <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
-                                <a href="/admin">
-                                    <LayoutDashboard className="h-4 w-4" />
-                                    <span>Administration</span>
-                                    <span className="sr-only">Accéder au panneau d'administration</span>
-                                </a>
-                            </DropdownMenuItem>
+                            <>
+                                <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
+                                    <a href="/admin">
+                                        <LayoutDashboard className="h-4 w-4" />
+                                        <span>Administration</span>
+                                        <span className="sr-only">Accéder au panneau d'administration</span>
+                                    </a>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
+                                    <a href="/editor/dashboard">
+                                        <LayoutDashboard className="h-4 w-4" />
+                                        <span>Éditeur d'articles</span>
+                                        <span className="sr-only">Accéder à l'éditeur d'articles</span>
+                                    </a>
+                                </DropdownMenuItem>
+                            </>
                         )}
                         <DropdownMenuSeparator className="bg-zinc-800 my-1" />
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                             onClick={handleLogout}
                             className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-red-400 hover:text-red-300 hover:bg-zinc-800 focus:bg-zinc-800 transition-colors"
                         >
@@ -134,7 +142,7 @@ export function NavBar() {
         setIsRegisterOpen(false)
         setIsLoginOpen(true)
     }
-    
+
     // Fermer les modales après une connexion/inscription réussie
     const handleAuthSuccess = () => {
         setIsLoginOpen(false)

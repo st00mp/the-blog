@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Home, FilePen, Settings, LogOut, LayoutDashboard } from "lucide-react"
 
 import { useAuth } from "@/contexts/AuthContext"
-import { 
+import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
@@ -23,15 +23,15 @@ type Role = 'admin' | 'editor' | 'user'
 
 // Hiérarchie des rôles
 const ROLE_HIERARCHY: Record<Role, number> = {
-  'admin': 3,
-  'editor': 2,
-  'user': 1
+    'admin': 3,
+    'editor': 2,
+    'user': 1
 }
 
 // Vérifie si l'utilisateur a le rôle requis
 const hasRequiredRole = (userRole: Role | undefined, requiredRole: Role): boolean => {
-  if (!userRole) return false
-  return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[requiredRole]
+    if (!userRole) return false
+    return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[requiredRole]
 }
 
 // Structure de navigation
@@ -51,9 +51,9 @@ const adminNavigation = [
         title: "Édition",
         items: [
             {
-                title: "Tableau de bord",
+                title: "Vue d’ensemble",
                 url: "/editor/dashboard",
-                icon: Home,
+                icon: LayoutDashboard,
                 requiredRole: 'editor' as Role
             },
             {
@@ -87,44 +87,43 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
 
     return (
         <Sidebar {...props}>
-            <SidebarContent>
-                {/* Groupes de navigation */}
-                {adminNavigation.map((group) => (
-                    <SidebarGroup key={group.title}>
-                        <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-                        <SidebarGroupContent>
-                            <SidebarMenu>
-                                {group.items.map((item) => {
-                                    // Vérifier si l'utilisateur a le rôle requis pour voir cet élément
-                                    if (!hasRequiredRole(user?.role as Role | undefined, item.requiredRole)) {
-                                        return null;
-                                    }
-                                    
-                                    return (
-                                        <SidebarMenuItem key={item.title}>
-                                            <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                                                <Link href={item.url} className="flex items-center">
-                                                    <item.icon className="mr-2" size={18} />
-                                                    <span>{item.title}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    );
-                                })}
-                            </SidebarMenu>
-                        </SidebarGroupContent>
-                    </SidebarGroup>
-                ))}
+            <div className="px-4 py-6">
+                <SidebarContent className="space-y-6">
+                    {/* Groupes de navigation */}
+                    {adminNavigation.map((group) => (
+                        <SidebarGroup key={group.title}>
+                            <SidebarGroupLabel className="text-zinc-400 text-xs font-medium uppercase tracking-wider">
+                                {group.title}
+                            </SidebarGroupLabel>
+                            <SidebarGroupContent className="mt-2">
+                                <SidebarMenu className="space-y-1">
+                                    {group.items.map((item) => {
+                                        // Vérifier si l'utilisateur a le rôle requis pour voir cet élément
+                                        if (!hasRequiredRole(user?.role as Role | undefined, item.requiredRole)) {
+                                            return null;
+                                        }
 
-            </SidebarContent>
-            <SidebarFooter className="p-4 border-t border-zinc-800">
-                <SidebarMenuButton asChild>
-                    <Link href="/" className="flex items-center text-zinc-400 hover:text-zinc-200">
-                        <LogOut className="mr-2" size={18} />
-                        <span>Retour au site</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarFooter>
+                                        return (
+                                            <SidebarMenuItem key={item.title}>
+                                                <SidebarMenuButton
+                                                    asChild
+                                                    isActive={isActive(item.url)}
+                                                    className="px-3 py-2 rounded-md hover:bg-zinc-800 transition-colors"
+                                                >
+                                                    <Link href={item.url} className="flex items-center">
+                                                        <item.icon className="mr-3" size={18} />
+                                                        <span className="text-sm">{item.title}</span>
+                                                    </Link>
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                        );
+                                    })}
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    ))}
+                </SidebarContent>
+            </div>
         </Sidebar>
     )
 }

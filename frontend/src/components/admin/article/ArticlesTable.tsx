@@ -29,9 +29,10 @@ type Article = {
 type ArticlesTableProps = {
   articles: Article[]
   onDelete: (id: string) => void
+  isDeleting?: boolean
 }
 
-export function AdminArticlesTable({ articles, onDelete }: ArticlesTableProps) {
+export function AdminArticlesTable({ articles, onDelete, isDeleting = false }: ArticlesTableProps) {
   // État pour la confirmation de suppression
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
 
@@ -57,7 +58,7 @@ export function AdminArticlesTable({ articles, onDelete }: ArticlesTableProps) {
   }
 
   return (
-    <div className="relative overflow-x-auto rounded-md">
+    <div className="relative overflow-x-auto">
       <table className="w-full text-sm text-left text-zinc-300">
         <thead className="text-xs uppercase bg-zinc-800 text-zinc-400">
           <tr>
@@ -137,10 +138,11 @@ export function AdminArticlesTable({ articles, onDelete }: ArticlesTableProps) {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-zinc-800" />
                       <DropdownMenuItem
-                        className="cursor-pointer text-red-400 flex items-center gap-2 hover:bg-zinc-800 focus:bg-zinc-800"
-                        onClick={() => handleDeleteRequest(article.id)}
+                        className={`cursor-pointer ${isDeleting ? 'opacity-50 cursor-not-allowed' : 'text-red-400 hover:bg-zinc-800'}`}
+                        onClick={() => !isDeleting && handleDeleteRequest(article.id)}
+                        disabled={isDeleting}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 mr-2" />
                         <span>Supprimer</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
