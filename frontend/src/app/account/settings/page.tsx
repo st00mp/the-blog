@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
-import { Save, Upload, KeyRound, Bell, Settings } from "lucide-react";
+import { Save, Upload, KeyRound, Bell, Settings, User } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -170,7 +170,7 @@ export default function SettingsPage() {
                     <AccordionItem value="profile" className="border border-zinc-800 rounded-md bg-zinc-900">
                         <AccordionTrigger className="px-5 py-4 hover:bg-zinc-800/50">
                             <div className="flex items-center">
-                                <Settings className="mr-2 h-5 w-5" />
+                                <User className="mr-2 h-5 w-5" />
                                 <span>Profil</span>
                             </div>
                         </AccordionTrigger>

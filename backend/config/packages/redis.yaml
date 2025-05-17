@@ -1,0 +1,14 @@
+parameters:
+    redis_dsn: '%env(REDIS_URL)%'
+
+services:
+    # Configuration du client Redis via Predis
+    redis_client:
+        class: Predis\Client
+        arguments: ['%redis_dsn%']
+        public: true
+
+    # Configuration du gestionnaire de session Redis
+    session.handler.redis:
+        class: Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler
+        arguments: ['@redis_client']

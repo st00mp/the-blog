@@ -56,7 +56,7 @@ export default function AdminPage() {
     <RouteGuard requireAuth={true} requireRole="admin">
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Administration</h1>
+          <h1 className="text-2xl font-bold text-white">Tableau de bord</h1>
           <p className="text-zinc-400 mt-1">Gestion des utilisateurs et des paramètres</p>
         </div>
 

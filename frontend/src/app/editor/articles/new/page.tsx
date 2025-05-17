@@ -170,27 +170,33 @@ export default function NewArticlePage() {
     return (
         <div className="space-y-6">
             {/* En-tête */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-white">Nouvel article</h1>
-                    <p className="text-zinc-400 mt-1">Créez et publiez un nouvel article</p>
+            <div className="space-y-2 mb-6">
+                <h1 className="text-2xl font-bold text-white">Nouvel article</h1>
+                <p className="text-zinc-400">Créez et publiez un nouvel article</p>
+                
+                {/* Ligne d'informations */}
+                <div className="flex flex-wrap items-center gap-4 pt-2 text-sm text-zinc-400 border-t border-zinc-800">
+                    <div className="flex items-center gap-2 bg-zinc-800/50 border border-zinc-700 rounded px-3 py-1.5">
+                        <span>Catégorie</span>
+                        <ChevronDown className="h-4 w-4" />
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                        <span className="text-zinc-500">Auteur :</span>
+                        <span className="font-medium text-white">{user?.name}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                        <span className="text-zinc-500">Date de création :</span>
+                        <span className="text-zinc-300">auto</span>
+                    </div>
                 </div>
             </div>
 
             {/* Carte principale */}
             <Card className="bg-zinc-900 border border-zinc-800 overflow-hidden">
                 <CardContent className="px-6 py-6">
-                    {/* Badge auteur */}
-            <div className="flex justify-end mb-6">
-                <div className="inline-flex items-center gap-2 bg-zinc-800/50 border border-zinc-700 rounded-full px-3 py-1.5 text-sm text-zinc-300">
-                    <div className="flex items-center justify-center h-6 w-6 rounded-full bg-blue-700/50 text-blue-300">
-                        <User className="h-3.5 w-3.5" />
-                    </div>
-                    <span className="font-medium">{user?.name}</span>
-                </div>
-            </div>
-
-            {/* Section : Choix de la catégorie */}
+                    {/* Section : Choix de la catégorie */}
                     <ArticleSection title="Catégorie de l'article" tooltip="Classer cet article dans une thématique">
                         <div className="relative">
                             <select

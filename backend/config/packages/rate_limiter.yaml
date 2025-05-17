@@ -1,0 +1,4 @@
+framework:
+    rate_limiter:
+        # La configuration par défaut du login throttling est utilisée
+        # via les paramètres max_attempts et interval dans security.yaml

@@ -1,9 +1,18 @@
 # see https://symfony.com/doc/current/reference/configuration/framework.html
 framework:
     secret: '%env(APP_SECRET)%'
+    #csrf_protection: true
+    http_method_override: true
 
-    # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    # Configuration des sessions
+    session:
+        handler_id: 'session.handler.redis'
+        cookie_secure: auto   # HTTPS en prod, HTTP en dev
+        cookie_samesite: lax
+    
+    # Configuration du cache
+    cache:
+        prefix_seed: 'app_'
 
     #esi: true
     #fragments: true

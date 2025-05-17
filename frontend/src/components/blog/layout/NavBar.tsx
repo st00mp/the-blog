@@ -11,7 +11,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, LayoutDashboard, LogOut } from "lucide-react"
+import { User, LayoutDashboard, LogOut, Edit } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { LoginForm } from "@/components/login-form"
@@ -74,43 +74,37 @@ function UserMenu() {
                             <div className="text-xs text-zinc-500">{user?.email}</div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-zinc-800 my-1" />
-                        <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
-                            <a href="/account/settings">
-                                <User className="h-4 w-4" />
-                                <span>Profil</span>
-                                <span className="sr-only">Accéder à votre profil</span>
-                            </a>
-                        </DropdownMenuItem>
-                        {/* Option Éditeur pour les éditeurs */}
-                        {user?.role === "editor" && (
+
+                        {/* Option Administration pour les admins */}
+                        {user?.role === "admin" && (
                             <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
-                                <a href="/editor/dashboard">
+                                <a href="/admin">
                                     <LayoutDashboard className="h-4 w-4" />
-                                    <span>Éditeur</span>
-                                    <span className="sr-only">Accéder à l'éditeur d'articles</span>
+                                    <span>Administration</span>
+                                    <span className="sr-only">Accéder au panneau d'administration</span>
                                 </a>
                             </DropdownMenuItem>
                         )}
 
-                        {/* Option Administration pour les admins */}
-                        {user?.role === "admin" && (
-                            <>
-                                <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
-                                    <a href="/admin">
-                                        <LayoutDashboard className="h-4 w-4" />
-                                        <span>Administration</span>
-                                        <span className="sr-only">Accéder au panneau d'administration</span>
-                                    </a>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
-                                    <a href="/editor/dashboard">
-                                        <LayoutDashboard className="h-4 w-4" />
-                                        <span>Éditeur d'articles</span>
-                                        <span className="sr-only">Accéder à l'éditeur d'articles</span>
-                                    </a>
-                                </DropdownMenuItem>
-                            </>
+                        {/* Option Édition pour les éditeurs et admins */}
+                        {(user?.role === "editor" || user?.role === "admin") && (
+                            <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
+                                <a href="/editor/dashboard">
+                                    <Edit className="h-4 w-4" />
+                                    <span>Édition</span>
+                                    <span className="sr-only">Accéder à l'interface d'édition</span>
+                                </a>
+                            </DropdownMenuItem>
                         )}
+
+                        {/* Option Compte pour tous les utilisateurs connectés */}
+                        <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
+                            <a href="/account/settings">
+                                <User className="h-4 w-4" />
+                                <span>Compte</span>
+                                <span className="sr-only">Accéder à votre compte</span>
+                            </a>
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-zinc-800 my-1" />
                         <DropdownMenuItem
                             onClick={handleLogout}

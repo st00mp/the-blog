@@ -67,8 +67,19 @@ services:
       - symfony-backend
       - db
 
+  redis:
+    image: redis:7-alpine
+    container_name: the-blog-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
+
 volumes:
   mysql_data:
   symfony_code:
+  redis_data:
 
 
