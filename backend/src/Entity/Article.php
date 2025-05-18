@@ -15,6 +15,14 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\HasLifecycleCallbacks]
 class Article
 {
+    // Définition des constantes pour les statuts d'article
+    public const STATUS_DRAFT = 0;
+    public const STATUS_PUBLISHED = 1;
+    
+    public const STATUSES = [
+        'draft' => self::STATUS_DRAFT,
+        'published' => self::STATUS_PUBLISHED
+    ];
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -99,6 +107,10 @@ class Article
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['article:list', 'article:detail'])]
     private ?User $author = null;
+
+    #[ORM\Column(type: 'smallint')]
+    #[Groups(['article:list', 'article:detail'])]
+    private int $status = self::STATUS_PUBLISHED; // Par défaut, les articles sont publiés
 
     /**
      * @var Collection<int, Comment>
@@ -199,10 +211,39 @@ class Article
         return $this->quote;
     }
 
-    public function setQuote(?string $quote): static
+    public function setQuote(?string $quote): self
     {
         $this->quote = $quote;
 
+        return $this;
+    }
+    
+    public function getStatus(): int
+    {
+        return $this->status;
+    }
+    
+    public function setStatus(int $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+    
+    public function getStatusAsString(): string
+    {
+        return $this->status === self::STATUS_PUBLISHED ? 'published' : 'draft';
+    }
+    
+    public function setStatusFromString(string $statusString): self
+    {
+        $statusString = strtolower(trim($statusString));
+        if ($statusString === 'published') {
+            $this->status = self::STATUS_PUBLISHED;
+        } else {
+            $this->status = self::STATUS_DRAFT;
+        }
+        
         return $this;
     }
 

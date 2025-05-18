@@ -30,24 +30,26 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false }: A
   // État pour la confirmation de suppression
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
 
-  // Formater la date pour l'affichage en gérant les erreurs potentielles
-  const formatDate = (dateString: string) => {
+  // Formater la date pour l'affichage
+  const formatDate = (dateString: string | undefined): string => {
     try {
       // Vérification si la date est au format créé par notre backend
       if (dateString && dateString.length > 0) {
+        console.log(`Tentative de formatage de date: ${dateString}`);
         const date = new Date(dateString)
         // Vérifier si la date est valide
         if (!isNaN(date.getTime())) {
           return format(date, "dd MMM yyyy", { locale: fr })
         }
       }
+      console.log(`Date invalide ou manquante: ${dateString}`);
       return "Date inconnue"
     } catch (error) {
       console.error("Erreur de formatage de date:", error, dateString)
       return "Date inconnue"
     }
   }
-  
+
   // Récupérer l'extrait de l'article (utilisant intro si disponible)
   const getExcerpt = (article: Article): string => {
     return article.intro || ""
@@ -98,7 +100,10 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false }: A
                       : "bg-amber-900/30 text-amber-400 hover:bg-amber-900/40"
                   }
                 >
-                  {article.status === "published" ? "Publié" : "Brouillon"}
+                  <div className="flex items-center">
+                    <span className={`w-2 h-2 rounded-full mr-2 ${article.status === "published" ? "bg-green-500" : "bg-amber-500"}`}></span>
+                    {article.status === "published" ? "Publié" : "Brouillon"}
+                  </div>
                 </Badge>
               </td>
               <td className="px-6 py-4 text-right">

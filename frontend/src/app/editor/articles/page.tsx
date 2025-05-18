@@ -86,12 +86,29 @@ export default function ArticlesPage() {
   // Fonction pour filtrer les articles
   const filteredArticles = useMemo(() => {
     return articles.filter(article => {
+      // Recherche dans le titre et l'intro
       const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (article.intro ? article.intro.toLowerCase().includes(searchTerm.toLowerCase()) : false);
+        
+      // Comparaison de statut ("all", "published", ou "draft")
       const matchesStatus = statusFilter === "all" || article.status === statusFilter;
+      
       return matchesSearch && matchesStatus;
     });
   }, [articles, searchTerm, statusFilter]);
+  
+  // Console log pour déboguer les données reçues par le frontend
+  useEffect(() => {
+    if (!isLoading && articles.length > 0) {
+      console.log('Articles chargés avec statuts:', 
+        articles.map(a => ({ 
+          id: a.id, 
+          title: a.title, 
+          status: a.status, 
+          createdAt: a.createdAt 
+        })));
+    }
+  }, [articles, isLoading]);
 
   // Fonction pour réinitialiser les filtres
   const resetFilters = () => {
