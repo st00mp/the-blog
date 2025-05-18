@@ -17,7 +17,7 @@ class ArticleRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Article::class);
     }
-    
+
     /**
      * Recherche d'articles avec filtres et pagination
      * 
@@ -32,24 +32,24 @@ class ArticleRepository extends ServiceEntityRepository
         // Valider les paramètres de pagination
         $page = max(1, $page);
         $limit = max(1, $limit);
-        
+
         // Créer la requête de base avec jointure sur la catégorie
         $qb = $this->createBaseQueryBuilder();
-        
+
         // Ajouter les filtres si nécessaire
         $this->addSearchFilter($qb, $search);
         $this->addCategoryFilter($qb, $categoryId);
-        
+
         // Appliquer la pagination
         $qb->setFirstResult(($page - 1) * $limit)
-           ->setMaxResults($limit);
-        
+            ->setMaxResults($limit);
+
         // Exécuter la requête avec Paginator pour obtenir le nombre total
         $paginator = new Paginator($qb->getQuery());
         $total = count($paginator);
         $totalPages = (int) ceil($total / $limit);
         $articles = iterator_to_array($paginator->getIterator());
-        
+
         // Retourner les résultats et les métadonnées
         return [
             'data' => $articles,
@@ -61,7 +61,7 @@ class ArticleRepository extends ServiceEntityRepository
             ],
         ];
     }
-    
+
     /**
      * Crée une requête de base pour les articles
      */
@@ -69,10 +69,12 @@ class ArticleRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('a')
             ->addSelect('c') // Sélectionne aussi la catégorie pour éviter les requêtes N+1
+            ->addSelect('u') // Sélectionne aussi l'auteur pour éviter les requêtes N+1
             ->leftJoin('a.category', 'c')
+            ->leftJoin('a.author', 'u')
             ->orderBy('a.updated_at', 'DESC');
     }
-    
+
     /**
      * Ajoute un filtre de recherche à la requête
      */
@@ -80,10 +82,10 @@ class ArticleRepository extends ServiceEntityRepository
     {
         if ($search !== '') {
             $qb->andWhere('a.title LIKE :kw OR a.intro LIKE :kw')
-               ->setParameter('kw', '%' . $search . '%');
+                ->setParameter('kw', '%' . $search . '%');
         }
     }
-    
+
     /**
      * Ajoute un filtre par catégorie à la requête
      */
@@ -91,10 +93,10 @@ class ArticleRepository extends ServiceEntityRepository
     {
         if ($categoryId > 0) {
             $qb->andWhere('c.id = :cat')
-               ->setParameter('cat', $categoryId);
+                ->setParameter('cat', $categoryId);
         }
     }
-    
+
     /**
      * Trouve un article par son slug avec ses relations
      */

@@ -37,7 +37,10 @@ final class ArticleController extends AbstractController
         $result = $repo->findWithFilters($search, $categoryId, $page, $limit);
 
         // 3. Envoi de la réponse JSON avec les articles et les métadonnées
-        return $this->json($result, 200, [], ['groups' => 'article:list']);
+        return $this->json($result, 200, [], [
+            'groups' => ['article:list', 'article:detail'],
+            'json_encode_options' => JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
+        ]);
     }
 
     // Endpoint pour récupérer le détail d’un article par son slug
@@ -56,13 +59,12 @@ final class ArticleController extends AbstractController
     // POST /api/articles
     #[Route('/api/articles', name: 'api_article_create', methods: ['POST'])]
     public function create(
-        Request $request, 
-        EntityManagerInterface $em, 
+        Request $request,
+        EntityManagerInterface $em,
         ValidatorInterface $validator,
         CategoryRepository $categoryRepo,
         UserRepository $userRepo
-    ): JsonResponse
-    {
+    ): JsonResponse {
         // Tentative de création d'un article à partir des données reçues
         try {
             $data = json_decode($request->getContent(), true);
@@ -80,7 +82,7 @@ final class ArticleController extends AbstractController
             if (!$categoryId) {
                 return $this->json(['error' => 'Catégorie manquante'], 400);
             }
-            
+
             $category = $categoryRepo->find($categoryId);
             if (!$category) {
                 return $this->json(['error' => 'Catégorie invalide'], 400);
@@ -90,59 +92,59 @@ final class ArticleController extends AbstractController
             $article = new Article();
             $article->setTitle(trim($data['title']));
             $article->setCategory($category);
-            
+
             // Champs optionnels avec validation
             if (isset($data['metaTitle'])) {
                 $article->setMetaTitle(trim($data['metaTitle']));
             }
-            
+
             if (isset($data['metaDescription'])) {
                 $article->setMetaDescription(trim($data['metaDescription']));
             }
-            
+
             if (isset($data['intro'])) {
                 $article->setIntro(trim($data['intro']));
             }
-            
+
             // Validation du format des steps
             if (isset($data['steps']) && is_array($data['steps'])) {
                 $article->setSteps($data['steps']);
             } else {
                 $article->setSteps([]);
             }
-            
+
             if (isset($data['quote'])) {
                 $article->setQuote(trim($data['quote']));
             }
-            
+
             if (isset($data['conclusionTitle'])) {
                 $article->setConclusionTitle(trim($data['conclusionTitle']));
             }
-            
+
             if (isset($data['conclusionDescription']) && is_array($data['conclusionDescription'])) {
                 $article->setConclusionDescription($data['conclusionDescription']);
             }
-            
+
             if (isset($data['ctaDescription'])) {
                 $article->setCtaDescription(trim($data['ctaDescription']));
             }
-            
+
             if (isset($data['ctaButton'])) {
                 $article->setCtaButton(trim($data['ctaButton']));
             }
 
             // 3. Récupération de l'utilisateur connecté
             $user = $this->getUser();
-            
+
             if (!$user) {
                 return $this->json(['error' => 'Vous devez être connecté pour créer un article'], 401);
             }
-            
+
             // Vérification que l'utilisateur est bien une instance de User
             if (!$user instanceof \App\Entity\User) {
                 return $this->json(['error' => 'Utilisateur invalide'], 400);
             }
-            
+
             $article->setAuthor($user);
 
             // 4. Validation de l'entité
@@ -160,9 +162,9 @@ final class ArticleController extends AbstractController
             $em->flush();
 
             return $this->json(
-                ['success' => true, 'id' => $article->getId(), 'slug' => $article->getSlug()], 
-                201, 
-                [], 
+                ['success' => true, 'id' => $article->getId(), 'slug' => $article->getSlug()],
+                201,
+                [],
                 ['groups' => 'article:detail']
             );
         } catch (Throwable $e) {
@@ -180,31 +182,30 @@ final class ArticleController extends AbstractController
     #[Route('/api/articles/{slug}', name: 'api_article_update', methods: ['PUT'])]
     public function update(
         string $slug,
-        Request $request, 
-        EntityManagerInterface $em, 
+        Request $request,
+        EntityManagerInterface $em,
         ArticleRepository $articleRepo,
         CategoryRepository $categoryRepo,
         ValidatorInterface $validator
-    ): JsonResponse
-    {
+    ): JsonResponse {
         try {
             // 1. Récupération de l'article existant
             $article = $articleRepo->findOneBy(['slug' => $slug]);
             if (!$article) {
                 return $this->json(['error' => 'Article non trouvé'], 404);
             }
-            
+
             // 2. Récupération et validation des données
             $data = json_decode($request->getContent(), true);
             if (!$data) {
                 return $this->json(['error' => 'Données JSON invalides'], 400);
             }
-            
+
             // 3. Mise à jour des champs modifiables
             if (isset($data['title']) && !empty(trim($data['title']))) {
                 $article->setTitle(trim($data['title']));
             }
-            
+
             // Mise à jour de la catégorie si fournie
             if (isset($data['category'])) {
                 $category = $categoryRepo->find($data['category']);
@@ -213,44 +214,44 @@ final class ArticleController extends AbstractController
                 }
                 $article->setCategory($category);
             }
-            
+
             // Mise à jour des autres champs
             if (isset($data['metaTitle'])) {
                 $article->setMetaTitle(trim($data['metaTitle']));
             }
-            
+
             if (isset($data['metaDescription'])) {
                 $article->setMetaDescription(trim($data['metaDescription']));
             }
-            
+
             if (isset($data['intro'])) {
                 $article->setIntro(trim($data['intro']));
             }
-            
+
             if (isset($data['steps']) && is_array($data['steps'])) {
                 $article->setSteps($data['steps']);
             }
-            
+
             if (isset($data['quote'])) {
                 $article->setQuote(trim($data['quote']));
             }
-            
+
             if (isset($data['conclusionTitle'])) {
                 $article->setConclusionTitle(trim($data['conclusionTitle']));
             }
-            
+
             if (isset($data['conclusionDescription']) && is_array($data['conclusionDescription'])) {
                 $article->setConclusionDescription($data['conclusionDescription']);
             }
-            
+
             if (isset($data['ctaDescription'])) {
                 $article->setCtaDescription(trim($data['ctaDescription']));
             }
-            
+
             if (isset($data['ctaButton'])) {
                 $article->setCtaButton(trim($data['ctaButton']));
             }
-            
+
             // 4. Validation de l'entité mise à jour
             $errors = $validator->validate($article);
             if (count($errors) > 0) {
@@ -260,17 +261,16 @@ final class ArticleController extends AbstractController
                 }
                 return $this->json(['error' => 'Validation failed', 'details' => $errorMessages], 400);
             }
-            
+
             // 5. Persistance des modifications
             $em->flush();
-            
+
             return $this->json(
                 ['success' => true, 'id' => $article->getId(), 'slug' => $article->getSlug()],
                 200,
                 [],
                 ['groups' => 'article:detail']
             );
-            
         } catch (Throwable $e) {
             // Gestion des erreurs serveur
             $message = $_ENV['APP_ENV'] === 'dev' ? $e->getMessage() : 'Une erreur est survenue';
@@ -280,7 +280,7 @@ final class ArticleController extends AbstractController
             ], 500);
         }
     }
-    
+
     // Endpoint pour supprimer un article
     // DELETE /api/articles/{slug}
     #[Route('/api/articles/{slug}', name: 'api_article_delete', methods: ['DELETE'])]
@@ -288,21 +288,19 @@ final class ArticleController extends AbstractController
         string $slug,
         ArticleRepository $articleRepo,
         EntityManagerInterface $em
-    ): JsonResponse
-    {
+    ): JsonResponse {
         try {
             // 1. Récupération de l'article à supprimer
             $article = $articleRepo->findOneBy(['slug' => $slug]);
             if (!$article) {
                 return $this->json(['error' => 'Article non trouvé'], 404);
             }
-            
+
             // 2. Suppression de l'article
             $em->remove($article);
             $em->flush();
-            
+
             return $this->json(['success' => true], 200);
-            
         } catch (Throwable $e) {
             // Gestion des erreurs serveur
             $message = $_ENV['APP_ENV'] === 'dev' ? $e->getMessage() : 'Une erreur est survenue';

@@ -16,7 +16,7 @@ type Article = {
     category: Category
     updated_at: string
     created_at: string
-    author: { name: string }
+    author: { id: number, name: string }
 }
 
 export default async function BlogPage({

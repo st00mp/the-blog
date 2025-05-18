@@ -22,7 +22,7 @@ type Article = {
     category: Category
     updated_at: string
     created_at: string
-    author: { name: string }
+    author: { id: number, name: string }
 }
 
 // Composant principal en rendu côté client

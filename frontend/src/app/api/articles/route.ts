@@ -16,13 +16,34 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-    const cookie = request.headers.get('cookie');
-    const res = await fetch('http://nginx/api/articles', {
-        headers: {
-            ...(cookie ? { cookie } : {}),
-        },
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search');
+    const category = searchParams.get('category');
+    const page = searchParams.get('page') || '1';
+    
+    let url = new URL('http://nginx/api/articles');
+    if (search) url.searchParams.append('search', search);
+    if (category) url.searchParams.append('category', category);
+    url.searchParams.append('page', page);
+    
+    const res = await fetch(url.toString(), {
         next: { revalidate: 60 },
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
     });
+
+    if (!res.ok) {
+        return new Response(JSON.stringify({ error: 'Failed to fetch articles' }), { 
+            status: res.status,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
     const data = await res.json();
-    return new Response(JSON.stringify(data), { status: res.status });
+    return new Response(JSON.stringify(data), { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
 }

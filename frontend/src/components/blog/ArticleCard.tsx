@@ -25,6 +25,7 @@ type Article = {
         name: string
     }
     author: {
+        id: number
         name: string
     }
     created_at: string
@@ -52,7 +53,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
 
                 {/* Extrait */}
                 <p className="text-sm text-white/70 leading-relaxed mb-4 line-clamp-3">
-                    {article.intro}
+                    {article.intro || "Aucun extrait disponible"}
                 </p>
 
                 {/* Auteur */}
