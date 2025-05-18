@@ -17,14 +17,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-// Types pour les articles
-type Article = {
-  id: string
-  title: string
-  createdAt: string
-  status: "published" | "draft"
-  excerpt: string
-}
+// Import du type Article depuis notre service
+import { Article } from "@/services/articleService"
 
 type ArticlesTableProps = {
   articles: Article[]
@@ -36,9 +30,27 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false }: A
   // État pour la confirmation de suppression
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
 
-  // Formater la date pour l'affichage
+  // Formater la date pour l'affichage en gérant les erreurs potentielles
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "dd MMM yyyy", { locale: fr })
+    try {
+      // Vérification si la date est au format créé par notre backend
+      if (dateString && dateString.length > 0) {
+        const date = new Date(dateString)
+        // Vérifier si la date est valide
+        if (!isNaN(date.getTime())) {
+          return format(date, "dd MMM yyyy", { locale: fr })
+        }
+      }
+      return "Date inconnue"
+    } catch (error) {
+      console.error("Erreur de formatage de date:", error, dateString)
+      return "Date inconnue"
+    }
+  }
+  
+  // Récupérer l'extrait de l'article (utilisant intro si disponible)
+  const getExcerpt = (article: Article): string => {
+    return article.intro || ""
   }
 
   // Gérer la demande de suppression
@@ -74,7 +86,7 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false }: A
               <td className="px-6 py-4 font-medium whitespace-nowrap">
                 <div className="flex flex-col">
                   <span className="text-zinc-200">{article.title}</span>
-                  <span className="text-xs text-zinc-400 mt-1 line-clamp-1">{article.excerpt}</span>
+                  <span className="text-xs text-zinc-400 mt-1 line-clamp-1">{getExcerpt(article)}</span>
                 </div>
               </td>
               <td className="px-6 py-4">{formatDate(article.createdAt)}</td>

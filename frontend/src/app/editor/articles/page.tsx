@@ -15,104 +15,79 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useToast } from "@/components/ui/use-toast"
+import { useAuth } from "@/contexts/AuthContext"
+import { Article, getMyArticles, deleteArticle } from "@/services/articleService"
 
-// Type pour les articles
-type Article = {
-  id: string
-  title: string
-  createdAt: string
-  status: "published" | "draft"
-  excerpt: string
-}
-
-// Données fictives pour simuler des articles
-const MOCK_ARTICLES: Article[] = [
-  {
-    id: "1",
-    title: "Introduction à Next.js 13",
-    createdAt: "2025-04-20T10:00:00Z",
-    status: "published",
-    excerpt: "Découvrez les nouvelles fonctionnalités de Next.js 13...",
-  },
-  {
-    id: "2",
-    title: "Utiliser Tailwind CSS avec React",
-    createdAt: "2025-04-18T14:30:00Z",
-    status: "published",
-    excerpt: "Comment intégrer efficacement Tailwind CSS...",
-  },
-  {
-    id: "3",
-    title: "Les avantages de TypeScript",
-    createdAt: "2025-04-15T09:15:00Z",
-    status: "draft",
-    excerpt: "Pourquoi TypeScript devrait être votre langage de choix...",
-  },
-  {
-    id: "4",
-    title: "Les bases de l'API REST",
-    createdAt: "2025-04-10T16:45:00Z",
-    status: "draft",
-    excerpt: "Comprendre les principes fondamentaux des API REST...",
-  },
-  {
-    id: "5",
-    title: "Déployer votre application sur Vercel",
-    createdAt: "2025-04-05T11:20:00Z",
-    status: "published",
-    excerpt: "Un guide étape par étape pour déployer votre application Next.js...",
-  },
-  {
-    id: "6",
-    title: "Optimisation des performances React",
-    createdAt: "2025-03-28T13:40:00Z",
-    status: "published",
-    excerpt: "Techniques avancées pour améliorer les performances de vos applications React...",
-  },
-  {
-    id: "7",
-    title: "Introduction à GraphQL",
-    createdAt: "2025-03-22T09:30:00Z",
-    status: "draft",
-    excerpt: "Pourquoi GraphQL est une alternative intéressante aux API REST traditionnelles...",
-  },
-  {
-    id: "8",
-    title: "Gestion d'état avec Redux",
-    createdAt: "2025-03-15T16:20:00Z",
-    status: "published",
-    excerpt: "Comment implémenter Redux dans vos applications React pour une gestion d'état efficace...",
-  },
-];
+// Type Article est maintenant importé depuis articleService.ts
 
 export default function ArticlesPage() {
-  const [articles, setArticles] = useState<Article[]>(MOCK_ARTICLES);
+  const { toast } = useToast();
+  const { user } = useAuth(); // Récupérer l'utilisateur connecté
+  const [articles, setArticles] = useState<Article[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
 
-  // Simuler un chargement
+  // Charger les articles au montage et quand les filtres changent
   useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+    const loadArticles = async () => {
+      try {
+        setIsLoading(true);
+        // Récupérer l'ID de l'utilisateur connecté et le passer au service
+        const currentUserId = user?.id || null;
+        const response = await getMyArticles(searchTerm, statusFilter, currentUserId);
+        setArticles(response.data);
+        setMeta(response.meta);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de charger vos articles."
+        });
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Fonction pour supprimer un article avec feedback visuel
+    // Ne charger les articles que si l'utilisateur est connecté
+    if (user) {
+      loadArticles();
+    }
+  }, [searchTerm, statusFilter, toast, user]);
+
+  // Fonction pour supprimer un article
   const handleDeleteArticle = async (id: string) => {
-    setDeletingId(id);
-    // Simuler une requête API
-    await new Promise(resolve => setTimeout(resolve, 800));
-    setArticles(articles.filter(article => article.id !== id));
-    setDeletingId(null);
+    try {
+      setDeletingId(id);
+      await deleteArticle(id);
+      setArticles(articles.filter(article => article.id !== id));
+      
+      toast({
+        title: "Succès",
+        description: "L'article a été supprimé",
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de supprimer l'article."
+      });
+      console.error(error);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   // Fonction pour filtrer les articles
   const filteredArticles = useMemo(() => {
     return articles.filter(article => {
       const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
+        (article.intro ? article.intro.toLowerCase().includes(searchTerm.toLowerCase()) : false);
       const matchesStatus = statusFilter === "all" || article.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -148,7 +123,7 @@ export default function ArticlesPage() {
             <div className="flex items-center space-x-2">
               <h2 className="text-lg font-semibold text-white">Liste des articles</h2>
               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-800/50 text-zinc-300 border border-zinc-700">
-                {filteredArticles.length} {filteredArticles.length <= 1 ? 'article' : 'articles'}
+                {meta.total} {meta.total <= 1 ? 'article' : 'articles'}
               </span>
             </div>
 
