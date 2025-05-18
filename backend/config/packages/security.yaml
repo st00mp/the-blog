@@ -44,6 +44,7 @@ security:
     - { path: ^/api/categories, methods: [GET], roles: PUBLIC_ACCESS }
     - { path: ^/api/articles, methods: [GET], roles: PUBLIC_ACCESS }
     - { path: ^/api/articles, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/api/users, roles: ROLE_ADMIN }
     - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
