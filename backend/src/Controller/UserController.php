@@ -56,10 +56,19 @@ class UserController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         
+        // Vérifier si le rôle est valide
         if (!isset($data['role']) || !in_array($data['role'], User::ROLES)) {
             return new JsonResponse(
                 ['error' => 'Rôle invalide. Les valeurs autorisées sont: ' . implode(', ', User::ROLES)],
                 Response::HTTP_BAD_REQUEST
+            );
+        }
+        
+        // Sécurité: empêcher la modification du rôle d'un admin
+        if ($user->getRole() === 'admin') {
+            return new JsonResponse(
+                ['error' => 'Pour des raisons de sécurité, il n\'est pas possible de modifier le rôle d\'un administrateur'],
+                Response::HTTP_FORBIDDEN
             );
         }
         

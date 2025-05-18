@@ -18,6 +18,7 @@ import { LoginForm } from "@/components/login-form"
 import { RegisterForm } from "@/components/register-form"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 const navItems = [
     { name: "Accueil", href: "/" },
@@ -143,7 +144,7 @@ export function NavBar() {
         setIsLoginOpen(false)
         setIsRegisterOpen(false)
     }
-    
+
     // Fonction pour basculer vers la modale de connexion après inscription
     const handleSwitchToLogin = () => {
         // Fermer d'abord la modale d'inscription
@@ -157,8 +158,12 @@ export function NavBar() {
     return (
         <header className="w-full border-b border-zinc-800">
             <div className="w-full px-6 sm:px-12 py-3 flex items-center justify-between">
-                <h1 className="text-white text-xl font-bold">TechBlog</h1>
-
+                <Link
+                    href="/blog"
+                    className="text-white text-xl font-bold hover:underline"
+                >
+                    TechBlog
+                </Link>
                 <div className="flex items-center space-x-3">
                     {isLoading ? (
                         <div className="w-24 h-9 bg-zinc-800 animate-pulse rounded-md"></div>

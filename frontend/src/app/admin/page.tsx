@@ -227,22 +227,29 @@ export default function AdminPage() {
                             <td className="px-6 py-4">{u.name}</td>
                             <td className="px-6 py-4 text-zinc-400">{u.email}</td>
                             <td className="px-6 py-4">
-                              <Select
-                                defaultValue={u.role}
-                                onValueChange={val => handleRoleChange(u.id, val)}
-                                disabled={updatingRole === u.id}
-                              >
-                                <SelectTrigger
-                                  className="w-full bg-[#18181B] border border-zinc-700"
+                              {u.role === "admin" ? (
+                                <div className="flex items-center space-x-1 text-sm px-2 py-1.5 bg-zinc-800/40 border border-zinc-700 rounded text-zinc-300">
+                                  <span className="font-medium">Admin</span>
+                                  <span className="text-xs text-zinc-500"> (Protégé)</span>
+                                </div>
+                              ) : (
+                                <Select
+                                  defaultValue={u.role}
+                                  onValueChange={val => handleRoleChange(u.id, val)}
+                                  disabled={updatingRole === u.id}
                                 >
-                                  <SelectValue placeholder="Rôle" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-zinc-900">
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="editor">Éditeur</SelectItem>
-                                  <SelectItem value="user">Utilisateur</SelectItem>
-                                </SelectContent>
-                              </Select>
+                                  <SelectTrigger
+                                    className="w-full bg-[#18181B] border border-zinc-700"
+                                  >
+                                    <SelectValue placeholder="Rôle" />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-zinc-900">
+                                    <SelectItem value="admin">Admin</SelectItem>
+                                    <SelectItem value="editor">Éditeur</SelectItem>
+                                    <SelectItem value="user">Utilisateur</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              )}
                             </td>
                             <td className="px-6 py-4 text-zinc-400">
                               {u.lastLogin ? new Date(u.lastLogin).toLocaleString() : 'Jamais connecté'}
