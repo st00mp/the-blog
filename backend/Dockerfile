@@ -1,7 +1,7 @@
 FROM php:8.2-fpm-alpine
 
 # Mise à jour des paquets et installation des dépendances nécessaires
-RUN apk add --no-cache bash curl unzip libpng-dev libjpeg-turbo-dev libwebp-dev oniguruma-dev
+RUN apk add --no-cache bash curl unzip libpng-dev libjpeg-turbo-dev libwebp-dev oniguruma-dev redis
 
 # Installation des extensions PHP nécessaires
 RUN docker-php-ext-install pdo pdo_mysql mbstring gd

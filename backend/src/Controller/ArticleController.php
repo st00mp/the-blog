@@ -131,13 +131,16 @@ final class ArticleController extends AbstractController
                 $article->setCtaButton(trim($data['ctaButton']));
             }
 
-            // 3. Récupération de l'auteur (à adapter selon votre système d'authentification)
-            // Idéalement, récupérer l'utilisateur connecté via Security
-            $userId = $data['author'] ?? 1; // Fallback à l'ID 1 si non spécifié
-            $user = $userRepo->find($userId);
+            // 3. Récupération de l'utilisateur connecté
+            $user = $this->getUser();
             
             if (!$user) {
-                return $this->json(['error' => 'Auteur invalide'], 400);
+                return $this->json(['error' => 'Vous devez être connecté pour créer un article'], 401);
+            }
+            
+            // Vérification que l'utilisateur est bien une instance de User
+            if (!$user instanceof \App\Entity\User) {
+                return $this->json(['error' => 'Utilisateur invalide'], 400);
             }
             
             $article->setAuthor($user);
