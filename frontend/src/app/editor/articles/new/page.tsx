@@ -137,6 +137,7 @@ export default function NewArticlePage() {
             const res = await fetch(`/api/articles`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: 'include',
                 body: JSON.stringify(payload),
             });
 
@@ -173,19 +174,19 @@ export default function NewArticlePage() {
             <div className="space-y-2 mb-6">
                 <h1 className="text-2xl font-bold text-white">Nouvel article</h1>
                 <p className="text-zinc-400">Créez et publiez un nouvel article</p>
-                
+
                 {/* Ligne d'informations */}
                 <div className="flex flex-wrap items-center gap-4 pt-2 text-sm text-zinc-400 border-t border-zinc-800">
                     <div className="flex items-center gap-2 bg-zinc-800/50 border border-zinc-700 rounded px-3 py-1.5">
                         <span>Catégorie</span>
                         <ChevronDown className="h-4 w-4" />
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                         <span className="text-zinc-500">Auteur :</span>
                         <span className="font-medium text-white">{user?.name}</span>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                         <span className="text-zinc-500">Date de création :</span>
                         <span className="text-zinc-300">auto</span>
@@ -364,16 +365,16 @@ export default function NewArticlePage() {
 
                     {/* Boutons de validation */}
                     <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-zinc-800">
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className="border-zinc-700 text-zinc-300 hover:bg-zinc-800/50 hover:text-white"
                             onClick={() => window.history.back()}
                         >
                             Annuler
                         </Button>
-                        <Button 
-                            className="bg-blue-600 hover:bg-blue-700 text-white" 
-                            onClick={handleSubmit} 
+                        <Button
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                            onClick={handleSubmit}
                             disabled={isSaving}
                         >
                             {isSaving ? "Enregistrement..." : "Publier l'article"}
