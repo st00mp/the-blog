@@ -72,11 +72,13 @@ export function LoginForm({
       // Si la connexion réussit et qu'une fonction onSuccess est fournie, on l'appelle
       // Sinon, on redirige vers la page des paramètres du compte
       if (onSuccess) {
-        onSuccess()
+        onSuccess() // Pour la modale
       } else {
-        router.push("/account/settings")
-        router.refresh() // Pour s'assurer que les données utilisateur sont à jour
+        const redirectTo = searchParams?.get('redirect') || '/account/settings'
+        router.push(redirectTo)
+        router.refresh()
       }
+
     } catch (err) {
       console.error("Échec lors de l'appel fetch vers l'API login")
       const errorMessage = err instanceof Error ? err.message : "Une erreur est survenue lors de la connexion"
@@ -88,30 +90,25 @@ export function LoginForm({
   }
 
   return (
-    <div className={cn("w-full max-w-md mx-auto p-6 bg-zinc-900 rounded-lg shadow-lg", className)} {...props}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-2 text-center">
-          <h2 className="text-2xl font-bold text-white">Connexion</h2>
-          <p className="text-sm text-zinc-400">
-            Entrez vos identifiants pour accéder à votre compte
-          </p>
+    <div className={cn("grid gap-6 w-full max-w-md mx-auto p-6", className)} {...props}>
+
+
+      {registered && (
+        <div className="p-3 text-sm text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400 rounded-md">
+          Inscription réussie ! Vous pouvez maintenant vous connecter.
         </div>
+      )}
 
-        {registered && (
-          <div className="p-3 text-sm text-green-400 bg-green-900/30 rounded-md">
-            Inscription réussie ! Vous pouvez maintenant vous connecter.
-          </div>
-        )}
+      {error && (
+        <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400 rounded-md">
+          {error}
+        </div>
+      )}
 
-        {error && (
-          <div className="p-3 text-sm text-red-400 bg-red-900/30 rounded-md">
-            {error}
-          </div>
-        )}
-
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-zinc-300">
+            <Label htmlFor="email" className="text-sm font-medium leading-none">
               Email
             </Label>
             <Input
@@ -122,77 +119,92 @@ export function LoginForm({
               autoComplete="email"
               autoCorrect="off"
               disabled={isLoading}
-              {...register("email", {
-                required: "L'email est requis",
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Adresse email invalide",
-                },
-              })}
-              className={errors.email ? 'border-red-500' : ''}
+              {...register("email")}
+              className={cn(
+                "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                errors.email && "border-destructive"
+              )}
             />
             {errors.email && (
-              <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
+              <p className="text-sm font-medium text-destructive">
+                {errors.email.message}
+              </p>
             )}
           </div>
-
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-zinc-300">
+              <Label htmlFor="password" className="text-sm font-medium leading-none">
                 Mot de passe
               </Label>
-              <Link
-                href="/forgot-password"
-                className="text-xs text-zinc-400 hover:text-blue-400 transition-colors"
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => router.push('/forgot-password')}
               >
                 Mot de passe oublié ?
-              </Link>
+              </Button>
             </div>
             <Input
               id="password"
+              placeholder="••••••••"
               type="password"
               autoComplete="current-password"
               disabled={isLoading}
-              {...register("password", {
-                required: "Le mot de passe est requis",
-              })}
-              className={errors.password ? 'border-red-500' : ''}
+              {...register("password")}
+              className={cn(
+                "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                errors.password && "border-destructive"
+              )}
             />
             {errors.password && (
-              <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
+              <p className="text-sm font-medium text-destructive">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
-          <Button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            disabled={isLoading}
-          >
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Se connecter
           </Button>
         </div>
       </form>
 
-      <div className="mt-4 text-center text-sm text-zinc-400">
-        <span>Pas encore de compte ? </span>
-        {switchToRegister ? (
-          <button
-            onClick={switchToRegister}
-            className="text-blue-400 hover:text-blue-300 underline underline-offset-4"
-          >
-            S'inscrire
-          </button>
-        ) : (
-          <Link
-            href="/register"
-            className="text-blue-400 hover:text-blue-300 underline underline-offset-4"
-          >
-            S'inscrire
-          </Link>
-        )}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            Ou continuez avec
+          </span>
+        </div>
       </div>
+
+      <Button variant="outline" type="button" disabled={isLoading}>
+        {isLoading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <>
+            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+            </svg>
+            Google
+          </>
+        )}
+      </Button>
+
+      <p className="px-8 text-center text-sm text-muted-foreground">
+        <Button
+          variant="link"
+          className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+          onClick={switchToRegister}
+        >
+          Pas encore de compte ? Créez-en un
+        </Button>
+      </p>
     </div>
   )
 }

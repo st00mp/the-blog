@@ -62,7 +62,7 @@ export default async function BlogPage({
             <div className="max-w-7xl mx-auto px-6 sm:px-10 md:px-16 lg:px-20">
                 <BlogClient
                     initialArticles={rawArticles}
-                    initialCategories={categories}
+                    initialCategories={Array.isArray(categories) ? categories : []}
                     initialSearch={searchParams.search ?? ''}
                 />
             </div>

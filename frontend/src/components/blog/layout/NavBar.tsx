@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User, LayoutDashboard, LogOut, Edit } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LoginForm } from "@/components/login-form"
 import { RegisterForm } from "@/components/register-form"
 import { useAuth } from "@/contexts/AuthContext"
@@ -139,8 +139,19 @@ export function NavBar() {
 
     // Fermer les modales après une connexion/inscription réussie
     const handleAuthSuccess = () => {
+        // Fermer la modale active
         setIsLoginOpen(false)
         setIsRegisterOpen(false)
+    }
+    
+    // Fonction pour basculer vers la modale de connexion après inscription
+    const handleSwitchToLogin = () => {
+        // Fermer d'abord la modale d'inscription
+        setIsRegisterOpen(false)
+        // Puis ouvrir la modale de connexion avec un léger délai
+        setTimeout(() => {
+            setIsLoginOpen(true)
+        }, 100)
     }
 
     return (
@@ -167,7 +178,10 @@ export function NavBar() {
                             {/* Boîte de dialogue de connexion */}
                             <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
                                 <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 p-0 overflow-hidden">
-                                    <div className="p-6">
+                                    <DialogHeader className="border-b border-zinc-800 p-6 pb-4">
+                                        <DialogTitle className="text-xl font-semibold text-white">Connexion</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="p-6 pt-4">
                                         <LoginForm onSuccess={handleAuthSuccess} switchToRegister={switchToRegister} />
                                     </div>
                                 </DialogContent>
@@ -185,8 +199,11 @@ export function NavBar() {
                             {/* Boîte de dialogue d'inscription */}
                             <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
                                 <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 p-0 overflow-hidden">
-                                    <div className="p-6">
-                                        <RegisterForm onSuccess={handleAuthSuccess} switchToLogin={switchToLogin} />
+                                    <DialogHeader className="border-b border-zinc-800 p-6 pb-4">
+                                        <DialogTitle className="text-xl font-semibold text-white">Créer un compte</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="p-6 pt-4">
+                                        <RegisterForm onSuccess={handleAuthSuccess} switchToLogin={handleSwitchToLogin} />
                                     </div>
                                 </DialogContent>
                             </Dialog>
