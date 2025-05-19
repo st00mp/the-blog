@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { MoreHorizontal, Eye, FileEdit, Trash2, FilePlus, Send, FileQuestion, FileMinus } from "lucide-react"
+import { MoreHorizontal, Eye, FileEdit, Trash2, FilePlus, Send, FileQuestion, FileMinus, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/components/ui/use-toast"
 
@@ -52,10 +52,10 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
         // Conversion de la date en tenant compte du fuseau horaire
         // Format de dateString attendu: 2025-05-18T22:30:00+00:00 (format ISO)
         // ou 2025-05-18T22:30:00.000Z (format ISO avec Z pour UTC)
-        
+
         // 1. Convertir en objet Date (qui sera interprété selon le fuseau local)
         const date = new Date(dateString);
-        
+
         // 2. Vérifier si la date est valide
         if (!isNaN(date.getTime())) {
           // 3. Formater avec le locale français
@@ -63,7 +63,7 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
           return format(date, "dd MMM yyyy", { locale: fr });
         }
       }
-      
+
       // En cas de date invalide ou manquante, afficher un message
       return "Date inconnue";
     } catch (error) {
@@ -87,13 +87,13 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
     onDelete(id, slug)
     setDeleteConfirmId(null)
   }
-  
+
   // Changer le statut d'un article (publier ou dépublier) - sans notification
   const handleStatusChange = async (id: string, newStatus: 'published' | 'draft') => {
     try {
       setUpdatingStatusId(id)
       const updatedArticle = await updateArticleStatus(id, newStatus)
-      
+
       // Mettre à jour l'interface utilisateur sans notification
       if (onStatusChange) {
         onStatusChange(updatedArticle)
@@ -103,7 +103,7 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
           window.location.reload()
         }, 500)
       }
-      
+
     } catch (error) {
       console.error("Erreur lors du changement de statut:", error)
       // Afficher une notification uniquement en cas d'erreur
@@ -196,7 +196,7 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
                     >
                       <DropdownMenuLabel className="text-zinc-400">Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator className="bg-zinc-800" />
-                      
+
                       {/* Actions de statut - contextuelles selon l'état de publication */}
                       {article.status === "published" ? (
                         // Actions pour un article publié
@@ -235,7 +235,7 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
                           </DropdownMenuItem>
                         </>
                       )}
-                      
+
                       {/* Actions communes à tous les articles */}
                       <DropdownMenuItem asChild className="cursor-pointer text-zinc-200 flex items-center gap-2 hover:bg-zinc-800">
                         <Link href={`/editor/articles/edit/${article.slug}`}>
@@ -243,6 +243,15 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
                           <span>Modifier</span>
                         </Link>
                       </DropdownMenuItem>
+
+                      {/* Option pour modérer les commentaires */}
+                      <DropdownMenuItem asChild className="cursor-pointer text-zinc-200 flex items-center gap-2 hover:bg-zinc-800">
+                        <Link href={`/blog/${article.slug}#comments`} target="_blank">
+                          <MessageSquare className="h-4 w-4" />
+                          <span>Commentaires</span>
+                        </Link>
+                      </DropdownMenuItem>
+
                       <DropdownMenuSeparator className="bg-zinc-800" />
                       <DropdownMenuItem
                         className={`cursor-pointer ${isDeleting ? 'opacity-50 cursor-not-allowed' : 'text-red-400 hover:bg-zinc-800'}`}

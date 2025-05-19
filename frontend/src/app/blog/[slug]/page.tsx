@@ -34,7 +34,7 @@ export async function generateStaticParams() {
         throw new Error("BACKEND_API_URL must be defined")
     }
     // Récupère tous les slugs d'articles depuis l'API pour générer les pages dynamiquement
-    const res = await fetch(`${API_URL}/api/articles`, { 
+    const res = await fetch(`${API_URL}/api/articles`, {
         next: { revalidate: 60 }
     })
     if (!res.ok) {
@@ -52,7 +52,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props) {
     const API_URL = process.env.BACKEND_API_URL
     // Utiliser le même temps de revalidation que la page principale
-    const res = await fetch(`${API_URL}/api/articles/${params.slug}`, { 
+    const res = await fetch(`${API_URL}/api/articles/${params.slug}`, {
         next: { revalidate: 60 }
     })
     const article = await res.json() as Article
@@ -67,7 +67,7 @@ export default async function BlogPostPage({ params }: Props) {
     const API_URL = process.env.BACKEND_API_URL
     try {
         // Récupère les données de l'article via son slug depuis l'API
-        const res = await fetch(`${API_URL}/api/articles/${params.slug}`, { 
+        const res = await fetch(`${API_URL}/api/articles/${params.slug}`, {
             next: { revalidate: 60 }
         })
         if (!res.ok) throw new Error(`Failed to fetch article: ${res.status}`)
@@ -126,7 +126,7 @@ export default async function BlogPostPage({ params }: Props) {
                                     <section key={i}>
                                         <h2 className="text-2xl font-semibold mb-2">{step.title}</h2>
                                         <div className="text-white/80 leading-relaxed">
-                                            <TiptapRenderer content={step.content} />
+                                            <TiptapRenderer content={typeof step.content === 'string' ? JSON.parse(step.content) : step.content} />
                                         </div>
                                     </section>
                                 ))}
@@ -142,7 +142,7 @@ export default async function BlogPostPage({ params }: Props) {
                                         <h3 className="text-xl font-semibold mb-2 text-white">{article.conclusionTitle}</h3>
                                     )}
                                     {article.conclusionDescription && (
-                                        <TiptapRenderer content={article.conclusionDescription} />
+                                        <TiptapRenderer content={typeof article.conclusionDescription === 'string' ? JSON.parse(article.conclusionDescription) : article.conclusionDescription} />
                                     )}
                                 </footer>
                             )}
@@ -153,7 +153,7 @@ export default async function BlogPostPage({ params }: Props) {
                 </div>
 
                 {/* Section des commentaires */}
-                <div className="mt-12 relative mx-auto max-w-6xl pt-5 pb-5 bg-white/[0.02] shadow-sm px-4 sm:px-6">
+                <div id="comments" className="mt-12 relative mx-auto max-w-6xl pt-5 pb-5 bg-white/[0.02] shadow-sm px-4 sm:px-6">
                     <section className="mx-auto w-full max-w-3xl px-4 pb-12">
                         <CommentSectionWrapper articleId={article.slug} />
                     </section>
