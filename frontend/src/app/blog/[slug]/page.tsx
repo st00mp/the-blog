@@ -2,6 +2,7 @@
 import TiptapRenderer from "@/components/blog/detail/TiptapRenderer"
 import { Button } from "@/components/ui/button"
 import { ClockIcon } from "lucide-react"
+import CommentSectionWrapper from "@/components/blog/CommentSectionWrapper"
 
 // Active l'ISR (Incremental Static Regeneration) toutes les 60 secondes pour cette page
 export const revalidate = 60
@@ -137,9 +138,19 @@ export default async function BlogPostPage({ params }: Props) {
                                     )}
                                 </footer>
                             )}
+
+
                         </section>
                     </article>
                 </div>
+
+                {/* Section des commentaires */}
+                <div className="mt-12 relative mx-auto max-w-6xl pt-5 pb-5  bg-white/[0.02] shadow-sm px-4 sm:px-6">
+                    <section className="mx-auto w-full max-w-3xl px-4 pb-12">
+                        <CommentSectionWrapper articleId={article.slug} />
+                    </section>
+                </div>
+
             </main>
         )
     } catch (error) {

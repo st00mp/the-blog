@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Article;
 use App\Entity\Comment;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -16,28 +17,41 @@ class CommentRepository extends ServiceEntityRepository
         parent::__construct($registry, Comment::class);
     }
 
-    //    /**
-    //     * @return Comment[] Returns an array of Comment objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('c.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Trouve tous les commentaires racine (sans parent) pour un article donné
+     * 
+     * @param Article $article L'article pour lequel récupérer les commentaires
+     * @return Comment[] Tableau des commentaires racine
+     */
+    public function findRootCommentsByArticle(Article $article): array
+    {
+        return $this->createQueryBuilder('c')
+            ->where('c.article = :article')
+            ->andWhere('c.parent IS NULL')
+            ->setParameter('article', $article)
+            ->orderBy('c.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 
-    //    public function findOneBySomeField($value): ?Comment
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /**
+     * Trouve tous les commentaires pour un article avec toutes les relations préchargées
+     * pour optimiser les performances
+     *
+     * @param Article $article L'article pour lequel récupérer les commentaires
+     * @return Comment[] Tableau de tous les commentaires
+     */
+    public function findAllByArticleWithRelations(Article $article): array
+    {
+        return $this->createQueryBuilder('c')
+            ->select('c', 'a', 'p', 'ch')
+            ->leftJoin('c.author', 'a')
+            ->leftJoin('c.parent', 'p')
+            ->leftJoin('c.children', 'ch')
+            ->where('c.article = :article')
+            ->setParameter('article', $article)
+            ->orderBy('c.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }
