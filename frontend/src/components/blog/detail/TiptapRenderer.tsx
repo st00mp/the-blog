@@ -13,6 +13,64 @@ import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
+// Extension personnalisée
+import { Node, mergeAttributes } from '@tiptap/core';
+
+// Création d'une extension pour gérer directement les vidéos
+const VideoExtension = Node.create({
+  name: 'video',
+  group: 'block',
+  atom: true, // Ne peut pas être séparé plus loin
+
+  addAttributes() {
+    return {
+      src: { default: null },
+      controls: { default: true },
+      width: { default: '100%' },
+      height: { default: null },
+      type: { default: null },
+      class: { default: 'rounded-md my-4' },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'video',
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['video', mergeAttributes(HTMLAttributes)];
+  },
+});
+
+// Extension pour les blockquotes contenant du HTML spécial
+const CustomBlockquote = Node.create({
+  name: 'customblockquote',
+  group: 'block',
+  content: 'inline*',
+  addAttributes() {
+    return {
+      html: { default: '' },
+    };
+  },
+  parseHTML() {
+    return [
+      {
+        tag: 'blockquote[data-html]',
+        getAttrs: (node) => ({
+          html: node.getAttribute('data-html'),
+        }),
+      },
+    ];
+  },
+  renderHTML({ HTMLAttributes }) {
+    const { html, ...rest } = HTMLAttributes;
+    return ['blockquote', mergeAttributes(rest, { 'data-html': html }), 0];
+  },
+});
 
 type Props = {
     content: any; // JSON provenant de ton article
@@ -38,22 +96,94 @@ export default function TiptapRenderer({ content }: Props) {
             TableRow,
             TableCell,
             TableHeader,
+            // Nos extensions personnalisées
+            VideoExtension,
+            CustomBlockquote,
         ],
         editorProps: {
             attributes: { class: "prose" },
+            handleDOMEvents: {
+                // Gérer la transformation du contenu vidéo après le rendu
+                focus: (view, event) => {
+                    setTimeout(() => {
+                        processVideos();
+                    }, 0);
+                    return false; // Pour permettre d'autres gestionnaires
+                }
+            },
         },
         injectCSS: false,
     });
 
+    // Fonction pour traiter les balises vidéo et s'assurer qu'elles sont bien rendues
+    const processVideos = () => {
+        if (!containerRef.current) return;
+
+        // Traiter directement les balises vidéo qui sont correctement insérées via l'extension
+        const videos = containerRef.current.querySelectorAll('video');
+        console.log('Vidéos trouvées:', videos.length);
+        
+        videos.forEach((videoEl) => {
+            // S'assurer que chaque vidéo a les bonnes propriétés
+            videoEl.controls = true;
+            videoEl.style.width = '100%';
+            videoEl.classList.add('rounded-md');
+            videoEl.style.maxHeight = '400px';
+        });
+
+        // Maintenir la compatibilité avec l'ancienne méthode (blockquotes avec vidéos)
+        const blockquotes = containerRef.current.querySelectorAll('blockquote');
+        console.log('Recherche de vidéos dans', blockquotes.length, 'blockquotes');
+        
+        blockquotes.forEach((block) => {
+            const content = block.innerHTML;
+            
+            // Si le blockquote contient une balise vidéo
+            if (content.includes('<video') || content.includes('</video>')) {
+                console.log('Blockquote avec balise vidéo détecté !');
+                
+                try {
+                    // Extraire la balise vidéo
+                    const videoMatch = content.match(/<video[\s\S]*?<\/video>/i);
+                    
+                    if (videoMatch) {
+                        // Créer un élément div pour remplacer le blockquote
+                        const videoContainer = document.createElement('div');
+                        videoContainer.className = 'video-container my-4';
+                        videoContainer.innerHTML = videoMatch[0];
+                        
+                        // Récupérer l'élément vidéo et assurer qu'il a les bonnes propriétés
+                        const videoEl = videoContainer.querySelector('video');
+                        if (videoEl) {
+                            videoEl.controls = true;
+                            videoEl.style.width = '100%';
+                            videoEl.classList.add('rounded-md');
+                            videoEl.style.maxHeight = '400px';
+                            
+                            // Remplacer le blockquote par le conteneur vidéo
+                            block.parentNode?.replaceChild(videoContainer, block);
+                            console.log('Vidéo remplacée avec succès');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erreur lors du traitement de la vidéo:', error);
+                }
+            }
+        });
+    };
+    
     // Traiter les vidéos et documents après le rendu
     useEffect(() => {
         if (!containerRef.current) return;
         
-        // Fonction pour traiter les médias
-        const processMedia = () => {
+        // Fonction pour traiter tous les médias (YouTube, Vimeo, et vidéos locales)
+        const processAllMedia = () => {
             if (!containerRef.current) return;
             
-            // Sélectionner tous les blockquotes dans le contenu rendu
+            // Traiter d'abord les vidéos locales
+            processVideos();
+            
+            // Sélectionner tous les blockquotes restants dans le contenu rendu
             const mediaBlocks = containerRef.current.querySelectorAll('blockquote');
             console.log('Nombre de blockquotes trouvés:', mediaBlocks.length);
             
@@ -132,6 +262,35 @@ export default function TiptapRenderer({ content }: Props) {
                     } else {
                         console.log('Pas de lien Vimeo trouvé dans le contenu');
                     }
+                } 
+                // Vérifier s'il s'agit d'une balise vidéo MP4/WebM directement uploadée
+                else if (content.includes('<video') || content.includes('video>')) {
+                    console.log('Balise vidéo détectée!');
+                    
+                    // Extraire le contenu de la balise vidéo
+                    const videoTagMatch = content.match(/<video[\s\S]*?<\/video>/i);
+                    
+                    if (videoTagMatch && videoTagMatch[0]) {
+                        const videoHTML = videoTagMatch[0];
+                        console.log('HTML vidéo extrait:', videoHTML);
+                        
+                        // Créer un conteneur pour le HTML de la vidéo
+                        const videoContainer = document.createElement('div');
+                        videoContainer.innerHTML = videoHTML;
+                        
+                        // S'assurer que la vidéo a les bonnes propriétés
+                        const videoElement = videoContainer.querySelector('video');
+                        if (videoElement) {
+                            videoElement.controls = true;
+                            videoElement.style.width = '100%';
+                            videoElement.classList.add('rounded-md', 'my-4');
+                            videoElement.style.maxHeight = '400px';
+                            
+                            // Remplacer le blockquote par l'élément vidéo
+                            console.log('Remplacement du blockquote par lecteur vidéo');
+                            block.parentNode?.replaceChild(videoContainer, block);
+                        }
+                    }
                 } else {
                     console.log('Pas de contenu vidéo détecté');
                 }
@@ -139,7 +298,7 @@ export default function TiptapRenderer({ content }: Props) {
         };
         
         // Exécuter après un court délai pour s'assurer que le contenu est rendu
-        const timer = setTimeout(processMedia, 200); // Délai augmenté pour s'assurer que le DOM est prêt
+        const timer = setTimeout(processAllMedia, 200); // Délai augmenté pour s'assurer que le DOM est prêt
         
         return () => clearTimeout(timer);
     }, [editor, content]); // Traiter chaque fois que l'éditeur ou le contenu change

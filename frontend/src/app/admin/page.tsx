@@ -10,6 +10,7 @@ import {
   CardTitle
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -26,7 +27,8 @@ import {
   Check,
   Loader2,
   Search,
-  X
+  X,
+  Upload
 } from "lucide-react"
 import { getUsers, updateUserRole, User } from "@/services/userService"
 import { useToast } from "@/components/ui/use-toast"
@@ -42,6 +44,8 @@ export default function AdminPage() {
   const [updatingRole, setUpdatingRole] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [currentPage, setCurrentPage] = useState<number>(1)
+  const [isUploading, setIsUploading] = useState<boolean>(false)
+  const fileInputRef = useState<HTMLInputElement | null>(null)
   const pageSize = 4 // Nombre d'utilisateurs par page
 
   useEffect(() => {
@@ -90,6 +94,43 @@ export default function AdminPage() {
     totalAdmins: users.filter(u => u.role === 'admin').length,
     totalEditors: users.filter(u => u.role === 'editor').length,
     totalRegularUsers: users.filter(u => u.role === 'user').length
+  }
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Vérifier que c'est un fichier CSV
+    if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
+      toast({
+        variant: "destructive",
+        title: "Format non supporté",
+        description: "Veuillez importer un fichier CSV (.csv)"
+      })
+      return
+    }
+
+    setIsUploading(true)
+
+    // Ici, simuler un succès de l'upload puisque c'est statique pour l'instant
+    setTimeout(() => {
+      toast({
+        title: "Succès",
+        description: `Le fichier ${file.name} a été importé avec succès. Les utilisateurs seront ajoutés sous peu.`,
+        variant: "default"
+      })
+      setIsUploading(false)
+      
+      // Réinitialiser le champ de fichier pour permettre une nouvelle sélection du même fichier
+      if (event.target) {
+        event.target.value = ''
+      }
+    }, 1500)
+
+    // En production, vous enverriez le fichier à l'API avec quelque chose comme:
+    // const formData = new FormData()
+    // formData.append('usersFile', file)
+    // await fetch('/api/users/upload', { method: 'POST', body: formData })
   }
 
   const handleRoleChange = async (userId: string, newRole: string) => {
@@ -169,30 +210,54 @@ export default function AdminPage() {
         {/* Liste des utilisateurs */}
         <Card className="bg-zinc-900 border-zinc-800 overflow-hidden">
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex items-center">
               <CardTitle className="text-lg">Utilisateurs</CardTitle>
             </div>
 
             {/* Champ de recherche */}
-            <div className="relative mt-4">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Search className="h-4 w-4 text-zinc-500" />
+            <div className="flex items-center gap-3 mt-4">
+              <div className="relative w-72 sm:w-96">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Search className="h-4 w-4 text-zinc-500" />
+                </div>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Rechercher par email ou nom..."
+                  className="w-full pl-10 pr-10 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-zinc-200 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {searchTerm && (
+                  <button
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-300"
+                    onClick={() => setSearchTerm("")}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Rechercher par email ou nom..."
-                className="w-full pl-10 pr-10 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-zinc-200 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              {searchTerm && (
-                <button
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-300"
-                  onClick={() => setSearchTerm("")}
+              
+              <div className="relative inline-block">
+                <input
+                  type="file"
+                  id="users-upload"
+                  accept=".csv"
+                  className="sr-only"
+                  onChange={handleFileUpload}
+                  disabled={isUploading}
+                />
+                <Label
+                  htmlFor="users-upload"
+                  className={`inline-flex items-center justify-center p-2 rounded-md ${isUploading ? 'bg-zinc-700 cursor-not-allowed' : 'bg-zinc-800 hover:bg-zinc-700 cursor-pointer'} text-zinc-400 hover:text-zinc-300 transition-colors border border-zinc-700`}
+                  title="Importer des utilisateurs (CSV)"
                 >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
+                  {isUploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                </Label>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="pt-3 px-0 pb-0">

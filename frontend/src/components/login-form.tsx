@@ -45,10 +45,10 @@ export function LoginForm({
     setError(null)
 
     try {
-      console.log("Tentative de connexion via:", `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/login`)
+      console.log("Tentative de connexion via:", `/api/login`)
       console.log("Données envoyées:", data)
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/login`, {
+      const response = await fetch(`/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

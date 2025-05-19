@@ -79,7 +79,7 @@ export default function NewArticlePage() {
     };
 
     // Fonction déclenchée lors de la soumission du formulaire (POST vers l'API)
-    const handleSubmit = async () => {
+    const handleSubmit = async (isDraft: boolean = false) => {
         if (!title.trim()) {
             alert("Le titre est obligatoire.");
             return;
@@ -99,6 +99,7 @@ export default function NewArticlePage() {
             conclusionDescription: any;
             ctaDescription: string;
             ctaButton: string;
+            status: number; // 0 pour brouillon, 1 pour publié
         };
 
         const payload: NewArticlePayload = {
@@ -113,6 +114,7 @@ export default function NewArticlePage() {
             conclusionDescription,
             ctaDescription,
             ctaButton,
+            status: isDraft ? 0 : 1, // 0 pour brouillon, 1 pour publié
         };
 
         // 	Reset de tous les champs pour plus de clarté :
@@ -142,8 +144,9 @@ export default function NewArticlePage() {
             });
 
             if (!res.ok) throw new Error("Erreur lors de la création de l'article");
-
-            alert("Article créé avec succès !");
+            
+            const statusText = isDraft ? "Brouillon" : "Article publié";
+            alert(`${statusText} créé avec succès !`);
             resetForm();
         } catch (err) {
             console.error(err);
@@ -373,8 +376,16 @@ export default function NewArticlePage() {
                             Annuler
                         </Button>
                         <Button
+                            variant="outline"
+                            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800/50 hover:text-white"
+                            onClick={() => handleSubmit(true)}
+                            disabled={isSaving}
+                        >
+                            {isSaving ? "Enregistrement..." : "Enregistrer comme brouillon"}
+                        </Button>
+                        <Button
                             className="bg-blue-600 hover:bg-blue-700 text-white"
-                            onClick={handleSubmit}
+                            onClick={() => handleSubmit(false)}
                             disabled={isSaving}
                         >
                             {isSaving ? "Enregistrement..." : "Publier l'article"}

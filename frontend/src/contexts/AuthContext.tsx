@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Vérifie si l'utilisateur est déjà connecté au chargement
     const checkSession = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/me`, {
+        const response = await fetch(`/api/me`, {
           method: "GET",
           credentials: "include",
           headers: {
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/logout`, {
+      await fetch(`/api/logout`, {
         method: "POST",
         credentials: "include",
         headers: {

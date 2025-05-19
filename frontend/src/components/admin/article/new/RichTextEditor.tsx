@@ -17,8 +17,39 @@ import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
-import HorizontalRule from "@tiptap/extension-horizontal-rule";
+import { Node, mergeAttributes } from '@tiptap/core';
 import { Bold, Italic, Strikethrough, List, ListOrdered, Plus, ImagesIcon, X, Table as TableIcon, Minus, Link as LinkIcon, AlignLeft, AlignCenter, AlignRight, Quote, Highlighter, Palette, Video, FileText } from "lucide-react";
+import { MediaUploader } from './MediaUploader';
+
+// Création d'une extension pour gérer directement les vidéos
+const VideoExtension = Node.create({
+  name: 'video',
+  group: 'block',
+  atom: true, // Ne peut pas être séparé plus loin
+
+  addAttributes() {
+    return {
+      src: { default: null },
+      controls: { default: true },
+      width: { default: '100%' },
+      height: { default: null },
+      type: { default: null },
+      class: { default: 'rounded-md my-4' },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'video',
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['video', mergeAttributes(HTMLAttributes)];
+  },
+});
 
 
 // Type
@@ -64,6 +95,8 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
             TableRow,
             TableHeader,
             TableCell,
+            // Extension vidéo personnalisée
+            VideoExtension,
             Placeholder.configure({
                 placeholder: ({ editor }) => {
                     if (editor.isEmpty) {
@@ -183,87 +216,179 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                                 </button>
 
                                 <h3 className="text-lg font-bold mb-4 text-white">Ajouter un bloc</h3>
-                                <div className="flex flex-col gap-3">
+                                <div className="flex flex-col gap-5">
+                                    
+                                    {/* Groupe Image */}
+                                    <div className="border border-zinc-700 rounded-lg p-1">
+                                        <h4 className="text-zinc-300 text-sm mb-2 px-3 pt-2 font-medium">Image</h4>
+                                        <div className="flex flex-col gap-1">
+                                            {/* Upload d'image */}
+                                            <MediaUploader
+                                                type="image"
+                                                label="Télécharger une image"
+                                                icon={<ImagesIcon size={20} />}
+                                                onSuccess={(url, mimeType) => {
+                                                    if (mimeType.startsWith('image/')) {
+                                                        const alt = prompt("Texte alternatif (description de l'image) ?") || "Image ajoutée";
+                                                        editor?.chain().focus().setImage({ src: url, alt }).run();
+                                                        setOpen(false);
+                                                    }
+                                                }}
+                                                onError={(error) => {
+                                                    console.error("Erreur d'upload:", error);
+                                                    alert(`Erreur lors de l'upload : ${error}`);
+                                                }}
+                                            />
+                                            
+                                            {/* Image par URL */}
+                                            <button className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base" onClick={() => {
+                                                const url = prompt("URL de l'image ?");
+                                                if (url) {
+                                                    const alt = prompt("Texte alternatif (description de l'image) ?") || "Image ajoutée";
+                                                    editor?.chain().focus().setImage({ src: url, alt }).run();
+                                                    setOpen(false);
+                                                }
+                                            }}>
+                                                <LinkIcon size={20} /> Image depuis une URL
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Groupe Vidéo */}
+                                    <div className="border border-zinc-700 rounded-lg p-1">
+                                        <h4 className="text-zinc-300 text-sm mb-2 px-3 pt-2 font-medium">Vidéo</h4>
+                                        <div className="flex flex-col gap-1">
+                                            {/* Upload de vidéo */}
+                                            <MediaUploader
+                                                type="video"
+                                                label="Télécharger une vidéo"
+                                                icon={<Video size={20} />}
+                                                onSuccess={(url, mimeType) => {
+                                                    // Utiliser l'extension vidéo pour insérer la vidéo correctement
+                                                    editor?.chain().focus().insertContent({
+                                                        type: 'video',
+                                                        attrs: {
+                                                            src: url,
+                                                            controls: true,
+                                                            width: '100%',
+                                                            type: mimeType,
+                                                            class: 'rounded-md my-4',
+                                                        }
+                                                    }).run();
+                                                    setOpen(false);
+                                                }}
+                                                onError={(error) => {
+                                                    console.error("Erreur d'upload:", error);
+                                                    alert(`Erreur lors de l'upload : ${error}`);
+                                                }}
+                                            />
+                                            
+                                            {/* Vidéo par URL (YouTube/Vimeo) */}
+                                            <button
+                                                className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base"
+                                                onClick={() => {
+                                                    const url = prompt("URL YouTube ou Vimeo ?");
+                                                    if (!url) return;
 
-                                    {/* Image */}
-                                    <button className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base" onClick={() => {
-                                        setOpen(false);
-                                        const url = prompt("URL de l'image ?");
-                                        if (url) {
-                                            const alt = prompt("Texte alternatif (description de l’image) ?") || "Image ajoutée";
-                                            editor?.chain().focus().setImage({ src: url, alt }).run();
-                                        }
-                                    }}>
-                                        <ImagesIcon size={20} /> Image
-                                    </button>
+                                                    const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+                                                    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
 
-                                    {/* Vidéo */}
-                                    <button
-                                        className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base"
-                                        onClick={() => {
-                                            setOpen(false);
-                                            const url = prompt("URL de la vidéo ?");
-                                            if (!url) return;
+                                                    let label = "📹 Vidéo intégrée";
+                                                    let link = url;
 
-                                            const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-                                            const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                                                    if (youtubeMatch) {
+                                                        label = "Vidéo YouTube";
+                                                        link = `https://www.youtube.com/watch?v=${youtubeMatch[1]}`;
+                                                    } else if (vimeoMatch) {
+                                                        label = "🎥 Vidéo Vimeo";
+                                                        link = `https://vimeo.com/${vimeoMatch[1]}`;
+                                                    }
 
-                                            let label = "📹 Vidéo intégrée";
-                                            let link = url;
+                                                    const html = `<blockquote class="video-preview-block"><strong>${label}</strong> — <a href="${link}" target="_blank" rel="noopener noreferrer">${link}</a></blockquote>`;
+                                                    editor?.chain().focus().insertContent(html).run();
+                                                    setOpen(false);
+                                                }}
+                                            >
+                                                <LinkIcon size={20} /> YouTube ou Vimeo
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Groupe Document */}
+                                    <div className="border border-zinc-700 rounded-lg p-1">
+                                        <h4 className="text-zinc-300 text-sm mb-2 px-3 pt-2 font-medium">Document</h4>
+                                        <div className="flex flex-col gap-1">
+                                            {/* Upload de document */}
+                                            <MediaUploader
+                                                type="document"
+                                                label="Télécharger un document"
+                                                icon={<FileText size={20} />}
+                                                onSuccess={(url, mimeType) => {
+                                                    // Pour les documents (PDF, Word, etc.)
+                                                    const fileExt = url.split('.').pop()?.toLowerCase();
+                                                    let label = "📄 Document";
+                                                    
+                                                    if (fileExt === "pdf") label = "📕 PDF à consulter";
+                                                    else if (["doc", "docx"].includes(fileExt || '')) label = "📘 Fichier Word";
+                                                    else if (["ppt", "pptx"].includes(fileExt || '')) label = "📙 Présentation PowerPoint";
+                                                    else if (["xls", "xlsx"].includes(fileExt || '')) label = "📗 Tableur Excel";
+                                                    
+                                                    const html = `<blockquote class="doc-preview-block"><strong>${label}</strong> — <a href="${url}" target="_blank" rel="noopener noreferrer">${url.split('/').pop()}</a></blockquote>`;
+                                                    editor?.chain().focus().insertContent(html).run();
+                                                    setOpen(false);
+                                                }}
+                                                onError={(error) => {
+                                                    console.error("Erreur d'upload:", error);
+                                                    alert(`Erreur lors de l'upload : ${error}`);
+                                                }}
+                                            />
+                                            
+                                            {/* Document par URL */}
+                                            <button
+                                                className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base"
+                                                onClick={() => {
+                                                    const url = prompt("URL du document ?");
+                                                    if (!url) return;
 
-                                            if (youtubeMatch) {
-                                                label = "Vidéo YouTube";
-                                                link = `https://www.youtube.com/watch?v=${youtubeMatch[1]}`;
-                                            } else if (vimeoMatch) {
-                                                label = "🎬 Vidéo Vimeo";
-                                                link = `https://vimeo.com/${vimeoMatch[1]}`;
-                                            }
+                                                    const ext = url.split(".").pop()?.toLowerCase();
+                                                    let label = "📄 Document";
 
-                                            const html = `<blockquote class="video-preview-block"><strong>${label}</strong> — <a href="${link}" target="_blank" rel="noopener noreferrer">${link}</a></blockquote>`;
-                                            editor?.chain().focus().insertContent(html).run();
-                                        }}
-                                    >
-                                        <Video size={20} /> Vidéo (Youtube / Vimeo)
-                                    </button>
+                                                    if (ext === "pdf") label = "📕 PDF à consulter";
+                                                    else if (ext === "doc" || ext === "docx") label = "📘 Fichier Word";
+                                                    else if (ext === "ppt" || ext === "pptx") label = "📙 Présentation PowerPoint";
+                                                    else if (ext === "xls" || ext === "xlsx") label = "📗 Tableur Excel";
 
-                                    {/* Document */}
-                                    <button
-                                        className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base"
-                                        onClick={() => {
-                                            setOpen(false);
-                                            const url = prompt("URL du document ?");
-                                            if (!url) return;
+                                                    const html = `<blockquote class="doc-preview-block">📄 <strong>${label}</strong> — <a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a></blockquote>`;
+                                                    editor?.chain().focus().insertContent(html).run();
+                                                    setOpen(false);
+                                                }}
+                                            >
+                                                <LinkIcon size={20} /> Document depuis une URL
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Groupe Mise en page */}
+                                    <div className="border border-zinc-700 rounded-lg p-1">
+                                        <h4 className="text-zinc-300 text-sm mb-2 px-3 pt-2 font-medium">Mise en page</h4>
+                                        <div className="flex flex-col gap-1">
+                                            {/* Séparateur */}
+                                            <button className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base" onClick={() => {
+                                                setOpen(false);
+                                                editor?.chain().focus().setHorizontalRule().run();
+                                            }}>
+                                                <Minus size={20} /> Ligne de séparation
+                                            </button>
 
-                                            const ext = url.split(".").pop()?.toLowerCase();
-                                            let label = "📄 Document";
-
-                                            if (ext === "pdf") label = "📕 PDF à consulter";
-                                            else if (ext === "doc" || ext === "docx") label = "📘 Fichier Word";
-                                            else if (ext === "ppt" || ext === "pptx") label = "📙 Présentation PowerPoint";
-                                            else if (ext === "xls" || ext === "xlsx") label = "📗 Tableur Excel";
-
-                                            const html = `<blockquote class="doc-preview-block">📄 <strong>${label}</strong> — <a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a></blockquote>`;
-                                            editor?.chain().focus().insertContent(html).run();
-                                        }}
-                                    >
-                                        <FileText size={20} /> Document
-                                    </button>
-
-                                    {/* Séparateur */}
-                                    <button className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base" onClick={() => {
-                                        setOpen(false);
-                                        editor?.chain().focus().setHorizontalRule().run();
-                                    }}>
-                                        <Minus size={20} /> Séparateur
-                                    </button>
-
-                                    {/* Tableau */}
-                                    <button className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base" onClick={() => {
-                                        setOpen(false);
-                                        editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
-                                    }}>
-                                        <TableIcon size={20} /> Tableau
-                                    </button>
+                                            {/* Tableau */}
+                                            <button className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base" onClick={() => {
+                                                setOpen(false);
+                                                editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+                                            }}>
+                                                <TableIcon size={20} /> Insérer un tableau
+                                            </button>
+                                        </div>
+                                    </div>
 
                                 </div>
                             </div>
