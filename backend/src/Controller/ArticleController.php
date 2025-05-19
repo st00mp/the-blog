@@ -310,4 +310,55 @@ final class ArticleController extends AbstractController
             ], 500);
         }
     }
+    
+    // Endpoint pour changer le statut d'un article (publier/dépublier)
+    // PATCH /api/articles/{id}/status
+    #[Route('/api/articles/{id}/status', name: 'api_article_update_status', methods: ['PATCH'])]
+    public function updateStatus(
+        int $id,
+        Request $request,
+        ArticleRepository $articleRepo,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        try {
+            // 1. Récupération de l'article à mettre à jour
+            $article = $articleRepo->find($id);
+            if (!$article) {
+                return $this->json(['error' => 'Article non trouvé'], 404);
+            }
+            
+            // 2. Récupération et validation des données
+            $data = json_decode($request->getContent(), true);
+            if (!$data || !isset($data['status'])) {
+                return $this->json(['error' => 'Statut manquant ou invalide'], 400);
+            }
+            
+            // 3. Vérification que le statut est valide (0 ou 1)
+            $status = (int) $data['status'];
+            if (!in_array($status, [Article::STATUS_DRAFT, Article::STATUS_PUBLISHED])) {
+                return $this->json(['error' => 'Statut invalide. Doit être 0 (brouillon) ou 1 (publié)'], 400);
+            }
+            
+            // 4. Mise à jour du statut
+            $article->setStatus($status);
+            
+            // 5. Persistance des modifications
+            $em->flush();
+            
+            // 6. Réponse avec l'article mis à jour
+            return $this->json(
+                $article,
+                200,
+                [],
+                ['groups' => 'article:detail']
+            );
+        } catch (Throwable $e) {
+            // Gestion des erreurs serveur
+            $message = $_ENV['APP_ENV'] === 'dev' ? $e->getMessage() : 'Une erreur est survenue';
+            return $this->json([
+                'error' => 'Erreur serveur',
+                'message' => $message,
+            ], 500);
+        }
+    }
 }

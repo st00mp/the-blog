@@ -82,6 +82,15 @@ export default function ArticlesPage() {
       setDeletingId(null);
     }
   };
+  
+  // Fonction pour mettre à jour un article après changement de statut (sans notification)
+  const handleStatusChange = (updatedArticle: Article) => {
+    // Mettre à jour la liste des articles avec le nouvel article mis à jour
+    setArticles(articles.map(article => 
+      article.id === updatedArticle.id ? updatedArticle : article
+    ));
+    // Pas de notification toast - à la demande de l'utilisateur
+  };
 
   // Fonction pour filtrer les articles
   const filteredArticles = useMemo(() => {
@@ -232,6 +241,7 @@ export default function ArticlesPage() {
                 articles={filteredArticles}
                 onDelete={handleDeleteArticle}
                 isDeleting={deletingId !== null}
+                onStatusChange={handleStatusChange}
               />
             </div>
           )}

@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { FileEdit, Trash2, MoreHorizontal, Eye } from "lucide-react"
+import { MoreHorizontal, Eye, FileEdit, Trash2, FilePlus, Send, FileQuestion, FileMinus } from "lucide-react"
+import Link from "next/link"
+import { useToast } from "@/components/ui/use-toast"
 
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -16,37 +16,59 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { updateArticleStatus } from "@/services/articleService"
 
-// Import du type Article depuis notre service
 import { Article } from "@/services/articleService"
 
 type ArticlesTableProps = {
   articles: Article[]
   onDelete: (id: string) => void
   isDeleting?: boolean
+  onStatusChange?: (article: Article) => void
 }
 
-export function AdminArticlesTable({ articles, onDelete, isDeleting = false }: ArticlesTableProps) {
+export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onStatusChange }: ArticlesTableProps) {
+  const { toast } = useToast()
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
   // État pour la confirmation de suppression
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
 
-  // Formater la date pour l'affichage
+  // Formater la date pour l'affichage avec gestion des fuseaux horaires
   const formatDate = (dateString: string | undefined): string => {
     try {
       // Vérification si la date est au format créé par notre backend
       if (dateString && dateString.length > 0) {
-        console.log(`Tentative de formatage de date: ${dateString}`);
-        const date = new Date(dateString)
-        // Vérifier si la date est valide
+        // Conversion de la date en tenant compte du fuseau horaire
+        // Format de dateString attendu: 2025-05-18T22:30:00+00:00 (format ISO)
+        // ou 2025-05-18T22:30:00.000Z (format ISO avec Z pour UTC)
+        
+        // 1. Convertir en objet Date (qui sera interprété selon le fuseau local)
+        const date = new Date(dateString);
+        
+        // 2. Vérifier si la date est valide
         if (!isNaN(date.getTime())) {
-          return format(date, "dd MMM yyyy", { locale: fr })
+          // 3. Formater avec le locale français
+          // Le format 'dd MMM yyyy' affichera par exemple "19 mai 2025"
+          return format(date, "dd MMM yyyy", { locale: fr });
         }
       }
-      console.log(`Date invalide ou manquante: ${dateString}`);
-      return "Date inconnue"
+      
+      // En cas de date invalide ou manquante, afficher un message
+      return "Date inconnue";
     } catch (error) {
-      console.error("Erreur de formatage de date:", error, dateString)
-      return "Date inconnue"
+      console.error("Erreur de formatage de date:", error, dateString);
+      return "Date inconnue";
     }
   }
 
@@ -64,6 +86,35 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false }: A
   const confirmDelete = (id: string) => {
     onDelete(id)
     setDeleteConfirmId(null)
+  }
+  
+  // Changer le statut d'un article (publier ou dépublier) - sans notification
+  const handleStatusChange = async (id: string, newStatus: 'published' | 'draft') => {
+    try {
+      setUpdatingStatusId(id)
+      const updatedArticle = await updateArticleStatus(id, newStatus)
+      
+      // Mettre à jour l'interface utilisateur sans notification
+      if (onStatusChange) {
+        onStatusChange(updatedArticle)
+      } else {
+        // Attendre un peu avant de rafraîchir la page
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
+      }
+      
+    } catch (error) {
+      console.error("Erreur lors du changement de statut:", error)
+      // Afficher une notification uniquement en cas d'erreur
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de changer le statut de l'article."
+      })
+    } finally {
+      setUpdatingStatusId(null)
+    }
   }
 
   // Annuler la suppression
@@ -141,12 +192,47 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false }: A
                     >
                       <DropdownMenuLabel className="text-zinc-400">Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator className="bg-zinc-800" />
-                      <DropdownMenuItem asChild className="cursor-pointer text-zinc-200 flex items-center gap-2 hover:bg-zinc-800">
-                        <Link href={`/blog/${article.id}`}>
-                          <Eye className="h-4 w-4" />
-                          <span>Voir</span>
-                        </Link>
-                      </DropdownMenuItem>
+                      
+                      {/* Actions de statut - contextuelles selon l'état de publication */}
+                      {article.status === "published" ? (
+                        // Actions pour un article publié
+                        <>
+                          <DropdownMenuItem asChild className="cursor-pointer text-zinc-200 flex items-center gap-2 hover:bg-zinc-800">
+                            <Link href={`/blog/${article.slug}`} target="_blank">
+                              <Eye className="h-4 w-4" />
+                              <span>Voir sur le site</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer text-zinc-200 flex items-center gap-2 hover:bg-zinc-800"
+                            onClick={() => handleStatusChange(article.id, 'draft')}
+                            disabled={updatingStatusId === article.id}
+                          >
+                            <FileMinus className="h-4 w-4" />
+                            <span>{updatingStatusId === article.id ? 'En cours...' : 'Dépublier'}</span>
+                          </DropdownMenuItem>
+                        </>
+                      ) : (
+                        // Actions pour un article en brouillon
+                        <>
+                          <DropdownMenuItem
+                            className="cursor-pointer text-zinc-200 flex items-center gap-2 hover:bg-zinc-800"
+                            onClick={() => handleStatusChange(article.id, 'published')}
+                            disabled={updatingStatusId === article.id}
+                          >
+                            <Send className="h-4 w-4" />
+                            <span>{updatingStatusId === article.id ? 'En cours...' : 'Publier'}</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild className="cursor-pointer text-zinc-200 flex items-center gap-2 hover:bg-zinc-800">
+                            <Link href={`/preview/${article.slug}`} target="_blank">
+                              <FileQuestion className="h-4 w-4" />
+                              <span>Prévisualiser</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      
+                      {/* Actions communes à tous les articles */}
                       <DropdownMenuItem asChild className="cursor-pointer text-zinc-200 flex items-center gap-2 hover:bg-zinc-800">
                         <Link href={`/admin/articles/edit/${article.id}`}>
                           <FileEdit className="h-4 w-4" />
