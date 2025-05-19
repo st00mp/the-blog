@@ -331,22 +331,28 @@ export default function CommentSection({ articleId, isLoggedIn, currentUser, onL
             </div>
           )}
           
-          {/* Boîte de dialogue de confirmation pour la suppression */}
+          {/* Boîte de dialogue de confirmation pour la suppression - version compacte */}
           <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Supprimer ce commentaire ?</AlertDialogTitle>
-                <AlertDialogDescription>
+            <AlertDialogContent className="max-w-sm px-4 py-4 gap-3">
+              <AlertDialogHeader className="pb-0 space-y-1">
+                <AlertDialogTitle className="text-base">Supprimer ce commentaire ?</AlertDialogTitle>
+                <AlertDialogDescription className="text-xs">
                   {comment.children.length > 0 
-                    ? "Ce commentaire a des réponses. Son contenu sera masqué mais la structure sera conservée." 
-                    : "Cette action est irréversible et supprimera définitivement votre commentaire."}
+                    ? "Ce commentaire a des réponses. Son contenu sera masqué mais sa structure sera conservée." 
+                    : "Cette action est irréversible."}
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={isSubmitting}>Annuler</AlertDialogCancel>
+              <AlertDialogFooter className="flex-row justify-end gap-2 pt-2 mt-2">
+                <AlertDialogCancel 
+                  disabled={isSubmitting} 
+                  className="mt-0 h-8 text-xs px-3"
+                >
+                  Annuler
+                </AlertDialogCancel>
                 <AlertDialogAction 
                   onClick={handleDeleteComment}
                   disabled={isSubmitting}
+                  className="h-8 text-xs px-3"
                 >
                   {isSubmitting ? "Suppression..." : "Supprimer"}
                 </AlertDialogAction>
