@@ -123,49 +123,57 @@ export default function CommentSection({ articleId, isLoggedIn, currentUser, onL
     })
   }
   
-  // Fonction pour supprimer ou marquer un commentaire comme supprimé dans l'arbre
+  // Fonction pour marquer un commentaire comme supprimé dans l'arbre
   const removeCommentFromTree = (commentId: number) => {
     setComments(prevComments => {
-      // Traitement des commentaires de premier niveau
-      const filteredComments = prevComments.filter(c => c.id !== commentId)
-      
-      // Si le nombre de commentaires est différent, cela signifie que nous avons supprimé un commentaire de premier niveau
-      if (filteredComments.length !== prevComments.length) {
-        return filteredComments
-      }
-      
-      // Sinon, parcourir l'arbre et marquer/supprimer le commentaire
+      // Parcourir tous les commentaires et mettre à jour celui qui correspond à l'ID
       return prevComments.map(c => {
+        // Vérifier si c'est le commentaire à marquer comme supprimé
+        if (c.id === commentId) {
+          // Toujours marquer comme supprimé et CONSERVER le commentaire avec ses enfants
+          return { 
+            ...c, 
+            content: '[Ce commentaire a été supprimé]',
+            // Conserver toutes les autres propriétés y compris les enfants
+          }
+        }
+        
+        // Si ce n'est pas le commentaire cible, examiner ses enfants
         if (c.children.length > 0) {
           return { ...c, children: removeOrMarkCommentRecursively(c.children, commentId) }
         }
+        
+        // Sinon, simplement retourner le commentaire tel quel
         return c
       })
     })
   }
   
-  // Fonction récursive pour supprimer ou marquer un commentaire comme supprimé
+  // Fonction récursive pour marquer un commentaire comme supprimé et conserver la structure
   const removeOrMarkCommentRecursively = (children: Comment[], commentId: number): Comment[] => {
-    const result: Comment[] = []
-    
-    for (const child of children) {
+    // Mapper directement les enfants au lieu de construire un nouveau tableau
+    return children.map(child => {
+      // Si c'est le commentaire à traiter
       if (child.id === commentId) {
-        // Si le commentaire a des enfants, le marquer comme supprimé
-        if (child.children.length > 0) {
-          result.push({ ...child, content: '[Ce commentaire a été supprimé]' })
-        }
-        // Sinon, ne pas l'ajouter au résultat (suppression)
-      } else {
-        // Pour les autres commentaires, les garder et vérifier leurs enfants récursivement
-        if (child.children.length > 0) {
-          result.push({ ...child, children: removeOrMarkCommentRecursively(child.children, commentId) })
-        } else {
-          result.push(child)
+        // Toujours conserver la structure du commentaire mais modifier son contenu
+        return {
+          ...child,
+          content: '[Ce commentaire a été supprimé]'
+          // Garder tous les enfants et autres propriétés intacts
         }
       }
-    }
-    
-    return result
+      
+      // Pour les autres commentaires, vérifier récursivement leurs enfants
+      if (child.children.length > 0) {
+        return {
+          ...child,
+          children: removeOrMarkCommentRecursively(child.children, commentId)
+        }
+      }
+      
+      // Sinon, retourner le commentaire tel quel
+      return child
+    })
   }
 
   const getInitials = (name: string) => {
@@ -418,9 +426,17 @@ export default function CommentSection({ articleId, isLoggedIn, currentUser, onL
           {/* Commentaires enfants (réponses) avec niveau incrémenté - responsive pour mobile */}
           {comment.children && comment.children.length > 0 && (
             <div className="ml-4 sm:ml-6 md:ml-8 mt-3 border-l border-zinc-800 pl-3 sm:pl-4 md:pl-6 space-y-4">
-              {comment.children.map(childComment => (
-                <CommentItem key={childComment.id} comment={childComment} level={level + 1} />
-              ))}
+              {comment.children.map(childComment => {
+                // S'assurer que les commentaires enfants héritent de l'ID de l'auteur de l'article
+                // pour que le bouton de suppression s'affiche correctement
+                const enrichedChildComment = {
+                  ...childComment,
+                  articleAuthorId: comment.articleAuthorId
+                };
+                return (
+                  <CommentItem key={childComment.id} comment={enrichedChildComment} level={level + 1} />
+                );
+              })}
             </div>
           )}
         </div>
