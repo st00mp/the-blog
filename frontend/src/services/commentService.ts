@@ -3,11 +3,13 @@ export type Comment = {
   id: number;
   content: string;
   createdAt: string;
+  updatedAt: string;
   author: {
     id: number;
     name: string;
   };
   children: Comment[];
+  isOwner?: boolean; // Indique si l'utilisateur connecté est l'auteur du commentaire
 };
 
 /**
@@ -62,6 +64,55 @@ export async function addComment(articleSlug: string, content: string, parentId?
     return await response.json();
   } catch (error) {
     console.error('Erreur addComment:', error);
+    throw error;
+  }
+}
+
+/**
+ * Modifie un commentaire existant
+ */
+export async function updateComment(commentId: number, content: string): Promise<Comment> {
+  try {
+    const response = await fetch(`/api/comments/${commentId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ content }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erreur lors de la modification du commentaire');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erreur updateComment:', error);
+    throw error;
+  }
+}
+
+/**
+ * Supprime un commentaire existant
+ */
+export async function deleteComment(commentId: number): Promise<void> {
+  try {
+    const response = await fetch(`/api/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Erreur lors de la suppression du commentaire');
+    }
+  } catch (error) {
+    console.error('Erreur deleteComment:', error);
     throw error;
   }
 }

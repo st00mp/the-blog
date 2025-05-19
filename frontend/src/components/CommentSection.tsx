@@ -4,11 +4,13 @@ import { useState, useEffect } from "react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { getArticleComments, addComment, formatCommentDate, type Comment } from "@/services/commentService"
+import { getArticleComments, addComment, updateComment, deleteComment, formatCommentDate, type Comment } from "@/services/commentService"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { LoginForm } from "@/components/login-form"
 import { useRouter } from "next/navigation"
+import { Pencil, Trash2, MessageSquare } from "lucide-react"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 type CommentSectionProps = {
   articleId: string
@@ -92,6 +94,79 @@ export default function CommentSection({ articleId, isLoggedIn, currentUser, onL
       return child
     })
   }
+  
+  // Fonction pour mettre à jour un commentaire dans l'arbre
+  const updateCommentInTree = (commentId: number, updatedComment: Comment) => {
+    setComments(prevComments => {
+      return prevComments.map(c => {
+        if (c.id === commentId) {
+          return { ...c, content: updatedComment.content, updatedAt: updatedComment.updatedAt }
+        }
+        if (c.children.length > 0) {
+          return { ...c, children: updateCommentChildrenRecursively(c.children, commentId, updatedComment) }
+        }
+        return c
+      })
+    })
+  }
+  
+  // Fonction récursive pour mettre à jour un commentaire dans les enfants
+  const updateCommentChildrenRecursively = (children: Comment[], commentId: number, updatedComment: Comment): Comment[] => {
+    return children.map(child => {
+      if (child.id === commentId) {
+        return { ...child, content: updatedComment.content, updatedAt: updatedComment.updatedAt }
+      }
+      if (child.children.length > 0) {
+        return { ...child, children: updateCommentChildrenRecursively(child.children, commentId, updatedComment) }
+      }
+      return child
+    })
+  }
+  
+  // Fonction pour supprimer ou marquer un commentaire comme supprimé dans l'arbre
+  const removeCommentFromTree = (commentId: number) => {
+    setComments(prevComments => {
+      // Traitement des commentaires de premier niveau
+      const filteredComments = prevComments.filter(c => c.id !== commentId)
+      
+      // Si le nombre de commentaires est différent, cela signifie que nous avons supprimé un commentaire de premier niveau
+      if (filteredComments.length !== prevComments.length) {
+        return filteredComments
+      }
+      
+      // Sinon, parcourir l'arbre et marquer/supprimer le commentaire
+      return prevComments.map(c => {
+        if (c.children.length > 0) {
+          return { ...c, children: removeOrMarkCommentRecursively(c.children, commentId) }
+        }
+        return c
+      })
+    })
+  }
+  
+  // Fonction récursive pour supprimer ou marquer un commentaire comme supprimé
+  const removeOrMarkCommentRecursively = (children: Comment[], commentId: number): Comment[] => {
+    const result: Comment[] = []
+    
+    for (const child of children) {
+      if (child.id === commentId) {
+        // Si le commentaire a des enfants, le marquer comme supprimé
+        if (child.children.length > 0) {
+          result.push({ ...child, content: '[Ce commentaire a été supprimé]' })
+        }
+        // Sinon, ne pas l'ajouter au résultat (suppression)
+      } else {
+        // Pour les autres commentaires, les garder et vérifier leurs enfants récursivement
+        if (child.children.length > 0) {
+          result.push({ ...child, children: removeOrMarkCommentRecursively(child.children, commentId) })
+        } else {
+          result.push(child)
+        }
+      }
+    }
+    
+    return result
+  }
 
   const getInitials = (name: string) => {
     return name
@@ -104,13 +179,19 @@ export default function CommentSection({ articleId, isLoggedIn, currentUser, onL
 
   // Composant CommentItem avec gestion locale de son propre état de réponse
   function CommentItem({ comment, level = 0 }: { comment: Comment; level?: number }) {
-    // État local pour ce commentaire spécifique
+    // États locaux pour ce commentaire spécifique
     const [isReplying, setIsReplying] = useState(false)
+    const [isEditing, setIsEditing] = useState(false)
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [replyText, setReplyText] = useState("")
+    const [editText, setEditText] = useState(comment.content)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Limiter la profondeur de l'imbrication visuelle
     const effectiveLevel = Math.min(level, 3);
+    
+    // Indication si le commentaire a été modifié
+    const isEdited = comment.updatedAt !== comment.createdAt;
 
     // Fonction pour gérer la soumission de la réponse à ce commentaire spécifique
     const handleSubmitReply = async () => {
@@ -132,6 +213,44 @@ export default function CommentSection({ articleId, isLoggedIn, currentUser, onL
         setIsSubmitting(false)
       }
     }
+    
+    // Fonction pour gérer la modification du commentaire
+    const handleUpdateComment = async () => {
+      if (!editText.trim() || isSubmitting || editText === comment.content) return
+
+      try {
+        setIsSubmitting(true)
+        const updatedComment = await updateComment(comment.id, editText)
+        
+        // Mettre à jour le commentaire dans l'arbre
+        updateCommentInTree(comment.id, updatedComment)
+        
+        // Réinitialiser l'état local
+        setIsEditing(false)
+      } catch (err) {
+        console.error("Erreur lors de la modification du commentaire:", err)
+      } finally {
+        setIsSubmitting(false)
+      }
+    }
+    
+    // Fonction pour gérer la suppression du commentaire
+    const handleDeleteComment = async () => {
+      try {
+        setIsSubmitting(true)
+        await deleteComment(comment.id)
+        
+        // Supprimer le commentaire de l'arbre ou le marquer comme supprimé
+        removeCommentFromTree(comment.id)
+        
+        // Fermer la boîte de dialogue
+        setIsDeleteDialogOpen(false)
+      } catch (err) {
+        console.error("Erreur lors de la suppression du commentaire:", err)
+      } finally {
+        setIsSubmitting(false)
+      }
+    }
 
     return (
       <div className={`flex items-start gap-3 md:gap-4 pt-5 pb-3 ${level > 0 ? 'relative' : ''}`}>
@@ -143,21 +262,106 @@ export default function CommentSection({ articleId, isLoggedIn, currentUser, onL
           </Avatar>
         </div>
         <div className="grid gap-1.5 w-full">
-          <div className="flex items-center flex-wrap gap-1 sm:gap-2">
-            <div className="font-medium text-zinc-200 text-sm md:text-base">{comment.author.name}</div>
-            <div className="text-xs text-zinc-500">{formatCommentDate(comment.createdAt)}</div>
+          <div className="flex items-center justify-between flex-wrap gap-1 sm:gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <div className="font-medium text-zinc-200 text-sm md:text-base">{comment.author.name}</div>
+              <div className="text-xs text-zinc-500">{formatCommentDate(comment.createdAt)}</div>
+              {isEdited && <span className="text-xs text-zinc-600">(modifié)</span>}
+            </div>
+            
+            {/* Menu actions (modifier/supprimer) pour le propriétaire du commentaire */}
+            {comment.isOwner && isLoggedIn && (
+              <div className="flex space-x-1">
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className="p-1 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  title="Modifier"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button 
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  className="p-1 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  title="Supprimer"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
           </div>
-          <div className="text-xs sm:text-sm text-zinc-400">
-            {comment.content}
-          </div>
+          
+          {/* Contenu du commentaire (normal ou en mode édition) */}
+          {isEditing ? (
+            <div className="mt-2 grid gap-2">
+              <div className="overflow-hidden">
+                <Textarea
+                  placeholder="Votre commentaire..."
+                  className="bg-zinc-800/50 border-zinc-700 placeholder:text-zinc-500 resize-none min-h-[80px] w-full outline-none focus-visible:ring-4 focus-visible:ring-zinc-700/50 rounded-md focus-visible:border-zinc-600"
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  spellCheck="false"
+                  dir="ltr"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleUpdateComment}
+                  className="bg-zinc-800 hover:bg-zinc-700 text-white"
+                  disabled={isSubmitting || !editText.trim() || editText === comment.content}
+                  size="sm"
+                >
+                  {isSubmitting ? "Envoi..." : "Enregistrer"}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsEditing(false)
+                    setEditText(comment.content) // Réinitialiser le texte en cas d'annulation
+                  }}
+                  variant="outline"
+                  className="border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300"
+                  size="sm"
+                >
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-xs sm:text-sm text-zinc-400">
+              {comment.content}
+            </div>
+          )}
+          
+          {/* Boîte de dialogue de confirmation pour la suppression */}
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer ce commentaire ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {comment.children.length > 0 
+                    ? "Ce commentaire a des réponses. Son contenu sera masqué mais la structure sera conservée." 
+                    : "Cette action est irréversible et supprimera définitivement votre commentaire."}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isSubmitting}>Annuler</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleDeleteComment}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Suppression..." : "Supprimer"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
-          {isLoggedIn && (
+          {/* Options de réponse */}
+          {isLoggedIn && !isEditing && (
             <div className="pt-1">
               <button
                 onClick={() => setIsReplying(true)}
-                className="text-xs text-zinc-500 hover:text-zinc-300 transition"
+                className="text-xs flex items-center gap-1 text-zinc-500 hover:text-zinc-300 transition"
               >
-                Répondre
+                <MessageSquare className="h-3 w-3" /> Répondre
               </button>
             </div>
           )}

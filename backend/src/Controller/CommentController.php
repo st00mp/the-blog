@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Psr\Log\LoggerInterface;
 
 class CommentController extends AbstractController
@@ -146,15 +147,141 @@ class CommentController extends AbstractController
             $children[] = $this->formatComment($child);
         }
         
+        $currentUser = $this->getUser();
+        $isAuthor = $currentUser && $currentUser instanceof User && $currentUser->getId() === $comment->getAuthor()->getId();
+        
         return [
             'id' => $comment->getId(),
             'content' => $comment->getContent(),
             'createdAt' => $comment->getCreatedAt()->format('c'),
+            'updatedAt' => $comment->getUpdatedAt()->format('c'),
             'author' => [
                 'id' => $comment->getAuthor()->getId(),
                 'name' => $comment->getAuthor()->getName()
             ],
-            'children' => $children
+            'children' => $children,
+            'isOwner' => $isAuthor // Indique si l'utilisateur courant est l'auteur du commentaire
         ];
+    }
+    
+    /**
+     * Modifier un commentaire
+     */
+    #[Route('/api/comments/{id}', name: 'api_update_comment', methods: ['PUT'])]
+    public function updateComment(Request $request, int $id): JsonResponse
+    {
+        try {
+            // Vérifier si l'utilisateur est connecté
+            $user = $this->getUser();
+            if (!$user || !$user instanceof User) {
+                return new JsonResponse(
+                    ['error' => 'Vous devez être connecté pour modifier un commentaire'],
+                    Response::HTTP_UNAUTHORIZED
+                );
+            }
+            
+            // Récupérer le commentaire
+            $comment = $this->entityManager->getRepository(Comment::class)->find($id);
+            
+            if (!$comment) {
+                return new JsonResponse(['error' => 'Commentaire non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+            
+            // Vérifier que l'utilisateur est l'auteur du commentaire
+            if ($comment->getAuthor()->getId() !== $user->getId()) {
+                throw new AccessDeniedException('Vous n\'avez pas l\'autorisation de modifier ce commentaire');
+            }
+            
+            $data = json_decode($request->getContent(), true);
+            if (!isset($data['content']) || empty(trim($data['content']))) {
+                return new JsonResponse(
+                    ['error' => 'Le contenu du commentaire ne peut pas être vide'],
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
+            
+            // Mettre à jour le commentaire
+            $comment->setContent($data['content']);
+            $comment->setUpdatedAt(new \DateTimeImmutable());
+            
+            $this->entityManager->flush();
+            
+            return new JsonResponse(
+                $this->formatComment($comment),
+                Response::HTTP_OK
+            );
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(
+                ['error' => $e->getMessage()],
+                Response::HTTP_FORBIDDEN
+            );
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la modification d\'un commentaire', [
+                'error' => $e->getMessage(),
+                'comment_id' => $id
+            ]);
+            
+            return new JsonResponse(
+                ['error' => 'Une erreur est survenue lors de la modification du commentaire'],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+    
+    /**
+     * Supprimer un commentaire
+     */
+    #[Route('/api/comments/{id}', name: 'api_delete_comment', methods: ['DELETE'])]
+    public function deleteComment(int $id): JsonResponse
+    {
+        try {
+            // Vérifier si l'utilisateur est connecté
+            $user = $this->getUser();
+            if (!$user || !$user instanceof User) {
+                return new JsonResponse(
+                    ['error' => 'Vous devez être connecté pour supprimer un commentaire'],
+                    Response::HTTP_UNAUTHORIZED
+                );
+            }
+            
+            // Récupérer le commentaire
+            $comment = $this->entityManager->getRepository(Comment::class)->find($id);
+            
+            if (!$comment) {
+                return new JsonResponse(['error' => 'Commentaire non trouvé'], Response::HTTP_NOT_FOUND);
+            }
+            
+            // Vérifier que l'utilisateur est l'auteur du commentaire
+            if ($comment->getAuthor()->getId() !== $user->getId()) {
+                throw new AccessDeniedException('Vous n\'avez pas l\'autorisation de supprimer ce commentaire');
+            }
+            
+            // Pour les commentaires avec des réponses, on supprime le contenu mais on garde la structure
+            if (count($comment->getChildren()) > 0) {
+                $comment->setContent('[Ce commentaire a été supprimé]');
+                $this->entityManager->flush();
+            } else {
+                // Si c'est une feuille (pas d'enfants), on peut le supprimer complètement
+                $this->entityManager->remove($comment);
+                $this->entityManager->flush();
+            }
+            
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        } catch (AccessDeniedException $e) {
+            return new JsonResponse(
+                ['error' => $e->getMessage()],
+                Response::HTTP_FORBIDDEN
+            );
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la suppression d\'un commentaire', [
+                'error' => $e->getMessage(),
+                'comment_id' => $id
+            ]);
+            
+            return new JsonResponse(
+                ['error' => 'Une erreur est survenue lors de la suppression du commentaire'],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }

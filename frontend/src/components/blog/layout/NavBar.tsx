@@ -34,8 +34,27 @@ function UserMenu() {
 
     const handleLogout = async () => {
         await logout()
-        router.push("/")
-        router.refresh()
+        
+        // Récupérer le chemin actuel
+        const currentPath = window.location.pathname
+        
+        // Ne rediriger que si la page actuelle nécessite une authentification
+        const authRequiredPaths = [
+            '/editor',
+            '/admin',
+            '/preview',
+            '/account'
+        ]
+        
+        const needsRedirect = authRequiredPaths.some(path => currentPath.startsWith(path))
+        
+        if (needsRedirect) {
+            // Si on est sur une page protégée, rediriger vers la page d'accueil
+            router.push("/")
+        } else {
+            // Sinon, juste rafraîchir la page pour mettre à jour l'UI
+            router.refresh()
+        }
     }
 
     // Obtenir les initiales de l'utilisateur pour l'avatar
