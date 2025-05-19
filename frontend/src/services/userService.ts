@@ -50,3 +50,26 @@ export async function updateUserRole(userId: string, role: string): Promise<User
     throw error;
   }
 }
+
+export async function importUsersFromCSV(file: File): Promise<{ success: number; failed: number }> {
+  try {
+    const formData = new FormData();
+    formData.append('csvFile', file);
+
+    const response = await fetch('/api/users/import', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Erreur lors de l\'import des utilisateurs');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erreur importUsersFromCSV:', error);
+    throw error;
+  }
+}

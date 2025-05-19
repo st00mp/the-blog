@@ -30,7 +30,7 @@ import {
   X,
   Upload
 } from "lucide-react"
-import { getUsers, updateUserRole, User } from "@/services/userService"
+import { getUsers, updateUserRole, User, importUsersFromCSV } from "@/services/userService"
 import { useToast } from "@/components/ui/use-toast"
 import { Pagination } from "@/components/ui/pagination"
 
@@ -96,7 +96,7 @@ export default function AdminPage() {
     totalRegularUsers: users.filter(u => u.role === 'user').length
   }
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -111,26 +111,34 @@ export default function AdminPage() {
     }
 
     setIsUploading(true)
-
-    // Ici, simuler un succès de l'upload puisque c'est statique pour l'instant
-    setTimeout(() => {
+    
+    try {
+      const result = await importUsersFromCSV(file)
+      
+      // Recharger la liste des utilisateurs après l'import
+      const updatedUsers = await getUsers()
+      setUsers(updatedUsers)
+      
       toast({
         title: "Succès",
-        description: `Le fichier ${file.name} a été importé avec succès. Les utilisateurs seront ajoutés sous peu.`,
+        description: `Import réussi : ${result.success} utilisateur(s) ajouté(s), ${result.failed} échec(s).`,
         variant: "default"
       })
+    } catch (error) {
+      console.error(error)
+      toast({
+        variant: "destructive",
+        title: "Erreur d'importation",
+        description: error instanceof Error ? error.message : "Une erreur s'est produite lors de l'importation."
+      })
+    } finally {
       setIsUploading(false)
       
       // Réinitialiser le champ de fichier pour permettre une nouvelle sélection du même fichier
       if (event.target) {
         event.target.value = ''
       }
-    }, 1500)
-
-    // En production, vous enverriez le fichier à l'API avec quelque chose comme:
-    // const formData = new FormData()
-    // formData.append('usersFile', file)
-    // await fetch('/api/users/upload', { method: 'POST', body: formData })
+    }
   }
 
   const handleRoleChange = async (userId: string, newRole: string) => {
