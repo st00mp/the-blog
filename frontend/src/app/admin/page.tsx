@@ -117,62 +117,60 @@ export default function AdminPage() {
 
   return (
     <RouteGuard requireAuth={true} requireRole="admin">
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* En-tête */}
-        <header>
-          <h1 className="text-2xl font-bold text-white">Tableau de bord</h1>
-          <p className="text-zinc-400 mt-1">Gestion des utilisateurs et des rôles</p>
-        </header>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Tableau de bord</h1>
+            <p className="text-zinc-400 mt-1">Gestion des utilisateurs et des rôles</p>
+          </div>
+        </div>
 
         {/* Statistiques */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-zinc-900 border border-zinc-800">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <UserIcon className="mr-2 h-5 w-5 text-blue-400" /> Administrateurs
-              </CardTitle>
+          <Card className="bg-zinc-900 border-zinc-800 hover:shadow-lg transition-shadow">
+            <CardHeader className="flex items-center pb-2">
+              <UserIcon className="mr-2 h-5 w-5 text-blue-400" />
+              <CardTitle className="text-lg">Administrateurs</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{stats.totalAdmins}</p>
+              <p className="text-3xl font-bold text-white">{stats.totalAdmins}</p>
             </CardContent>
           </Card>
-          <Card className="bg-zinc-900 border border-zinc-800">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <FileText className="mr-2 h-5 w-5 text-purple-400" /> Éditeurs
-              </CardTitle>
+          <Card className="bg-zinc-900 border-zinc-800 hover:shadow-lg transition-shadow">
+            <CardHeader className="flex items-center pb-2">
+              <FileText className="mr-2 h-5 w-5 text-purple-400" />
+              <CardTitle className="text-lg">Éditeurs</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{stats.totalEditors}</p>
+              <p className="text-3xl font-bold text-white">{stats.totalEditors}</p>
             </CardContent>
           </Card>
-          <Card className="bg-zinc-900 border border-zinc-800">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <MessageSquare className="mr-2 h-5 w-5 text-green-400" /> Utilisateurs
-              </CardTitle>
+          <Card className="bg-zinc-900 border-zinc-800 hover:shadow-lg transition-shadow">
+            <CardHeader className="flex items-center pb-2">
+              <Users className="mr-2 h-5 w-5 text-green-400" />
+              <CardTitle className="text-lg">Utilisateurs</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{stats.totalRegularUsers}</p>
+              <p className="text-3xl font-bold text-white">{stats.totalRegularUsers}</p>
             </CardContent>
           </Card>
-          <Card className="bg-zinc-900 border border-zinc-800">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Users className="mr-2 h-5 w-5 text-zinc-400" /> Total
-              </CardTitle>
+          <Card className="bg-zinc-900 border-zinc-800 hover:shadow-lg transition-shadow">
+            <CardHeader className="flex items-center pb-2">
+              <Users className="mr-2 h-5 w-5 text-yellow-400" />
+              <CardTitle className="text-lg">Total</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{stats.totalUsers}</p>
+              <p className="text-3xl font-bold text-white">{stats.totalUsers}</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Tableau des utilisateurs */}
-        <Card className="bg-zinc-900 border border-zinc-800">
-          <CardHeader className="pb-0">
+        {/* Liste des utilisateurs */}
+        <Card className="bg-zinc-900 border-zinc-800 overflow-hidden">
+          <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle>Utilisateurs</CardTitle>
+              <CardTitle className="text-lg">Utilisateurs</CardTitle>
             </div>
 
             {/* Champ de recherche */}
@@ -197,7 +195,7 @@ export default function AdminPage() {
               )}
             </div>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="pt-3 px-0 pb-0">
             {loading ? (
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
@@ -286,7 +284,7 @@ export default function AdminPage() {
 
                     {/* Pagination */}
                     {totalFilteredUsers > pageSize && (
-                      <div className="py-4 px-6 border-t border-zinc-800">
+                      <div className="mt-4 py-4 flex justify-center bg-zinc-900 border-t border-zinc-800">
                         <Pagination
                           total={totalFilteredUsers}
                           currentPage={currentPage}

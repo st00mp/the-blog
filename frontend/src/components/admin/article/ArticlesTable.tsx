@@ -123,23 +123,27 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
   }
 
   return (
-    <div className="relative overflow-x-auto">
-      <table className="w-full text-sm text-left text-zinc-300">
-        <thead className="text-xs uppercase bg-zinc-800 text-zinc-400">
-          <tr>
-            <th scope="col" className="px-6 py-3">Titre</th>
-            <th scope="col" className="px-6 py-3">Date de création</th>
-            <th scope="col" className="px-6 py-3">Statut</th>
-            <th scope="col" className="px-6 py-3 text-right">Actions</th>
+    <div className="overflow-x-auto">
+      <table className="w-full table-fixed border-collapse">
+        <thead className="bg-zinc-800">
+          <tr className="text-sm font-medium text-zinc-400">
+            <th className="w-2/5 px-6 py-3 text-left">Titre</th>
+            <th className="w-1/5 px-6 py-3 text-left">Date de création</th>
+            <th className="w-1/5 px-6 py-3 text-left">Statut</th>
+            <th className="w-1/5 px-6 py-3 text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
           {articles.map((article) => (
-            <tr key={article.id} className="border-b border-zinc-800 bg-zinc-900 hover:bg-zinc-800">
-              <td className="px-6 py-4 font-medium whitespace-nowrap">
+            <tr key={article.id} className="border-t border-zinc-800 hover:bg-zinc-800/50">
+              <td className="px-6 py-4">
                 <div className="flex flex-col">
-                  <span className="text-zinc-200">{article.title}</span>
-                  <span className="text-xs text-zinc-400 mt-1 line-clamp-1">{getExcerpt(article)}</span>
+                  <span className="text-zinc-200 font-medium">{article.title}</span>
+                  <span className="text-xs text-zinc-500 mt-1">
+                    {article.intro && article.intro.length > 70
+                      ? `${article.intro.substring(0, 70)}...`
+                      : article.intro}
+                  </span>
                 </div>
               </td>
               <td className="px-6 py-4">{formatDate(article.createdAt)}</td>
@@ -160,12 +164,12 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
               <td className="px-6 py-4 text-right">
                 {deleteConfirmId === article.id ? (
                   <div className="flex items-center justify-end gap-2">
-                    <span className="text-xs text-zinc-400 mr-2">Confirmer ?</span>
+                    <span className="text-xs text-zinc-400 mr-1">Confirmer ?</span>
                     <Button
                       size="sm"
                       variant="destructive"
                       onClick={() => confirmDelete(article.id, article.slug)}
-                      className="h-8 px-2 text-xs"
+                      className="h-7 px-2 text-xs rounded-sm"
                     >
                       Oui
                     </Button>
@@ -173,7 +177,7 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
                       size="sm"
                       variant="outline"
                       onClick={cancelDelete}
-                      className="h-8 px-2 text-xs bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                      className="h-7 px-2 text-xs rounded-sm bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                     >
                       Non
                     </Button>

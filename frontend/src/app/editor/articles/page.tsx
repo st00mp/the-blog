@@ -67,7 +67,7 @@ export default function ArticlesPage() {
       // Passer le slug à la fonction deleteArticle, car le backend utilise le slug pour identifier l'article
       await deleteArticle(id, slug);
       setArticles(articles.filter(article => article.id !== id));
-      
+
       toast({
         title: "Succès",
         description: "L'article a été supprimé",
@@ -84,11 +84,11 @@ export default function ArticlesPage() {
       setDeletingId(null);
     }
   };
-  
+
   // Fonction pour mettre à jour un article après changement de statut (sans notification)
   const handleStatusChange = (updatedArticle: Article) => {
     // Mettre à jour la liste des articles avec le nouvel article mis à jour
-    setArticles(articles.map(article => 
+    setArticles(articles.map(article =>
       article.id === updatedArticle.id ? updatedArticle : article
     ));
     // Pas de notification toast - à la demande de l'utilisateur
@@ -100,23 +100,23 @@ export default function ArticlesPage() {
       // Recherche dans le titre et l'intro
       const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (article.intro ? article.intro.toLowerCase().includes(searchTerm.toLowerCase()) : false);
-        
+
       // Comparaison de statut ("all", "published", ou "draft")
       const matchesStatus = statusFilter === "all" || article.status === statusFilter;
-      
+
       return matchesSearch && matchesStatus;
     });
   }, [articles, searchTerm, statusFilter]);
-  
+
   // Console log pour déboguer les données reçues par le frontend
   useEffect(() => {
     if (!isLoading && articles.length > 0) {
-      console.log('Articles chargés avec statuts:', 
-        articles.map(a => ({ 
-          id: a.id, 
-          title: a.title, 
-          status: a.status, 
-          createdAt: a.createdAt 
+      console.log('Articles chargés avec statuts:',
+        articles.map(a => ({
+          id: a.id,
+          title: a.title,
+          status: a.status,
+          createdAt: a.createdAt
         })));
     }
   }, [articles, isLoading]);
@@ -127,7 +127,7 @@ export default function ArticlesPage() {
     setStatusFilter("all");
     setCurrentPage(1);
   };
-  
+
   // Fonction pour changer de page
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -150,7 +150,7 @@ export default function ArticlesPage() {
       </div>
 
       {/* Carte principale */}
-      <Card className="bg-zinc-900 border border-zinc-800 overflow-hidden p-6">
+      <Card className="bg-zinc-900 border border-zinc-800 overflow-hidden">
         {/* En-tête avec filtres */}
         <CardHeader className="pb-4 px-6 pt-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -214,9 +214,9 @@ export default function ArticlesPage() {
         </CardHeader>
 
         {/* Contenu */}
-        <CardContent className="p-0">
+        <CardContent className="pt-3 px-0 pb-0">
           {isLoading ? (
-            <div className="flex items-center justify-center p-12">
+            <div className="flex items-center justify-center h-40">
               <div className="animate-pulse flex flex-col items-center space-y-2">
                 <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                 <p className="text-sm text-zinc-400">Chargement des articles...</p>
@@ -244,28 +244,28 @@ export default function ArticlesPage() {
               )}
             </div>
           ) : (
-            <div className="overflow-hidden">
+            <div className="overflow-x-auto">
               <AdminArticlesTable
                 articles={filteredArticles}
                 onDelete={handleDeleteArticle}
                 isDeleting={deletingId !== null}
                 onStatusChange={handleStatusChange}
               />
-              
+
               {/* Pagination */}
               {meta.totalPages > 1 && (
-                <div className="px-6 py-4 flex justify-center border-t border-zinc-800">
+                <div className="mt-4 py-4 flex justify-center bg-zinc-900 border-t border-zinc-800">
                   <div className="flex items-center gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 h-8 w-8 p-0"
                       onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
                     >
                       &lsaquo;
                     </Button>
-                    
+
                     {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map((page) => (
                       <Button
                         key={page}
@@ -279,10 +279,10 @@ export default function ArticlesPage() {
                         {page}
                       </Button>
                     ))}
-                    
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
+
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 h-8 w-8 p-0"
                       onClick={() => handlePageChange(Math.min(meta.totalPages, currentPage + 1))}
                       disabled={currentPage === meta.totalPages}
