@@ -62,12 +62,16 @@ type ArticleResponse = {
 // Récupère tous les articles
 export async function getAllArticles(
   searchTerm: string = '',
-  status: string = 'all'
+  status: string = 'all',
+  page: number = 1,
+  limit: number = 12
 ): Promise<ArticleResponse> {
   try {
     const queryParams = new URLSearchParams();
     if (searchTerm) queryParams.append('search', searchTerm);
     if (status !== 'all') queryParams.append('status', status);
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
 
     const response = await fetch(`/api/articles?${queryParams.toString()}`, {
       method: 'GET',
@@ -97,11 +101,13 @@ export async function getAllArticles(
 export async function getMyArticles(
   searchTerm: string = '',
   status: string = 'all',
-  currentUserId: number | null = null
+  currentUserId: number | null = null,
+  page: number = 1,
+  limit: number = 12
 ): Promise<ArticleResponse> {
   try {
-    // Récupérer tous les articles
-    const allArticlesResponse = await getAllArticles(searchTerm, status);
+    // Récupérer tous les articles avec pagination
+    const allArticlesResponse = await getAllArticles(searchTerm, status, page, limit);
     
     // Si l'ID de l'utilisateur n'est pas fourni, retourner tous les articles
     if (!currentUserId) {
@@ -129,9 +135,14 @@ export async function getMyArticles(
 }
 
 // Supprimer un article
-export async function deleteArticle(id: string): Promise<void> {
+export async function deleteArticle(id: string, slug?: string): Promise<void> {
   try {
-    const response = await fetch(`/api/articles/${id}`, {
+    // Si un slug est fourni, l'utiliser pour la suppression
+    // sinon utiliser l'ID (compatibilité arrière)
+    const identifier = slug || id;
+    console.log('Tentative de suppression avec l\'identifiant:', identifier);
+    
+    const response = await fetch(`/api/articles/${identifier}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -140,8 +151,10 @@ export async function deleteArticle(id: string): Promise<void> {
     });
 
     if (!response.ok) {
-      throw new Error('Erreur lors de la suppression de l\'article');
+      throw new Error(`Erreur lors de la suppression de l\'article: ${response.status} ${response.statusText}`);
     }
+    
+    console.log('Suppression réussie de l\'article avec identifiant:', identifier);
   } catch (error) {
     console.error('Erreur deleteArticle:', error);
     throw error;

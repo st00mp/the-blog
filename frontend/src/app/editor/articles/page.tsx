@@ -29,7 +29,8 @@ export default function ArticlesPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1, limit: 12 });
 
   // Charger les articles au montage et quand les filtres changent
   useEffect(() => {
@@ -38,7 +39,7 @@ export default function ArticlesPage() {
         setIsLoading(true);
         // Récupérer l'ID de l'utilisateur connecté et le passer au service
         const currentUserId = user?.id || null;
-        const response = await getMyArticles(searchTerm, statusFilter, currentUserId);
+        const response = await getMyArticles(searchTerm, statusFilter, currentUserId, currentPage, meta.limit);
         setArticles(response.data);
         setMeta(response.meta);
       } catch (error) {
@@ -57,13 +58,14 @@ export default function ArticlesPage() {
     if (user) {
       loadArticles();
     }
-  }, [searchTerm, statusFilter, toast, user]);
+  }, [searchTerm, statusFilter, currentPage, meta.limit, toast, user]);
 
   // Fonction pour supprimer un article
-  const handleDeleteArticle = async (id: string) => {
+  const handleDeleteArticle = async (id: string, slug?: string) => {
     try {
       setDeletingId(id);
-      await deleteArticle(id);
+      // Passer le slug à la fonction deleteArticle, car le backend utilise le slug pour identifier l'article
+      await deleteArticle(id, slug);
       setArticles(articles.filter(article => article.id !== id));
       
       toast({
@@ -123,6 +125,12 @@ export default function ArticlesPage() {
   const resetFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
+    setCurrentPage(1);
+  };
+  
+  // Fonction pour changer de page
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -243,6 +251,47 @@ export default function ArticlesPage() {
                 isDeleting={deletingId !== null}
                 onStatusChange={handleStatusChange}
               />
+              
+              {/* Pagination */}
+              {meta.totalPages > 1 && (
+                <div className="px-6 py-4 flex justify-center border-t border-zinc-800">
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 h-8 w-8 p-0"
+                      onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      &lsaquo;
+                    </Button>
+                    
+                    {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        size="sm"
+                        variant={page === currentPage ? "default" : "outline"}
+                        className={page === currentPage
+                          ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700 h-8 w-8 p-0"
+                          : "border-zinc-700 text-zinc-300 hover:bg-zinc-800 h-8 w-8 p-0"}
+                        onClick={() => handlePageChange(page)}
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                    
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 h-8 w-8 p-0"
+                      onClick={() => handlePageChange(Math.min(meta.totalPages, currentPage + 1))}
+                      disabled={currentPage === meta.totalPages}
+                    >
+                      &rsaquo;
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

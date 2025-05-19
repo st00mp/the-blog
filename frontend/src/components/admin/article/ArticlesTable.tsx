@@ -33,7 +33,7 @@ import { Article } from "@/services/articleService"
 
 type ArticlesTableProps = {
   articles: Article[]
-  onDelete: (id: string) => void
+  onDelete: (id: string, slug?: string) => void
   isDeleting?: boolean
   onStatusChange?: (article: Article) => void
 }
@@ -78,13 +78,13 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
   }
 
   // Gérer la demande de suppression
-  const handleDeleteRequest = (id: string) => {
+  const handleDeleteRequest = (id: string, slug?: string) => {
     setDeleteConfirmId(id)
   }
 
   // Confirmer la suppression
-  const confirmDelete = (id: string) => {
-    onDelete(id)
+  const confirmDelete = (id: string, slug?: string) => {
+    onDelete(id, slug)
     setDeleteConfirmId(null)
   }
   
@@ -164,7 +164,7 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => confirmDelete(article.id)}
+                      onClick={() => confirmDelete(article.id, article.slug)}
                       className="h-8 px-2 text-xs"
                     >
                       Oui
@@ -234,7 +234,7 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
                       
                       {/* Actions communes à tous les articles */}
                       <DropdownMenuItem asChild className="cursor-pointer text-zinc-200 flex items-center gap-2 hover:bg-zinc-800">
-                        <Link href={`/admin/articles/edit/${article.id}`}>
+                        <Link href={`/editor/articles/edit/${article.slug}`}>
                           <FileEdit className="h-4 w-4" />
                           <span>Modifier</span>
                         </Link>
@@ -242,7 +242,7 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
                       <DropdownMenuSeparator className="bg-zinc-800" />
                       <DropdownMenuItem
                         className={`cursor-pointer ${isDeleting ? 'opacity-50 cursor-not-allowed' : 'text-red-400 hover:bg-zinc-800'}`}
-                        onClick={() => !isDeleting && handleDeleteRequest(article.id)}
+                        onClick={() => !isDeleting && handleDeleteRequest(article.id, article.slug)}
                         disabled={isDeleting}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
