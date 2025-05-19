@@ -5,6 +5,7 @@ import { ClockIcon } from "lucide-react"
 import CommentSectionWrapper from "@/components/blog/CommentSectionWrapper"
 
 // Active l'ISR (Incremental Static Regeneration) toutes les 60 secondes pour cette page
+// Bon compromis entre fraîcheur des données et performances
 export const revalidate = 60
 
 type Props = { params: { slug: string } }
@@ -33,7 +34,9 @@ export async function generateStaticParams() {
         throw new Error("BACKEND_API_URL must be defined")
     }
     // Récupère tous les slugs d'articles depuis l'API pour générer les pages dynamiquement
-    const res = await fetch(`${API_URL}/api/articles`, { next: { revalidate: 60 } })
+    const res = await fetch(`${API_URL}/api/articles`, { 
+        next: { revalidate: 60 }
+    })
     if (!res.ok) {
         throw new Error(`Erreur HTTP articles: ${res.status}`)
     }
@@ -48,7 +51,10 @@ export async function generateStaticParams() {
 // Fonction Next.js pour générer les balises meta (title, description) pour le SEO
 export async function generateMetadata({ params }: Props) {
     const API_URL = process.env.BACKEND_API_URL
-    const res = await fetch(`${API_URL}/api/articles/${params.slug}`, { next: { revalidate: 60 } })
+    // Utiliser le même temps de revalidation que la page principale
+    const res = await fetch(`${API_URL}/api/articles/${params.slug}`, { 
+        next: { revalidate: 60 }
+    })
     const article = await res.json() as Article
     return {
         title: article.metaTitle || article.title,
@@ -61,7 +67,9 @@ export default async function BlogPostPage({ params }: Props) {
     const API_URL = process.env.BACKEND_API_URL
     try {
         // Récupère les données de l'article via son slug depuis l'API
-        const res = await fetch(`${API_URL}/api/articles/${params.slug}`, { next: { revalidate: 60 } })
+        const res = await fetch(`${API_URL}/api/articles/${params.slug}`, { 
+            next: { revalidate: 60 }
+        })
         if (!res.ok) throw new Error(`Failed to fetch article: ${res.status}`)
         const article = await res.json() as Article
 
@@ -145,7 +153,7 @@ export default async function BlogPostPage({ params }: Props) {
                 </div>
 
                 {/* Section des commentaires */}
-                <div className="mt-12 relative mx-auto max-w-6xl pt-5 pb-5  bg-white/[0.02] shadow-sm px-4 sm:px-6">
+                <div className="mt-12 relative mx-auto max-w-6xl pt-5 pb-5 bg-white/[0.02] shadow-sm px-4 sm:px-6">
                     <section className="mx-auto w-full max-w-3xl px-4 pb-12">
                         <CommentSectionWrapper articleId={article.slug} />
                     </section>

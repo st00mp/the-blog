@@ -1,4 +1,14 @@
 /**
+ * Type pour une activité récente
+ */
+export type RecentActivity = {
+  type: 'article_published' | 'new_comment' | 'draft_updated';
+  color: string;
+  message: string;
+  date: string;
+};
+
+/**
  * Type pour les statistiques du dashboard
  */
 export type DashboardStats = {
@@ -7,6 +17,7 @@ export type DashboardStats = {
   comments: number;
   viewsThisMonth: number;
   isAdmin?: boolean; // Indique si l'utilisateur connecté a le rôle admin
+  recentActivity?: RecentActivity[]; // Activités récentes
 };
 
 /**

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
-import { Plus, Filter, Search } from "lucide-react"
+import { Plus, Filter, Search, RefreshCw } from "lucide-react"
+import { useArticleActions } from "@/contexts/ArticleActionsContext"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -24,6 +25,8 @@ import { Article, getMyArticles, deleteArticle } from "@/services/articleService
 export default function ArticlesPage() {
     const { toast } = useToast();
     const { user } = useAuth(); // Récupérer l'utilisateur connecté
+    const { shouldRefresh, registerAction } = useArticleActions(); // Utiliser le contexte d'actions
+    
     const [articles, setArticles] = useState<Article[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -31,34 +34,69 @@ export default function ArticlesPage() {
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1, limit: 12 });
+    const [isRefreshing, setIsRefreshing] = useState(false); // État pour le rafraîchissement manuel
+
+    // Fonction pour charger les articles
+    const loadArticles = async () => {
+        try {
+            setIsLoading(true);
+            // Récupérer l'ID de l'utilisateur connecté et le passer au service
+            const currentUserId = user?.id || null;
+            const response = await getMyArticles(searchTerm, statusFilter, currentUserId, currentPage, meta.limit);
+            setArticles(response.data);
+            setMeta(response.meta);
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Erreur",
+                description: "Impossible de charger vos articles."
+            });
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Charger les articles au montage et quand les filtres changent
     useEffect(() => {
-        const loadArticles = async () => {
-            try {
-                setIsLoading(true);
-                // Récupérer l'ID de l'utilisateur connecté et le passer au service
-                const currentUserId = user?.id || null;
-                const response = await getMyArticles(searchTerm, statusFilter, currentUserId, currentPage, meta.limit);
-                setArticles(response.data);
-                setMeta(response.meta);
-            } catch (error) {
-                toast({
-                    variant: "destructive",
-                    title: "Erreur",
-                    description: "Impossible de charger vos articles."
-                });
-                console.error(error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        // Ne charger les articles que si l'utilisateur est connecté
-        if (user) {
+        loadArticles();
+        // Pas de rafraîchissement automatique par minuteur
+        // Le chargement se fait uniquement lors des changements de filtres ou de page
+    }, [searchTerm, statusFilter, currentPage, meta.limit, user]);
+    
+    // Vérifier si une action a été effectuée et rafraîchir les données si nécessaire
+    useEffect(() => {
+        if (shouldRefresh()) {
+            console.log('Rafraîchissement des articles après une action');
             loadArticles();
         }
-    }, [searchTerm, statusFilter, currentPage, meta.limit, toast, user]);
+    }, [shouldRefresh]);
+    
+    // Fonction pour le rafraîchissement manuel
+    const handleManualRefresh = () => {
+        setIsRefreshing(true);
+        loadArticles().finally(() => {
+            setIsRefreshing(false);
+        });
+    };
+    
+    // Force un rafraîchissement quand le composant devient visible dans l'onglet
+    useEffect(() => {
+        // fonction pour détecter si la page devient visible
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                loadArticles();
+            }
+        };
+        
+        // Ajouter un écouteur d'événement pour détecter les changements de visibilité
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        
+        // Nettoyer l'écouteur d'événement lors du démontage
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []);
 
     // Fonction pour supprimer un article
     const handleDeleteArticle = async (id: string, slug?: string) => {
@@ -68,6 +106,9 @@ export default function ArticlesPage() {
             await deleteArticle(id, slug);
             setArticles(articles.filter(article => article.id !== id));
 
+            // Enregistrer l'action de suppression pour déclencher un rafraîchissement ailleurs
+            registerAction("delete");
+            
             toast({
                 title: "Succès",
                 description: "L'article a été supprimé",
@@ -91,6 +132,10 @@ export default function ArticlesPage() {
         setArticles(articles.map(article =>
             article.id === updatedArticle.id ? updatedArticle : article
         ));
+        
+        // Enregistrer l'action de changement de statut (publication ou brouillon)
+        registerAction(updatedArticle.status === 'published' ? "publish" : "draft");
+        
         // Pas de notification toast - à la demande de l'utilisateur
     };
 
@@ -154,11 +199,21 @@ export default function ArticlesPage() {
                 {/* En-tête avec filtres */}
                 <CardHeader className="pb-4 px-6 pt-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-3">
                             <h2 className="text-lg font-semibold text-white">Liste des articles</h2>
                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-800/50 text-zinc-300 border border-zinc-700">
                                 {meta.total} {meta.total <= 1 ? 'article' : 'articles'}
                             </span>
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={handleManualRefresh}
+                                disabled={isRefreshing}
+                                className="flex items-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 h-8 px-2"
+                                title="Rafraîchir la liste"
+                            >
+                                <RefreshCw size={16} className={`${isRefreshing ? 'animate-spin' : ''}`} />
+                            </Button>
                         </div>
 
                         <div className="flex items-center gap-3 flex-1 justify-end">

@@ -116,29 +116,47 @@ export default function EditorDashboardPage() {
         </div>
       )}
 
-      {/* Section de mise à jour rapide */}
-      <Card className="bg-zinc-900 border-zinc-800">
-        <CardHeader>
-          <CardTitle>Activité récente</CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 py-6">
-          <ul className="space-y-4">
-            <li className="flex items-start space-x-3">
-              <span className="mt-1 inline-block h-2 w-2 rounded-full bg-blue-400" />
-              <span className="text-sm text-zinc-300">
-                Votre article <strong>« Comment déployer un LLM en production »</strong> a été publié il y a 2 heures.
-              </span>
-            </li>
-            <li className="flex items-start space-x-3">
-              <span className="mt-1 inline-block h-2 w-2 rounded-full bg-purple-400" />
-              <span className="text-sm text-zinc-300">
-                Nouveau commentaire sur <strong>« Optimiser les coûts GPU »</strong>.
-              </span>
-            </li>
-            {/* … */}
-          </ul>
-        </CardContent>
-      </Card>
+      {/* Section d'activité récente */}
+      <div className="mt-8">
+        <Card className="bg-zinc-900 border-zinc-800 shadow-md hover:shadow-lg transition-shadow">
+          <CardHeader className="pb-2 border-b border-zinc-800">
+            <CardTitle className="text-xl text-zinc-100">Activité récente</CardTitle>
+          </CardHeader>
+          <CardContent className="px-6 py-8">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+                  <span className="text-xs text-zinc-500">Chargement des activités...</span>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="py-4 text-center text-zinc-500">Impossible de charger les activités récentes.</div>
+            ) : !stats.recentActivity || stats.recentActivity.length === 0 ? (
+              <div className="py-4 text-center text-zinc-500">Aucune activité récente à afficher.</div>
+            ) : (
+              <ul className="space-y-6 pl-1">
+                {stats.recentActivity.map((activity, index) => (
+                  <li key={index} className="flex items-start space-x-4 py-1">
+                    <span 
+                      className={`mt-1.5 inline-block h-3 w-3 rounded-full ${
+                        activity.color === 'blue' ? 'bg-blue-400' : 
+                        activity.color === 'purple' ? 'bg-purple-400' : 
+                        activity.color === 'yellow' ? 'bg-yellow-400' : 
+                        'bg-gray-400'
+                      } shadow-glow`} 
+                    />
+                    <span 
+                      className="text-sm text-zinc-300 leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: activity.message }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -73,12 +73,17 @@ export async function getAllArticles(
     queryParams.append('page', page.toString());
     queryParams.append('limit', limit.toString());
 
+    // Ajout d'un timestamp pour éviter le cache du navigateur
+    queryParams.append('_t', Date.now().toString());
+    
     const response = await fetch(`/api/articles?${queryParams.toString()}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
+      cache: 'no-store', // Désactiver le cache pour toujours récupérer des données fraîches
+      next: { revalidate: 0 }, // Force Next.js à revalider la requête à chaque fois
     });
 
     if (!response.ok) {
@@ -106,27 +111,39 @@ export async function getMyArticles(
   limit: number = 12
 ): Promise<ArticleResponse> {
   try {
-    // Récupérer tous les articles avec pagination
-    const allArticlesResponse = await getAllArticles(searchTerm, status, page, limit);
+    console.log('Fetching articles for user ID:', currentUserId);
     
-    // Si l'ID de l'utilisateur n'est pas fourni, retourner tous les articles
-    if (!currentUserId) {
-      return allArticlesResponse;
+    // Utiliser un paramètre spécifique pour filtrer côté serveur si un ID est fourni
+    const queryParams = new URLSearchParams();
+    if (searchTerm) queryParams.append('search', searchTerm);
+    if (status !== 'all') queryParams.append('status', status);
+    if (currentUserId) queryParams.append('author_id', currentUserId.toString());
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
+    
+    // Ajout d'un timestamp pour éviter le cache du navigateur
+    queryParams.append('_t', Date.now().toString());
+    
+    const response = await fetch(`/api/articles?${queryParams.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      cache: 'no-store', // Désactiver le cache pour toujours récupérer des données fraîches
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur lors de la récupération des articles');
     }
+
+    const responseData = await response.json();
+    console.log('Articles fetched:', responseData.data?.length || 0);
     
-    // Filtrer les articles pour n'inclure que ceux de l'utilisateur connecté
-    const filteredArticles = allArticlesResponse.data.filter(article => 
-      article.author && article.author.id === currentUserId
-    );
-    
-    // Retourner les données filtrées avec les métadonnées mises à jour
+    // Convertir les statuts pour l'UI
     return {
-      data: convertApiDataForUI(filteredArticles),
-      meta: {
-        ...allArticlesResponse.meta,
-        total: filteredArticles.length,
-        totalPages: Math.ceil(filteredArticles.length / allArticlesResponse.meta.limit)
-      }
+      ...responseData,
+      data: convertApiDataForUI(responseData.data)
     };
   } catch (error) {
     console.error('Erreur getMyArticles:', error);

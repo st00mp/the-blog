@@ -23,11 +23,13 @@ class ArticleRepository extends ServiceEntityRepository
      * 
      * @param string $search Terme de recherche (optionnel)
      * @param int $categoryId ID de catégorie pour filtrer (optionnel)
+     * @param int $authorId ID de l'auteur pour filtrer (optionnel)
+     * @param int $status Statut des articles (-1 = tous, 0 = brouillon, 1 = publié)
      * @param int $page Numéro de page (commence à 1)
      * @param int $limit Nombre d'éléments par page
      * @return array Tableau contenant les articles et les métadonnées de pagination
      */
-    public function findWithFilters(string $search = '', int $categoryId = 0, int $page = 1, int $limit = 12): array
+    public function findWithFilters(string $search = '', int $categoryId = 0, int $authorId = 0, int $status = -1, int $page = 1, int $limit = 12): array
     {
         // Valider les paramètres de pagination
         $page = max(1, $page);
@@ -39,6 +41,8 @@ class ArticleRepository extends ServiceEntityRepository
         // Ajouter les filtres si nécessaire
         $this->addSearchFilter($qb, $search);
         $this->addCategoryFilter($qb, $categoryId);
+        $this->addAuthorFilter($qb, $authorId);
+        $this->addStatusFilter($qb, $status);
 
         // Appliquer la pagination
         $qb->setFirstResult(($page - 1) * $limit)
@@ -94,6 +98,28 @@ class ArticleRepository extends ServiceEntityRepository
         if ($categoryId > 0) {
             $qb->andWhere('c.id = :cat')
                 ->setParameter('cat', $categoryId);
+        }
+    }
+    
+    /**
+     * Ajoute un filtre par auteur à la requête
+     */
+    private function addAuthorFilter(QueryBuilder $qb, int $authorId): void
+    {
+        if ($authorId > 0) {
+            $qb->andWhere('u.id = :author')
+                ->setParameter('author', $authorId);
+        }
+    }
+    
+    /**
+     * Ajoute un filtre par statut à la requête
+     */
+    private function addStatusFilter(QueryBuilder $qb, int $status): void
+    {
+        if ($status >= 0) { // -1 = tous les statuts, 0 = brouillon, 1 = publié
+            $qb->andWhere('a.status = :status')
+                ->setParameter('status', $status);
         }
     }
 

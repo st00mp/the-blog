@@ -10,6 +10,7 @@ export type Comment = {
   };
   children: Comment[];
   isOwner?: boolean; // Indique si l'utilisateur connecté est l'auteur du commentaire
+  articleAuthorId?: number; // ID de l'auteur de l'article pour autoriser la suppression
 };
 
 /**

@@ -150,6 +150,10 @@ class CommentController extends AbstractController
         $currentUser = $this->getUser();
         $isAuthor = $currentUser && $currentUser instanceof User && $currentUser->getId() === $comment->getAuthor()->getId();
         
+        // Récupérer l'article associé pour avoir l'ID de son auteur
+        $article = $comment->getArticle();
+        $articleAuthorId = $article->getAuthor()->getId();
+        
         return [
             'id' => $comment->getId(),
             'content' => $comment->getContent(),
@@ -160,7 +164,8 @@ class CommentController extends AbstractController
                 'name' => $comment->getAuthor()->getName()
             ],
             'children' => $children,
-            'isOwner' => $isAuthor // Indique si l'utilisateur courant est l'auteur du commentaire
+            'isOwner' => $isAuthor, // Indique si l'utilisateur courant est l'auteur du commentaire
+            'articleAuthorId' => $articleAuthorId // ID de l'auteur de l'article pour permissions
         ];
     }
     
@@ -251,8 +256,19 @@ class CommentController extends AbstractController
                 return new JsonResponse(['error' => 'Commentaire non trouvé'], Response::HTTP_NOT_FOUND);
             }
             
-            // Vérifier que l'utilisateur est l'auteur du commentaire
-            if ($comment->getAuthor()->getId() !== $user->getId()) {
+            // Récupérer l'article associé au commentaire
+            $article = $comment->getArticle();
+            
+            // Vérifier si l'utilisateur est autorisé à supprimer ce commentaire
+            $isCommentAuthor = $comment->getAuthor()->getId() === $user->getId();
+            $isArticleAuthor = $article->getAuthor()->getId() === $user->getId();
+            $isAdmin = in_array('ROLE_ADMIN', $user->getRoles());
+            
+            // Autoriser la suppression si l'utilisateur est :
+            // 1. L'auteur du commentaire OU
+            // 2. L'auteur de l'article OU
+            // 3. Un administrateur
+            if (!$isCommentAuthor && !$isArticleAuthor && !$isAdmin) {
                 throw new AccessDeniedException('Vous n\'avez pas l\'autorisation de supprimer ce commentaire');
             }
             

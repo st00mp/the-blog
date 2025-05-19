@@ -269,23 +269,30 @@ export default function CommentSection({ articleId, isLoggedIn, currentUser, onL
               {isEdited && <span className="text-xs text-zinc-600">(modifié)</span>}
             </div>
             
-            {/* Menu actions (modifier/supprimer) pour le propriétaire du commentaire */}
-            {comment.isOwner && isLoggedIn && (
+            {/* Menu actions (modifier/supprimer) */}
+            {isLoggedIn && (
               <div className="flex space-x-1">
-                <button 
-                  onClick={() => setIsEditing(true)}
-                  className="p-1 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
-                  title="Modifier"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-                <button 
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  className="p-1 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
-                  title="Supprimer"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                {/* Bouton modifier - uniquement pour l'auteur du commentaire */}
+                {comment.isOwner && (
+                  <button 
+                    onClick={() => setIsEditing(true)}
+                    className="p-1 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
+                    title="Modifier"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                
+                {/* Bouton supprimer - pour l'auteur du commentaire ET pour l'auteur de l'article */}
+                {(comment.isOwner || (currentUser && comment.articleAuthorId === currentUser.id)) && (
+                  <button 
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    className="p-1 rounded-full hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
+                    title={comment.isOwner ? "Supprimer" : "Supprimer ce commentaire (en tant qu'auteur de l'article)"}
+                  >
+                    <Trash2 className={`h-3.5 w-3.5 ${!comment.isOwner ? 'text-red-500 hover:text-red-400' : ''}`} />
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -331,28 +338,28 @@ export default function CommentSection({ articleId, isLoggedIn, currentUser, onL
             </div>
           )}
           
-          {/* Boîte de dialogue de confirmation pour la suppression - version compacte */}
+          {/* Boîte de dialogue de confirmation de suppression */}
           <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <AlertDialogContent className="max-w-sm px-4 py-4 gap-3">
-              <AlertDialogHeader className="pb-0 space-y-1">
-                <AlertDialogTitle className="text-base">Supprimer ce commentaire ?</AlertDialogTitle>
-                <AlertDialogDescription className="text-xs">
-                  {comment.children.length > 0 
-                    ? "Ce commentaire a des réponses. Son contenu sera masqué mais sa structure sera conservée." 
-                    : "Cette action est irréversible."}
+            <AlertDialogContent className="bg-zinc-900 border border-zinc-800">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {comment.isOwner ? 
+                    "Êtes-vous sûr de vouloir supprimer ce commentaire ? Cette action est irréversible." :
+                    "En tant qu'auteur de l'article, vous êtes sur le point de supprimer un commentaire écrit par quelqu'un d'autre. Cette action est irréversible."}
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter className="flex-row justify-end gap-2 pt-2 mt-2">
+              <AlertDialogFooter>
                 <AlertDialogCancel 
-                  disabled={isSubmitting} 
-                  className="mt-0 h-8 text-xs px-3"
+                  disabled={isSubmitting}
+                  className="bg-zinc-800 hover:bg-zinc-700 text-white"
                 >
                   Annuler
                 </AlertDialogCancel>
                 <AlertDialogAction 
                   onClick={handleDeleteComment}
                   disabled={isSubmitting}
-                  className="h-8 text-xs px-3"
+                  className="bg-red-700 hover:bg-red-600 text-white"
                 >
                   {isSubmitting ? "Suppression..." : "Supprimer"}
                 </AlertDialogAction>

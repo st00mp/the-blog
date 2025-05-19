@@ -32,9 +32,11 @@ final class ArticleController extends AbstractController
         $page = (int) $request->query->get('page', 1);
         $limit = (int) $request->query->get('limit', 12);
         $categoryId = $request->query->getInt('category', 0); // 0 = pas de filtre
+        $authorId = $request->query->getInt('author_id', 0); // Ajout du paramètre author_id
+        $status = $request->query->getInt('status', -1); // -1 = tous les statuts (0 = brouillon, 1 = publié)
 
         // 2. Utilisation de la méthode du repository pour obtenir les articles filtrés et paginés
-        $result = $repo->findWithFilters($search, $categoryId, $page, $limit);
+        $result = $repo->findWithFilters($search, $categoryId, $authorId, $status, $page, $limit);
 
         // 3. Envoi de la réponse JSON avec les articles et les métadonnées
         return $this->json($result, 200, [], [

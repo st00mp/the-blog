@@ -20,17 +20,25 @@ export async function GET(request: Request) {
     const search = searchParams.get('search');
     const category = searchParams.get('category');
     const page = searchParams.get('page') || '1';
+    const status = searchParams.get('status');
+    const limit = searchParams.get('limit');
+    const authorId = searchParams.get('author_id'); // Nouveau paramètre pour filtrer par auteur
+    const cookie = request.headers.get('cookie'); // Récupère les cookies du client
     
     let url = new URL('http://nginx/api/articles');
     if (search) url.searchParams.append('search', search);
     if (category) url.searchParams.append('category', category);
+    if (status && status !== 'all') url.searchParams.append('status', status);
+    if (authorId) url.searchParams.append('author_id', authorId);
+    if (limit) url.searchParams.append('limit', limit);
     url.searchParams.append('page', page);
     
     const res = await fetch(url.toString(), {
-        next: { revalidate: 60 },
+        cache: 'no-store', // Désactiver le cache
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            ...(cookie ? { cookie } : {}), // Transmettre le cookie s'il existe
         },
     });
 
