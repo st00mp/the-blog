@@ -58,6 +58,8 @@ export default function BlogClient({
     const handleSearch = async (term: string) => {
         const API = process.env.NEXT_PUBLIC_BACKEND_API_URL!
         const url = new URL(`${API}/api/articles`)
+        // Ajouter le statut=1 pour ne récupérer que les articles publiés
+        url.searchParams.set("status", "1")
         // Si un terme de recherche est présent, on l'ajoute en paramètre
         if (term) url.searchParams.set("search", term)
         // Idem pour la catégorie sélectionnée

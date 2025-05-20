@@ -33,6 +33,8 @@ export default async function BlogPage({
 
     // Construction dynamique de l'URL avec les paramètres de recherche, catégorie et pagination
     const url = new URL(`${API_URL}/api/articles`)
+    // Ajouter explicitement le statut=1 pour ne récupérer que les articles publiés
+    url.searchParams.set('status', '1')
     if (searchParams.search) url.searchParams.set('search', searchParams.search)
     if (searchParams.category) url.searchParams.set('category', searchParams.category)
     if (searchParams.page) url.searchParams.set('page', searchParams.page)
