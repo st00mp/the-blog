@@ -97,25 +97,25 @@ Quickly insert visuals or layout elements without disrupting the writing flow.
 
 #### **Admin Interface** /admin – Admin dashboard
 
-![image.png](attachment:bcf665af-8530-4359-9024-10e0b8119b46:b2df1abc-8c02-4f41-b2d0-f7c1609497ed.png)
+<img width="1723" alt="image" src="https://github.com/user-attachments/assets/e86d05c4-4753-4eb1-b851-204ab7208315" />
 
 ---
 
 #### **Author Interface** /editor – Author dashboard
 
-![image.png](attachment:29382227-4ddd-4bcd-8229-670b05070c55:image.png)
+<img width="1719" alt="image" src="https://github.com/user-attachments/assets/a24650e7-70d1-449b-9823-0b47b239ed46" />
 
 ---
 
 #### **Author Interface** /editor/articles – Article listing and actions
 
-![image.png](attachment:faa8d2e6-35e3-46db-9bbe-04488fbb13e7:image.png)
+<img width="1723" alt="image" src="https://github.com/user-attachments/assets/444c561c-3238-4975-93d1-540badb658ae" />
 
 ---
 
 #### **User Settings** /account/settings – Personal information and preferences
 
-![localhost_3100_account_settings (1).png](attachment:0c7c38a3-f921-440c-a7b9-d546fae51008:localhost_3100_account_settings_(1).png)
+![localhost_3100_account_settings](https://github.com/user-attachments/assets/dd8b73ca-8a84-4388-9cb7-9f6da6074d4f)
 
 
 
