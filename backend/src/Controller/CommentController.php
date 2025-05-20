@@ -260,15 +260,20 @@ class CommentController extends AbstractController
             $article = $comment->getArticle();
             
             // Vérifier si l'utilisateur est autorisé à supprimer ce commentaire
+            // Cas 1: L'utilisateur est l'auteur du commentaire
             $isCommentAuthor = $comment->getAuthor()->getId() === $user->getId();
-            $isArticleAuthor = $article->getAuthor()->getId() === $user->getId();
+            
+            // Cas 2: L'utilisateur est l'administrateur
             $isAdmin = in_array('ROLE_ADMIN', $user->getRoles());
             
-            // Autoriser la suppression si l'utilisateur est :
-            // 1. L'auteur du commentaire OU
-            // 2. L'auteur de l'article OU
-            // 3. Un administrateur
-            if (!$isCommentAuthor && !$isArticleAuthor && !$isAdmin) {
+            // Cas 3: L'utilisateur est l'auteur de l'article où se trouve le commentaire
+            $isArticleAuthor = $article->getAuthor()->getId() === $user->getId();
+            
+            // Règles de permission pour la suppression d'un commentaire :
+            // 1. L'auteur du commentaire peut toujours supprimer son propre commentaire
+            // 2. Un administrateur peut supprimer n'importe quel commentaire
+            // 3. L'auteur d'un article ne peut supprimer que les commentaires sur SES articles
+            if (!$isCommentAuthor && !$isAdmin && !$isArticleAuthor) {
                 throw new AccessDeniedException('Vous n\'avez pas l\'autorisation de supprimer ce commentaire');
             }
             
