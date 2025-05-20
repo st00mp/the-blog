@@ -9,22 +9,22 @@ The goal is to recreate a clean, elegant blog layout inspired by Vercel’s desi
 
 - [x] Set up database structure with users, articles, and categories
 - [x] Create static home & article detail pages
-- [ ] Generate dynamic article detail pages based on slug (`/blog/[slug]`)
-- [ ] Make homepage dynamic: fetch and display latest articles
-- [ ] Add search functionality for articles based on keywords
-- [ ] Add basic authentication (register / login)
-- [ ] Implement user roles (reader vs author)
-- [ ] Add comment system (with nesting support)
+- [x] Generate dynamic article detail pages based on slug (`/blog/[slug]`)
+- [x] Make homepage dynamic: fetch and display latest articles
+- [x] Add search functionality for articles based on keywords
+- [x] Add basic authentication (register / login)
+- [x] Implement user roles (reader vs author)
+- [x] Add comment system (with nesting support)
 - [x] Allow authors to create their own articles
-- [ ] Allow authors to edit their own articles
-- [ ] Allow authors to delete their own articles
-- [ ] Allow readers to post and manage their own comments
-- [ ] Add file upload support (image/video/document per article)
-- [ ] Add user management from initial .txt file
-- [ ] Secure form inputs and validate user data
-- [ ] Ensure full mobile/desktop responsiveness
-- [ ] Write simplified project documentation
-- [ ] Add minimal testing coverage
+- [x] Allow authors to edit their own articles
+- [x] Allow authors to delete their own articles
+- [x] Allow readers to post and manage their own comments
+- [x] Add file upload support (image/video/document per article)
+- [x] Add user management from initial .txt file
+- [x] Secure form inputs and validate user data
+- [x] Ensure full mobile/desktop responsiveness
+- [x] Write simplified project documentation
+- [x] Add minimal testing coverage
 
 ---
 
