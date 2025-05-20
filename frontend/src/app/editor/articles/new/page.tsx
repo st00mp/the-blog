@@ -144,7 +144,7 @@ export default function NewArticlePage() {
             });
 
             if (!res.ok) throw new Error("Erreur lors de la création de l'article");
-            
+
             const statusText = isDraft ? "Brouillon" : "Article publié";
             alert(`${statusText} créé avec succès !`);
             resetForm();
@@ -180,11 +180,6 @@ export default function NewArticlePage() {
 
                 {/* Ligne d'informations */}
                 <div className="flex flex-wrap items-center gap-4 pt-2 text-sm text-zinc-400 border-t border-zinc-800">
-                    <div className="flex items-center gap-2 bg-zinc-800/50 border border-zinc-700 rounded px-3 py-1.5">
-                        <span>Catégorie</span>
-                        <ChevronDown className="h-4 w-4" />
-                    </div>
-
                     <div className="flex items-center gap-2">
                         <span className="text-zinc-500">Auteur :</span>
                         <span className="font-medium text-white">{user?.name}</span>
