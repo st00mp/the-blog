@@ -50,14 +50,56 @@ final class ArticleController extends AbstractController
     #[Route('/api/articles/{slug}', name: 'api_article_detail', methods: ['GET'])]
     public function detail(Request $request, string $slug, ArticleRepository $repo): JsonResponse
     {
-        // Par défaut, ne récupérer que les articles publiés (statut 1)
-        // Si un statut est fourni explicitement, l'utiliser (utile pour l'admin/édition)
-        $status = $request->query->has('status') ? $request->query->getInt('status') : 1;
+        // Par défaut, on récupère uniquement les articles publiés (statut 1)
+        $requestedStatus = $request->query->has('status') ? $request->query->getInt('status') : 1;
+        $status = 1; // Valeur par défaut: uniquement les articles publiés
+        
+        // Si un statut différent de 1 (publié) est demandé, on vérifie l'authentification
+        if ($requestedStatus !== 1) {
+            $user = $this->getUser();
+            // Seuls les utilisateurs connectés peuvent accéder aux brouillons
+            if ($user) {
+                // Vérification supplémentaire pour les rôles si nécessaire
+                // On pourrait ajouter une vérification pour que seul l'auteur
+                // ou un admin puisse voir ses brouillons
+                $status = $requestedStatus;
+            } else {
+                // Utilisateur non connecté : ignorer le paramètre status et n'afficher que les publiés
+                $status = 1;
+            }
+        }
         
         $article = $repo->findOneBySlugWithRelations($slug, $status);
         if (!$article) {
             return $this->json(['error' => 'Article non trouvé'], 404);
         }
+        
+        // Si l'article est en brouillon, vérification supplémentaire
+        // pour s'assurer que seul l'auteur ou un admin peut y accéder
+        if ($article->getStatus() === 0) {
+            $user = $this->getUser();
+            if (!$user) {
+                return $this->json(['error' => 'Article non trouvé'], 404);
+            }
+            
+            // Si l'utilisateur n'est pas l'auteur et n'est pas admin, refuser l'accès
+            // Note: ceci est une sécurité supplémentaire même si le repository a déjà filtré
+            $isAdmin = in_array('ROLE_ADMIN', $user->getRoles());
+            
+            // Vérification si l'utilisateur est l'auteur de l'article
+            $isAuthor = false;
+            $author = $article->getAuthor();
+            if ($author && $user && method_exists($author, 'getId') && method_exists($user, 'getId')) {
+                $authorId = $author->getId();
+                $userId = $user->getId();
+                $isAuthor = $authorId === $userId;
+            }
+            
+            if (!$isAdmin && !$isAuthor) {
+                return $this->json(['error' => 'Article non trouvé'], 404);
+            }
+        }
+        
         return $this->json($article, 200, [], ['groups' => 'article:detail']);
     }
 
