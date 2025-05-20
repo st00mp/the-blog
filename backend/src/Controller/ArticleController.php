@@ -48,9 +48,13 @@ final class ArticleController extends AbstractController
     // Endpoint pour récupérer le détail d’un article par son slug
     // GET /api/articles/{slug}
     #[Route('/api/articles/{slug}', name: 'api_article_detail', methods: ['GET'])]
-    public function detail(string $slug, ArticleRepository $repo): JsonResponse
+    public function detail(Request $request, string $slug, ArticleRepository $repo): JsonResponse
     {
-        $article = $repo->findOneBySlugWithRelations($slug);
+        // Par défaut, ne récupérer que les articles publiés (statut 1)
+        // Si un statut est fourni explicitement, l'utiliser (utile pour l'admin/édition)
+        $status = $request->query->has('status') ? $request->query->getInt('status') : 1;
+        
+        $article = $repo->findOneBySlugWithRelations($slug, $status);
         if (!$article) {
             return $this->json(['error' => 'Article non trouvé'], 404);
         }

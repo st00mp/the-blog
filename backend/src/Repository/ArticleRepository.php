@@ -125,17 +125,27 @@ class ArticleRepository extends ServiceEntityRepository
 
     /**
      * Trouve un article par son slug avec ses relations
+     * @param string $slug Le slug de l'article à trouver
+     * @param int|null $status Statut des articles (-1 = tous, 0 = brouillon, 1 = publié, null = ne pas filtrer)
+     * @return Article|null L'article trouvé ou null
      */
-    public function findOneBySlugWithRelations(string $slug): ?Article
+    public function findOneBySlugWithRelations(string $slug, ?int $status = 1): ?Article
     {
-        return $this->createQueryBuilder('a')
+        $qb = $this->createQueryBuilder('a')
             ->addSelect('c') // Catégorie
             ->addSelect('u') // Auteur
             ->leftJoin('a.category', 'c')
             ->leftJoin('a.author', 'u')
             ->where('a.slug = :slug')
-            ->setParameter('slug', $slug)
-            ->getQuery()
+            ->setParameter('slug', $slug);
+            
+        // Filtrer par statut si demandé
+        if ($status !== null && $status >= 0) {
+            $qb->andWhere('a.status = :status')
+                ->setParameter('status', $status);
+        }
+            
+        return $qb->getQuery()
             ->getOneOrNullResult();
     }
 }
