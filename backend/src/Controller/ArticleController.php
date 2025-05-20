@@ -11,12 +11,8 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Security\Core\Security;
 use Throwable;
-use Doctrine\ORM\Tools\Pagination\Paginator;
-use App\Entity\Category;
 use App\Repository\CategoryRepository;
 
 final class ArticleController extends AbstractController
@@ -53,7 +49,7 @@ final class ArticleController extends AbstractController
         // Par défaut, on récupère uniquement les articles publiés (statut 1)
         $requestedStatus = $request->query->has('status') ? $request->query->getInt('status') : 1;
         $status = 1; // Valeur par défaut: uniquement les articles publiés
-        
+
         // Si un statut différent de 1 (publié) est demandé, on vérifie l'authentification
         if ($requestedStatus !== 1) {
             $user = $this->getUser();
@@ -68,38 +64,36 @@ final class ArticleController extends AbstractController
                 $status = 1;
             }
         }
-        
+
         $article = $repo->findOneBySlugWithRelations($slug, $status);
         if (!$article) {
             return $this->json(['error' => 'Article non trouvé'], 404);
         }
-        
+
         // Si l'article est en brouillon, vérification supplémentaire
         // pour s'assurer que seul l'auteur ou un admin peut y accéder
         if ($article->getStatus() === 0) {
             $user = $this->getUser();
+            // Vérification de type : l’IDE saura que $user est bien un App\Entity\User
+            if (!$user instanceof User) {
+                return $this->json(['error' => 'Utilisateur invalide'], 400);
+            }
             if (!$user) {
                 return $this->json(['error' => 'Article non trouvé'], 404);
             }
-            
+
             // Si l'utilisateur n'est pas l'auteur et n'est pas admin, refuser l'accès
             // Note: ceci est une sécurité supplémentaire même si le repository a déjà filtré
             $isAdmin = in_array('ROLE_ADMIN', $user->getRoles());
-            
-            // Vérification si l'utilisateur est l'auteur de l'article
-            $isAuthor = false;
+
             $author = $article->getAuthor();
-            if ($author && $user && method_exists($author, 'getId') && method_exists($user, 'getId')) {
-                $authorId = $author->getId();
-                $userId = $user->getId();
-                $isAuthor = $authorId === $userId;
-            }
-            
+            $isAuthor = $author instanceof User && $author->getId() === $user->getId();
+
             if (!$isAdmin && !$isAuthor) {
                 return $this->json(['error' => 'Article non trouvé'], 404);
             }
         }
-        
+
         return $this->json($article, 200, [], ['groups' => 'article:detail']);
     }
 
@@ -358,7 +352,7 @@ final class ArticleController extends AbstractController
             ], 500);
         }
     }
-    
+
     // Endpoint pour changer le statut d'un article (publier/dépublier)
     // PATCH /api/articles/{id}/status
     #[Route('/api/articles/{id}/status', name: 'api_article_update_status', methods: ['PATCH'])]
@@ -374,25 +368,25 @@ final class ArticleController extends AbstractController
             if (!$article) {
                 return $this->json(['error' => 'Article non trouvé'], 404);
             }
-            
+
             // 2. Récupération et validation des données
             $data = json_decode($request->getContent(), true);
             if (!$data || !isset($data['status'])) {
                 return $this->json(['error' => 'Statut manquant ou invalide'], 400);
             }
-            
+
             // 3. Vérification que le statut est valide (0 ou 1)
             $status = (int) $data['status'];
             if (!in_array($status, [Article::STATUS_DRAFT, Article::STATUS_PUBLISHED])) {
                 return $this->json(['error' => 'Statut invalide. Doit être 0 (brouillon) ou 1 (publié)'], 400);
             }
-            
+
             // 4. Mise à jour du statut
             $article->setStatus($status);
-            
+
             // 5. Persistance des modifications
             $em->flush();
-            
+
             // 6. Réponse avec l'article mis à jour
             return $this->json(
                 $article,
