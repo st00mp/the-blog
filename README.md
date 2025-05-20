@@ -33,14 +33,14 @@ The goal is to recreate a clean, elegant blog layout inspired by Vercel’s desi
 #### `/blog` – static layout  
 🧱 Component composition + overall structure
 
-![localhost_3100_blog](https://github.com/user-attachments/assets/9033acdf-79ec-4482-8d60-01a6cfa269a0)
+<img width="1720" alt="image" src="https://github.com/user-attachments/assets/cbe9067d-0a66-4477-ad82-16b99ff49e97" />
 
 ---
 
 #### `/blog/[slug]` – article detail layout  
 💡 Metadata + CTA + Vercel-inspired styling
 
-<img width="1720" alt="image" src="https://github.com/user-attachments/assets/03f16f0f-a2bd-4320-9757-61b406f05a74" />
+![localhost_3100_blog_comprendre-les-transformateurs-et-les-modeles-de-langage-avances](https://github.com/user-attachments/assets/b4fc2b5b-4c1e-4561-8584-c5103760545e)
 
 ---
 
@@ -50,7 +50,7 @@ The goal is to recreate a clean, elegant blog layout inspired by Vercel’s desi
 This interface provides a guided, step-by-step layout for writing blog content.  
 It's optimized for clarity, SEO-readiness, and a smooth authoring experience.
 
-![localhost_3100_admin_articles_new (3)](https://github.com/user-attachments/assets/2cf36ab7-778c-4c95-ad28-161aa915462b)
+![localhost_3100_editor_articles_new](https://github.com/user-attachments/assets/4ac3e3c5-ab2e-472b-b19b-3f9f1bdf3ff6)
 
 **Key features:**
 
@@ -91,9 +91,31 @@ Floating toolbar with horizontal scroll on overflow — optimized for readabilit
 ##### ➕ Block insertion modal  
 Quickly insert visuals or layout elements without disrupting the writing flow.
 
-![BlockModal](https://github.com/user-attachments/assets/c5a5fba6-af29-4453-891a-c91798b1b785)
+<img width="465" alt="image" src="https://github.com/user-attachments/assets/15d1a2b2-5139-42dc-9249-30744a6baf4c" />
 
+---
 
+#### **Admin Interface** /admin – Admin dashboard
+
+![image.png](attachment:bcf665af-8530-4359-9024-10e0b8119b46:b2df1abc-8c02-4f41-b2d0-f7c1609497ed.png)
+
+---
+
+#### **Author Interface** /editor – Author dashboard
+
+![image.png](attachment:29382227-4ddd-4bcd-8229-670b05070c55:image.png)
+
+---
+
+#### **Author Interface** /editor/articles – Article listing and actions
+
+![image.png](attachment:faa8d2e6-35e3-46db-9bbe-04488fbb13e7:image.png)
+
+---
+
+#### **User Settings** /account/settings – Personal information and preferences
+
+![localhost_3100_account_settings (1).png](attachment:0c7c38a3-f921-440c-a7b9-d546fae51008:localhost_3100_account_settings_(1).png)
 
 
 
