@@ -302,6 +302,42 @@ export default function TiptapRenderer({ content }: Props) {
         
         return () => clearTimeout(timer);
     }, [editor, content]); // Traiter chaque fois que l'éditeur ou le contenu change
+    
+    // Style supplémentaire pour les tableaux uniquement (lignes de séparation gérées par CSS)
+    useEffect(() => {
+        if (!containerRef.current || !editor) return;
+        
+        // Appliquer les styles aux tableaux
+        const applyTableStyles = () => {
+            // Styles pour les tableaux
+            const tables = containerRef.current?.querySelectorAll('table');
+            if (tables?.length) {
+                tables.forEach(table => {
+                    const tableElement = table as HTMLTableElement;
+                    tableElement.style.borderCollapse = 'collapse';
+                    tableElement.style.width = '100%';
+                    tableElement.style.margin = '1rem 0';
+                    tableElement.style.border = '1px solid #374151'; // zinc-700
+                });
+                
+                const cells = containerRef.current?.querySelectorAll('td, th');
+                cells?.forEach(cell => {
+                    const cellElement = cell as HTMLTableCellElement;
+                    cellElement.style.border = '1px solid #374151'; // zinc-700
+                    cellElement.style.padding = '0.5rem';
+                });
+            }
+        };
+        
+        // Appliquer les styles immédiatement
+        applyTableStyles();
+        
+        // Observer les changements pour réappliquer si nécessaire
+        const observer = new MutationObserver(applyTableStyles);
+        observer.observe(containerRef.current, { childList: true, subtree: true });
+        
+        return () => observer.disconnect();
+    }, [editor]);
 
     if (!editor) return null;
 
@@ -322,6 +358,13 @@ export default function TiptapRenderer({ content }: Props) {
                     margin: 1.5rem 0;
                     border-radius: 0.5rem;
                     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                }
+                
+                .ProseMirror hr {
+                    border: none;
+                    height: 1px;
+                    background-color: #4b5563; /* Gris zinc-600 */
+                    margin: 1.5rem 0;
                 }
             `}</style>
         </div>

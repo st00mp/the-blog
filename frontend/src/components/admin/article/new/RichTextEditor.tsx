@@ -496,6 +496,13 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
         .ProseMirror table td {
             background-color: #18181b; /* zinc-900 */
         }
+        
+        .ProseMirror hr {
+            border: none;
+            height: 1px;
+            background-color: #4b5563; /* Gris zinc-600 */
+            margin: 1.5rem 0;
+        }
 
         .ProseMirror colgroup,
         .ProseMirror col {
