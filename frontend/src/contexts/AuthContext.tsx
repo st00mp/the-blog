@@ -89,12 +89,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Attendre que les deux opérations soient terminées (réussies ou échouées)
       await Promise.allSettled([backendPromise, frontendPromise])
       
-      // Maintenant que toutes les opérations sont terminées, rediriger
-      window.location.href = "/";
+      // Déterminer si la page actuelle nécessite une authentification
+      const currentPath = window.location.pathname
+      const authRequiredPaths = [
+        '/editor',
+        '/admin',
+        '/preview',
+        '/account'
+      ]
+      
+      const needsRedirect = authRequiredPaths.some(path => currentPath.startsWith(path))
+      
+      if (needsRedirect) {
+        // Rediriger uniquement si l'utilisateur est sur une page protégée
+        window.location.href = "/";
+      } else {
+        // Sinon, rafraîchir la page pour mettre à jour l'UI sans changer d'URL
+        window.location.reload();
+      }
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error)
-      // En cas d'échec général, quand même rediriger
-      window.location.href = "/";
+      // Même logique en cas d'erreur
+      const currentPath = window.location.pathname
+      const authRequiredPaths = [
+        '/editor',
+        '/admin',
+        '/preview',
+        '/account'
+      ]
+      
+      const needsRedirect = authRequiredPaths.some(path => currentPath.startsWith(path))
+      
+      if (needsRedirect) {
+        window.location.href = "/";
+      } else {
+        window.location.reload();
+      }
     }
   }
 
