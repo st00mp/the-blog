@@ -153,7 +153,7 @@ export default async function BlogPostPage({ params }: Props) {
                 </div>
 
                 {/* Section des commentaires */}
-                <div id="comments" className="mt-12 relative mx-auto max-w-6xl pt-5 pb-5 bg-white/[0.02] shadow-sm px-4 sm:px-6">
+                <div id="comments" className="mt-12 relative mx-auto max-w-6xl pt-5 pb-5 shadow-sm px-4 sm:px-6">
                     <section className="mx-auto w-full max-w-3xl px-4 pb-12">
                         <CommentSectionWrapper articleId={article.slug} />
                     </section>
