@@ -70,11 +70,27 @@ export function LoginForm({
       login(userData.user)
 
       // Si la connexion réussit et qu'une fonction onSuccess est fournie, on l'appelle
-      // Sinon, on redirige vers la page des paramètres du compte
+      // Sinon, on redirige l'utilisateur vers une page appropriée selon son rôle
       if (onSuccess) {
         onSuccess() // Pour la modale
       } else {
-        const redirectTo = searchParams?.get('redirect') || '/account/settings'
+        // Si un paramètre redirect est fourni, on l'utilise en priorité
+        const customRedirect = searchParams?.get('redirect')
+        if (customRedirect) {
+          router.push(customRedirect)
+          router.refresh()
+          return
+        }
+        
+        // Sinon, redirection basée sur le rôle de l'utilisateur
+        let redirectTo = '/account/settings' // Par défaut pour les utilisateurs simples
+        
+        if (userData.user.role === 'admin') {
+          redirectTo = '/admin' // Dashboard admin pour les administrateurs
+        } else if (userData.user.role === 'editor') {
+          redirectTo = '/editor/dashboard' // Dashboard éditeur pour les éditeurs
+        }
+        
         router.push(redirectTo)
         router.refresh()
       }
@@ -197,13 +213,23 @@ export function LoginForm({
       </Button>
 
       <p className="px-8 text-center text-sm text-muted-foreground">
-        <Button
-          variant="link"
-          className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
-          onClick={switchToRegister}
-        >
-          Pas encore de compte ? Créez-en un
-        </Button>
+        {switchToRegister ? (
+          <Button
+            variant="link"
+            className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+            onClick={switchToRegister}
+          >
+            Pas encore de compte ? Créez-en un
+          </Button>
+        ) : (
+          <Button
+            variant="link"
+            className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+            asChild
+          >
+            <Link href="/register">Pas encore de compte ? Créez-en un</Link>
+          </Button>
+        )}
       </p>
     </div>
   )

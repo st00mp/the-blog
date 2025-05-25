@@ -3,12 +3,12 @@
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
-import Link from "next/link"
 
 type FormData = {
   name: string
@@ -297,13 +297,23 @@ export function RegisterForm({
           </Button>
 
           <p className="px-8 text-center text-sm text-muted-foreground">
-            <Button
-              variant="link"
-              className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
-              onClick={switchToLogin}
-            >
-              Déjà un compte ? Connectez-vous
-            </Button>
+            {switchToLogin ? (
+              <Button
+                variant="link"
+                className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+                onClick={switchToLogin}
+              >
+                Déjà un compte ? Connectez-vous
+              </Button>
+            ) : (
+              <Button
+                variant="link"
+                className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+                asChild
+              >
+                <Link href="/login">Déjà un compte ? Connectez-vous</Link>
+              </Button>
+            )}
           </p>
         </>
       )}
