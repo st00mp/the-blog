@@ -57,18 +57,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch(`/api/logout`, {
+      // On commence par réinitialiser l'utilisateur localement
+      setUser(null)
+      
+      // Appel à l'API backend Symfony pour la déconnexion
+      const backendPromise = fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/logout`, {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
+      }).catch(err => {
+        // Silencieusement ignorer les erreurs du backend
+        console.log("Backend logout: ", err.message)
       })
+
+      // Appel également à l'API frontend pour nettoyer le cookie côté client
+      const frontendPromise = fetch(`/api/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }).catch(err => {
+        // Silencieusement ignorer les erreurs du frontend
+        console.log("Frontend logout: ", err.message)
+      })
+      
+      // Attendre que les deux opérations soient terminées (réussies ou échouées)
+      await Promise.allSettled([backendPromise, frontendPromise])
+      
+      // Maintenant que toutes les opérations sont terminées, rediriger
+      window.location.href = "/";
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error)
-    } finally {
-      setUser(null)
+      // En cas d'échec général, quand même rediriger
+      window.location.href = "/";
     }
   }
 
