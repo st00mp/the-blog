@@ -56,8 +56,8 @@ export default function BlogClient({
 
     // Fonction asynchrone pour interroger l'API avec les filtres et la pagination
     const handleSearch = async (term: string) => {
-        const API = process.env.NEXT_PUBLIC_BACKEND_API_URL!
-        const url = new URL(`${API}/api/articles`)
+        // Utiliser l'API proxy Next.js locale au lieu d'appeler directement le backend
+        const url = new URL('/api/articles', window.location.origin)
         // Ajouter le statut=1 pour ne récupérer que les articles publiés
         url.searchParams.set("status", "1")
         // Si un terme de recherche est présent, on l'ajoute en paramètre
@@ -68,6 +68,8 @@ export default function BlogClient({
         }
         // Paramètre de page pour la pagination
         url.searchParams.set("page", page.toString())
+        
+        console.log('Recherche d\'articles via:', url.toString())
 
         // Appel réseau
         const res = await fetch(url.toString())

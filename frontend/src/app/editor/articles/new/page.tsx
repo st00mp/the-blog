@@ -144,13 +144,23 @@ export default function NewArticlePage() {
             });
 
             if (!res.ok) throw new Error("Erreur lors de la création de l'article");
-
-            const statusText = isDraft ? "Brouillon" : "Article publié";
-            alert(`${statusText} créé avec succès !`);
-            resetForm();
+            
+            // Récupérer la réponse complète de l'API
+            const responseData = await res.json();
+            
+            // Vérifier si l'API a envoyé une URL de redirection
+            if (responseData.redirectUrl) {
+                // Utiliser le router pour rediriger vers l'URL indiquée
+                router.push(responseData.redirectUrl);
+            } else {
+                // Comportement de secours si pas de redirection
+                const statusText = isDraft ? "Brouillon" : "Article publié";
+                alert(`${statusText} créé avec succès !`);
+                resetForm();
+            }
         } catch (err) {
             console.error(err);
-            alert("Impossible de créer l’article");
+            alert("Impossible de créer l'article");
         } finally {
             setIsSaving(false);
         }

@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -13,11 +12,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User, LayoutDashboard, LogOut, Edit } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { LoginForm } from "@/components/login-form"
-import { RegisterForm } from "@/components/register-form"
 import { useAuth } from "@/contexts/AuthContext"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 
 const navItems = [
@@ -32,38 +28,24 @@ function UserMenu() {
     const { user, logout } = useAuth()
     const router = useRouter()
 
-    const handleLogout = async () => {
-        await logout()
+    const handleLogout = async (e: React.MouseEvent) => {
+        // Empêcher la propagation de l'événement pour éviter les clics multiples
+        e.preventDefault()
+        e.stopPropagation()
         
-        // Récupérer le chemin actuel
-        const currentPath = window.location.pathname
-        
-        // Ne rediriger que si la page actuelle nécessite une authentification
-        const authRequiredPaths = [
-            '/editor',
-            '/admin',
-            '/preview',
-            '/account'
-        ]
-        
-        const needsRedirect = authRequiredPaths.some(path => currentPath.startsWith(path))
-        
-        if (needsRedirect) {
-            // Si on est sur une page protégée, rediriger vers la page d'accueil
-            router.push("/")
-        } else {
-            // Sinon, juste rafraîchir la page pour mettre à jour l'UI
-            router.refresh()
+        try {
+            // Utiliser la fonction logout du contexte d'authentification
+            // Elle s'occupera déjà de la redirection appropriée
+            await logout()
+            
+            // La fonction logout du contexte gère déjà la redirection,
+            // donc nous n'avons pas besoin de le faire ici
+        } catch (error) {
+            console.error('Erreur lors de la déconnexion:', error)
         }
     }
 
-    // Obtenir les initiales de l'utilisateur pour l'avatar
-    const getInitials = (name: string) => {
-        if (!name) return "UN"
-        const nameParts = name.split(" ")
-        if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase()
-        return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase()
-    }
+    // Fonction getInitials supprimée car plus nécessaire avec un admin unique
 
     return (
         <DropdownMenu>
@@ -90,44 +72,58 @@ function UserMenu() {
                         transition={{ duration: 0.2, ease: "easeOut" }}
                     >
                         <DropdownMenuLabel className="px-3 py-2 text-sm text-zinc-400 font-normal">
-                            {user?.name}
+                            Administrateur
                             <div className="text-xs text-zinc-500">{user?.email}</div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-zinc-800 my-1" />
 
-                        {/* Option Administration pour les admins */}
-                        {user?.role === "admin" && (
-                            <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
-                                <a href="/admin">
-                                    <LayoutDashboard className="h-4 w-4" />
-                                    <span>Administration</span>
-                                    <span className="sr-only">Accéder au panneau d'administration</span>
-                                </a>
-                            </DropdownMenuItem>
-                        )}
+                        {/* Option Administration - toujours visible car utilisateur unique */}
+                        <DropdownMenuItem 
+                            className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors"
+                            onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                router.push('/admin')
+                            }}
+                        >
+                            <LayoutDashboard className="h-4 w-4" />
+                            <span>Administration</span>
+                            <span className="sr-only">Accéder au panneau d'administration</span>
+                        </DropdownMenuItem>
 
-                        {/* Option Édition pour les éditeurs et admins */}
-                        {(user?.role === "editor" || user?.role === "admin") && (
-                            <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
-                                <a href="/editor/dashboard">
-                                    <Edit className="h-4 w-4" />
-                                    <span>Édition</span>
-                                    <span className="sr-only">Accéder à l'interface d'édition</span>
-                                </a>
-                            </DropdownMenuItem>
-                        )}
-
-                        {/* Option Compte pour tous les utilisateurs connectés */}
-                        <DropdownMenuItem className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors" asChild>
-                            <a href="/account/settings">
-                                <User className="h-4 w-4" />
-                                <span>Compte</span>
-                                <span className="sr-only">Accéder à votre compte</span>
-                            </a>
+                        {/* Option Édition pour l'admin */}
+                        <DropdownMenuItem 
+                            className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors"
+                            onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                router.push('/editor/dashboard')
+                            }}
+                        >
+                            <Edit className="h-4 w-4" />
+                            <span>Édition</span>
+                            <span className="sr-only">Accéder à l'interface d'édition</span>
+                        </DropdownMenuItem>
+                        
+                        {/* Option Paramètres */}
+                        <DropdownMenuItem 
+                            className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors"
+                            onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                router.push('/account/settings')
+                            }}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <span>Paramètres</span>
+                            <span className="sr-only">Accéder aux paramètres du compte</span>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-zinc-800 my-1" />
                         <DropdownMenuItem
-                            onClick={handleLogout}
+                            onClick={(e) => handleLogout(e)}
                             className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-red-400 hover:text-red-300 hover:bg-zinc-800 focus:bg-zinc-800 transition-colors"
                         >
                             <LogOut className="h-4 w-4" />
@@ -142,38 +138,10 @@ function UserMenu() {
 }
 
 export function NavBar() {
-    const [isLoginOpen, setIsLoginOpen] = useState(false)
-    const [isRegisterOpen, setIsRegisterOpen] = useState(false)
     const { isAuthenticated, isLoading } = useAuth()
-
-    // Fonction pour basculer entre les modales
-    const switchToRegister = () => {
-        setIsLoginOpen(false)
-        setIsRegisterOpen(true)
-    }
-
-    const switchToLogin = () => {
-        setIsRegisterOpen(false)
-        setIsLoginOpen(true)
-    }
-
-    // Fermer les modales après une connexion/inscription réussie
-    const handleAuthSuccess = () => {
-        // Fermer la modale active
-        setIsLoginOpen(false)
-        setIsRegisterOpen(false)
-    }
-
-    // Fonction pour basculer vers la modale de connexion après inscription
-    const handleSwitchToLogin = () => {
-        // Fermer d'abord la modale d'inscription
-        setIsRegisterOpen(false)
-        // Puis ouvrir la modale de connexion avec un léger délai
-        setTimeout(() => {
-            setIsLoginOpen(true)
-        }, 100)
-    }
-
+    const router = useRouter()
+    // Plus besoin de vérifier le chemin, nous affichons la NavBar partout
+    
     return (
         <header className="w-full border-b border-zinc-800">
             <div className="w-full px-6 sm:px-12 py-3 flex items-center justify-between">
@@ -190,47 +158,7 @@ export function NavBar() {
                         <UserMenu />
                     ) : (
                         <>
-                            {/* Log In = fond noir, texte blanc, hover légèrement plus clair */}
-                            <Button
-                                variant="ghost"
-                                className="bg-black text-white text-sm px-4 py-1 rounded-md border border-white/60 hover:bg-zinc-700 hover:text-white"
-                                onClick={() => setIsLoginOpen(true)}
-                            >
-                                Log In
-                            </Button>
-
-                            {/* Boîte de dialogue de connexion */}
-                            <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
-                                <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 p-0 overflow-hidden">
-                                    <DialogHeader className="border-b border-zinc-800 p-6 pb-4">
-                                        <DialogTitle className="text-xl font-semibold text-white">Connexion</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="p-6 pt-4">
-                                        <LoginForm onSuccess={handleAuthSuccess} switchToRegister={switchToRegister} />
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-
-                            {/* Sign Up = fond blanc, texte noir, hover fond gris clair */}
-                            <Button
-                                variant="ghost"
-                                className="bg-white text-black text-sm px-4 py-1 rounded-md hover:bg-zinc-300"
-                                onClick={() => setIsRegisterOpen(true)}
-                            >
-                                Sign Up
-                            </Button>
-
-                            {/* Boîte de dialogue d'inscription */}
-                            <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
-                                <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 p-0 overflow-hidden">
-                                    <DialogHeader className="border-b border-zinc-800 p-6 pb-4">
-                                        <DialogTitle className="text-xl font-semibold text-white">Créer un compte</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="p-6 pt-4">
-                                        <RegisterForm onSuccess={handleAuthSuccess} switchToLogin={handleSwitchToLogin} />
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
+                            {/* Aucun bouton de connexion - accès discret via /login */}
                         </>
                     )}
                 </div>

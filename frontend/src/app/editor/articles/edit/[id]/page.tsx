@@ -21,7 +21,7 @@ const defaultTiptapContent = {
 export default function EditArticlePage() {
     // Utiliser les params via un custom hook compatible avec Next.js
     const params = useParams();
-    const articleId = params?.id as string; // 'id' est en fait le slug dans cette implémentation
+    const articleId = params?.id as string; // 'id' est maintenant l'identifiant unique de l'article (et non plus le slug)
     const router = useRouter();
     const { user, isLoading: isAuthLoading, isAuthenticated } = useAuth();
 
@@ -60,10 +60,20 @@ export default function EditArticlePage() {
             
             try {
                 setIsLoading(true);
-                // articleId contient en fait le slug de l'article
-                const response = await fetch(`/api/articles/${articleId}`);
+                console.log(`Chargement de l'article avec ID: ${articleId}`);
+                // Utiliser l'API byid qui contourne le bug backend en récupérant l'article via la liste si nécessaire
+                const response = await fetch(`/api/articles/byid/${articleId}`, {
+                    method: 'GET',
+                    credentials: 'include', // S'assurer que les cookies sont envoyés
+                    cache: 'no-store', // Éviter la mise en cache
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
 
                 if (!response.ok) {
+                    console.error(`Erreur lors du chargement de l'article avec ID ${articleId}: ${response.status}`);
                     throw new Error(`Erreur ${response.status}: Impossible de charger l'article`);
                 }
 
@@ -189,31 +199,55 @@ export default function EditArticlePage() {
 
         setIsSaving(true);
 
-        // Préparer les données pour l'envoi à l'API
-        const formData = {
-            title,
-            categoryId: category ? parseInt(category) : null,
-            metaTitle: meta.title,
-            metaDescription: meta.description,
-            intro,
-            steps: steps.filter(step => step.title || JSON.stringify(step.content) !== JSON.stringify(defaultTiptapContent)).map(step => ({
-                title: step.title,
-                content: JSON.stringify(step.content)
-            })),
-            quote,
-            conclusionTitle,
-            conclusionDescription: JSON.stringify(conclusionDescription),
-            ctaDescription,
-            ctaButton
-        };
-
         try {
-            // Utiliser le slug (articleId) pour la mise à jour
-            const response = await fetch(`/api/articles/${articleId}`, {
+            // 1. Récupérer le slug de l'article
+            const articleDetailsResponse = await fetch(`/api/articles/byid/${articleId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                cache: 'no-store'
+            });
+            
+            if (!articleDetailsResponse.ok) {
+                throw new Error('Impossible de récupérer les détails de l\'article');
+            }
+            
+            const articleDetails = await articleDetailsResponse.json();
+            const slug = articleDetails.slug;
+            
+            if (!slug) {
+                throw new Error('Impossible de trouver le slug de l\'article');
+            }
+            
+            // 2. Préparer les données pour l'envoi à l'API
+            const formData = {
+                title,
+                category: category ? parseInt(category) : null, // Backend attend 'category', pas 'categoryId'
+                metaTitle: meta.title,
+                metaDescription: meta.description,
+                intro,
+                steps: steps.filter(step => step.title || JSON.stringify(step.content) !== JSON.stringify(defaultTiptapContent)).map(step => ({
+                    title: step.title,
+                    content: JSON.stringify(step.content)
+                })),
+                quote,
+                conclusionTitle,
+                conclusionDescription: JSON.stringify(conclusionDescription),
+                ctaDescription,
+                ctaButton
+            };
+            
+            // 3. Envoyer la mise à jour en utilisant le SLUG
+            const response = await fetch(`/api/articles/${slug}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(formData)
             });
 
@@ -222,7 +256,14 @@ export default function EditArticlePage() {
             }
 
             const data = await response.json();
-            router.push('/editor/articles');
+            
+            // Vérifier si l'API a renvoyé une URL de redirection
+            if (data.redirectUrl) {
+                router.push(data.redirectUrl);
+            } else {
+                // Fallback au comportement précédent
+                router.push('/editor/articles');
+            }
         } catch (error) {
             console.error('Erreur lors de la mise à jour de l\'article:', error);
             alert("Une erreur est survenue lors de la mise à jour de l'article");

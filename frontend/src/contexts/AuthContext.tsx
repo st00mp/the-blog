@@ -4,9 +4,9 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 
 export type User = {
   id: number
-  name: string
   email: string
-  role: string
+  role: string // Rôle principal (ex: 'ROLE_ADMIN')
+  name: string
   avatar?: string
 }
 
@@ -55,13 +55,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData)
   }
 
+  // Fonction de déconnexion simplifiée et cohérente avec l'architecture
   const logout = async () => {
     try {
       // On commence par réinitialiser l'utilisateur localement
       setUser(null)
       
-      // Appel à l'API backend Symfony pour la déconnexion
-      const backendPromise = fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/logout`, {
+      // Appel uniquement à l'API proxy Next.js qui s'occupera de transmettre au backend
+      // et de gérer les cookies d'authentification côté client
+      console.log('Tentative de déconnexion via API proxy Next.js')
+      const response = await fetch(`/api/logout`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -69,33 +72,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           Accept: "application/json",
         },
       }).catch(err => {
-        // Silencieusement ignorer les erreurs du backend
-        console.log("Backend logout: ", err.message)
+        // Capturer les erreurs pour éviter les rejets non gérés
+        console.error("Erreur lors de la déconnexion via l'API proxy:", err.message)
+        return null
       })
-
-      // Appel également à l'API frontend pour nettoyer le cookie côté client
-      const frontendPromise = fetch(`/api/logout`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }).catch(err => {
-        // Silencieusement ignorer les erreurs du frontend
-        console.log("Frontend logout: ", err.message)
-      })
-      
-      // Attendre que les deux opérations soient terminées (réussies ou échouées)
-      await Promise.allSettled([backendPromise, frontendPromise])
       
       // Déterminer si la page actuelle nécessite une authentification
       const currentPath = window.location.pathname
       const authRequiredPaths = [
-        '/editor',
-        '/admin',
-        '/preview',
-        '/account'
+        '/admin' // Simplifié pour n'inclure que le chemin d'administration
       ]
       
       const needsRedirect = authRequiredPaths.some(path => currentPath.startsWith(path))
@@ -109,22 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error)
-      // Même logique en cas d'erreur
-      const currentPath = window.location.pathname
-      const authRequiredPaths = [
-        '/editor',
-        '/admin',
-        '/preview',
-        '/account'
-      ]
-      
-      const needsRedirect = authRequiredPaths.some(path => currentPath.startsWith(path))
-      
-      if (needsRedirect) {
-        window.location.href = "/";
-      } else {
-        window.location.reload();
-      }
+      window.location.href = "/";
     }
   }
 

@@ -103,12 +103,17 @@ class ArticleRepository extends ServiceEntityRepository
     
     /**
      * Ajoute un filtre par auteur à la requête
+     * Note: En mode mono-utilisateur, cette méthode est simplifiée
+     * car tous les articles ont le même auteur (admin ID=1)
      */
     private function addAuthorFilter(QueryBuilder $qb, int $authorId): void
     {
-        if ($authorId > 0) {
-            $qb->andWhere('u.id = :author')
-                ->setParameter('author', $authorId);
+        // Mode mono-utilisateur: tous les articles ont l'admin comme auteur (ID=1)
+        // Conservons la compatibilité de l'API en permettant toujours le filtrage, mais
+        // sachant que tous les articles ont le même auteur (admin)
+        if ($authorId > 0 && $authorId != 1) {
+            // Si on demande un autre auteur que l'admin, on renvoie une requête qui ne donnera aucun résultat
+            $qb->andWhere('1 = 0'); // Condition toujours fausse
         }
     }
     

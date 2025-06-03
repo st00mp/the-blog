@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { RouteGuard } from "@/components/route-guard"
 import { useAuth } from "@/contexts/AuthContext"
 import {
@@ -20,17 +21,10 @@ import {
 } from "@/components/ui/select"
 import {
   Plus,
-  Users,
   FileText,
-  MessageSquare,
-  User as UserIcon,
-  Check,
-  Loader2,
-  Search,
-  X,
-  Upload
+  Loader2
 } from "lucide-react"
-import { getUsers, updateUserRole, User, importUsersFromCSV } from "@/services/userService"
+// Suppression des imports de userService.ts
 import { useToast } from "@/components/ui/use-toast"
 import { Pagination } from "@/components/ui/pagination"
 
@@ -39,130 +33,20 @@ import { Pagination } from "@/components/ui/pagination"
 export default function AdminPage() {
   const { user } = useAuth()
   const { toast } = useToast()
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [updatingRole, setUpdatingRole] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState<string>("")
-  const [currentPage, setCurrentPage] = useState<number>(1)
-  const [isUploading, setIsUploading] = useState<boolean>(false)
-  const fileInputRef = useState<HTMLInputElement | null>(null)
-  const pageSize = 4 // Nombre d'utilisateurs par page
+  const router = useRouter()
+  const [loading, setLoading] = useState<boolean>(false)
 
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        setLoading(true)
-        const data = await getUsers()
-        setUsers(data)
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de charger les utilisateurs."
-        })
-        console.error(error)
-      } finally {
-        setLoading(false)
-      }
-    }
+  // Suppression du chargement des utilisateurs
 
-    loadUsers()
-  }, [])
-
-  // Filtrer les utilisateurs en fonction du terme de recherche
-  const filteredUsers = users.filter(u =>
-    searchTerm === "" ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  // Calculer les indices de début et de fin pour la pagination
-  const totalFilteredUsers = filteredUsers.length
-  const lastUserIndex = Math.min(currentPage * pageSize, totalFilteredUsers)
-  const firstUserIndex = (currentPage - 1) * pageSize
-
-  // Récupérer uniquement les utilisateurs de la page actuelle
-  const currentUsers = filteredUsers.slice(firstUserIndex, lastUserIndex)
-
-  // Réinitialiser la pagination si on fait une recherche ou si le nombre total d'utilisateurs change
-  useEffect(() => {
-    setCurrentPage(1) // Retour à la première page quand on filtre
-  }, [searchTerm])
-
+  // Statistiques simplifiées pour un blog personnel
   const stats = {
-    totalUsers: users.length,
-    totalAdmins: users.filter(u => u.role === 'admin').length,
-    totalEditors: users.filter(u => u.role === 'editor').length,
-    totalRegularUsers: users.filter(u => u.role === 'user').length
+    totalArticles: 0, // À connecter à une API pour obtenir le nombre d'articles
+    publishedArticles: 0,
+    draftArticles: 0
   }
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    // Vérifier que c'est un fichier CSV
-    if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
-      toast({
-        variant: "destructive",
-        title: "Format non supporté",
-        description: "Veuillez importer un fichier CSV (.csv)"
-      })
-      return
-    }
-
-    setIsUploading(true)
-    
-    try {
-      const result = await importUsersFromCSV(file)
-      
-      // Recharger la liste des utilisateurs après l'import
-      const updatedUsers = await getUsers()
-      setUsers(updatedUsers)
-      
-      toast({
-        title: "Succès",
-        description: `Import réussi : ${result.success} utilisateur(s) ajouté(s), ${result.failed} échec(s).`,
-        variant: "default"
-      })
-    } catch (error) {
-      console.error(error)
-      toast({
-        variant: "destructive",
-        title: "Erreur d'importation",
-        description: error instanceof Error ? error.message : "Une erreur s'est produite lors de l'importation."
-      })
-    } finally {
-      setIsUploading(false)
-      
-      // Réinitialiser le champ de fichier pour permettre une nouvelle sélection du même fichier
-      if (event.target) {
-        event.target.value = ''
-      }
-    }
-  }
-
-  const handleRoleChange = async (userId: string, newRole: string) => {
-    try {
-      setUpdatingRole(userId)
-      await updateUserRole(userId, newRole)
-      setUsers(u => u.map(x => x.id === userId ? { ...x, role: newRole } : x))
-
-      toast({
-        title: "Succès",
-        description: "Le rôle a été mis à jour avec succès",
-        variant: "default"
-      })
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de mettre à jour le rôle de l'utilisateur."
-      })
-      console.error(error)
-    } finally {
-      setUpdatingRole(null)
-    }
-  }
+  
+  // Note: Ces statistiques sont pour l'instant statiques, vous pourriez vouloir
+  // les connecter à une API pour obtenir les vrais chiffres
 
   return (
     <RouteGuard requireAuth={true} requireRole="admin">
@@ -171,206 +55,102 @@ export default function AdminPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white">Tableau de bord</h1>
-            <p className="text-zinc-400 mt-1">Gestion des utilisateurs et des rôles</p>
+            <p className="text-zinc-400 mt-1">Administration du blog</p>
           </div>
         </div>
 
         {/* Statistiques */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <Card className="bg-zinc-900 border-zinc-800 hover:shadow-lg transition-shadow">
             <CardHeader className="flex items-center pb-2">
-              <UserIcon className="mr-2 h-5 w-5 text-blue-400" />
-              <CardTitle className="text-lg">Administrateurs</CardTitle>
+              <FileText className="mr-2 h-5 w-5 text-blue-400" />
+              <CardTitle className="text-lg">Total Articles</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-white">{stats.totalAdmins}</p>
+              <p className="text-3xl font-bold text-white">{stats.totalArticles}</p>
             </CardContent>
           </Card>
           <Card className="bg-zinc-900 border-zinc-800 hover:shadow-lg transition-shadow">
             <CardHeader className="flex items-center pb-2">
-              <FileText className="mr-2 h-5 w-5 text-purple-400" />
-              <CardTitle className="text-lg">Éditeurs</CardTitle>
+              <FileText className="mr-2 h-5 w-5 text-green-400" />
+              <CardTitle className="text-lg">Publiés</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-white">{stats.totalEditors}</p>
+              <p className="text-3xl font-bold text-white">{stats.publishedArticles}</p>
             </CardContent>
           </Card>
           <Card className="bg-zinc-900 border-zinc-800 hover:shadow-lg transition-shadow">
             <CardHeader className="flex items-center pb-2">
-              <Users className="mr-2 h-5 w-5 text-green-400" />
-              <CardTitle className="text-lg">Utilisateurs</CardTitle>
+              <FileText className="mr-2 h-5 w-5 text-yellow-400" />
+              <CardTitle className="text-lg">Brouillons</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-white">{stats.totalRegularUsers}</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-zinc-900 border-zinc-800 hover:shadow-lg transition-shadow">
-            <CardHeader className="flex items-center pb-2">
-              <Users className="mr-2 h-5 w-5 text-yellow-400" />
-              <CardTitle className="text-lg">Total</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-white">{stats.totalUsers}</p>
+              <p className="text-3xl font-bold text-white">{stats.draftArticles}</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Liste des utilisateurs */}
-        <Card className="bg-zinc-900 border-zinc-800 overflow-hidden">
-          <CardHeader>
-            <div className="flex items-center">
-              <CardTitle className="text-lg">Utilisateurs</CardTitle>
-            </div>
-
-            {/* Champ de recherche */}
-            <div className="flex items-center gap-3 mt-4">
-              <div className="relative w-72 sm:w-96">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <Search className="h-4 w-4 text-zinc-500" />
-                </div>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Rechercher par email ou nom..."
-                  className="w-full pl-10 pr-10 py-2 bg-zinc-800 border border-zinc-700 rounded-md text-zinc-200 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                {searchTerm && (
-                  <button
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-300"
-                    onClick={() => setSearchTerm("")}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
+        {/* Section de raccourcis rapides */}
+        <Card className="bg-zinc-900 border-zinc-800 shadow-lg overflow-hidden transition-all duration-300">
+          <CardHeader className="pb-3 border-b border-zinc-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="h-8 w-1 bg-blue-500 rounded-full"></div>
+                <CardTitle className="text-xl font-semibold">Raccourcis</CardTitle>
               </div>
-              
-              <div className="relative inline-block">
-                <input
-                  type="file"
-                  id="users-upload"
-                  accept=".csv"
-                  className="sr-only"
-                  onChange={handleFileUpload}
-                  disabled={isUploading}
-                />
-                <Label
-                  htmlFor="users-upload"
-                  className={`inline-flex items-center justify-center p-2 rounded-md ${isUploading ? 'bg-zinc-700 cursor-not-allowed' : 'bg-zinc-800 hover:bg-zinc-700 cursor-pointer'} text-zinc-400 hover:text-zinc-300 transition-colors border border-zinc-700`}
-                  title="Importer des utilisateurs (CSV)"
-                >
-                  {isUploading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Upload className="h-4 w-4" />
-                  )}
-                </Label>
-              </div>
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="bg-blue-600 hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                onClick={() => router.push('/editor/articles/new')}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Nouvel article
+              </Button>
             </div>
           </CardHeader>
-          <CardContent className="pt-3 px-0 pb-0">
-            {loading ? (
-              <div className="flex justify-center items-center h-40">
-                <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
-                <span className="ml-2 text-zinc-400">Chargement des utilisateurs...</span>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                {filteredUsers.length === 0 ? (
-                  <div className="text-center py-6 text-zinc-400">
-                    {searchTerm ? "Aucun utilisateur ne correspond à votre recherche" : "Aucun utilisateur trouvé"}
-                  </div>
-                ) : (
-                  <>
-                    <table className="w-full table-fixed border-collapse">
-                      <thead className="bg-zinc-800">
-                        <tr className="text-sm font-medium text-zinc-400">
-                          <th className="w-1/4 px-6 py-3 text-left">Nom</th>
-                          <th className="w-1/4 px-6 py-3 text-left">Email</th>
-                          <th className="w-1/6 px-6 py-3 text-left">Rôle</th>
-                          <th className="w-1/4 px-6 py-3 text-left">Dernière connexion</th>
-                          <th className="w-1/6 px-6 py-3" />
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {currentUsers.map(u => (
-                          <tr key={u.id} className="border-t border-zinc-800 hover:bg-zinc-800/50">
-                            <td className="px-6 py-4">{u.name}</td>
-                            <td className="px-6 py-4 text-zinc-400">{u.email}</td>
-                            <td className="px-6 py-4">
-                              {u.role === "admin" ? (
-                                <div className="flex items-center space-x-1 text-sm px-2 py-1.5 bg-zinc-800/40 border border-zinc-700 rounded text-zinc-300">
-                                  <span className="font-medium">Admin</span>
-                                  <span className="text-xs text-zinc-500"> (Protégé)</span>
-                                </div>
-                              ) : (
-                                <Select
-                                  defaultValue={u.role}
-                                  onValueChange={val => handleRoleChange(u.id, val)}
-                                  disabled={updatingRole === u.id}
-                                >
-                                  <SelectTrigger
-                                    className="w-full bg-[#18181B] border border-zinc-700"
-                                  >
-                                    <SelectValue placeholder="Rôle" />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-zinc-900">
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                    <SelectItem value="editor">Éditeur</SelectItem>
-                                    <SelectItem value="user">Utilisateur</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 text-zinc-400">
-                              {u.lastLogin ? new Date(u.lastLogin).toLocaleString() : 'Jamais connecté'}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              {updatingRole === u.id ? (
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  disabled
-                                  className="text-blue-400"
-                                >
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => toast({
-                                    title: "Information",
-                                    description: `${u.name} a le rôle ${u.role}`,
-                                    variant: "default"
-                                  })}
-                                  className="text-green-400 hover:bg-green-900/20"
-                                >
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+          <CardContent className="pt-5">
+            <p className="text-zinc-300 mb-6 max-w-3xl text-sm">
+              Bienvenue dans votre interface d'administration simplifiée. Utilisez cette interface pour gérer vos articles et le contenu de votre blog personnel.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Carte de gestion des articles */}
+              <div className="p-6 bg-zinc-800/60 rounded-xl border border-zinc-700/30 hover:border-zinc-600 hover:bg-zinc-800/80 transition-all flex flex-col">
 
-                    {/* Pagination */}
-                    {totalFilteredUsers > pageSize && (
-                      <div className="mt-4 py-4 flex justify-center bg-zinc-900 border-t border-zinc-800">
-                        <Pagination
-                          total={totalFilteredUsers}
-                          currentPage={currentPage}
-                          pageSize={pageSize}
-                          onPageChange={setCurrentPage}
-                          className="mt-2"
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-lg font-medium">Gestion des articles</h3>
+                  <FileText className="h-6 w-6 text-blue-400" />
+                </div>
+                <p className="text-zinc-400 text-sm mb-6 flex-grow">Créez, modifiez et publiez vos articles de blog.</p>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-center bg-zinc-700/50 hover:bg-zinc-700 hover:text-white border-zinc-600 transition-all"
+                  onClick={() => router.push('/editor/articles')}
+                >
+                  Gérer les articles
+                </Button>
               </div>
-            )}
+              
+              {/* Carte des paramètres */}
+              <div className="p-6 bg-zinc-800/60 rounded-xl border border-zinc-700/30 hover:border-zinc-600 hover:bg-zinc-800/80 transition-all flex flex-col">
+
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-lg font-medium">Paramètres du blog</h3>
+                  <svg className="h-6 w-6 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <p className="text-zinc-400 text-sm mb-6 flex-grow">Configurez les paramètres de votre blog personnel.</p>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-center bg-zinc-700/50 hover:bg-zinc-700 hover:text-white border-zinc-600 transition-all"
+                  onClick={() => router.push('/account/settings')}
+                >
+                  Paramètres
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

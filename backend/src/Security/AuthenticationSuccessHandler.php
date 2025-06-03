@@ -39,14 +39,13 @@ class AuthenticationSuccessHandler implements AuthenticationSuccessHandlerInterf
             $this->entityManager->flush();
         }
 
-        // Création de la réponse avec les informations utilisateur
+        // Création de la réponse avec les informations utilisateur simplifiée pour admin unique
         return new JsonResponse([
             'message' => 'Connexion réussie',
             'user' => [
                 'id' => $user->getId(),
                 'email' => $user->getEmail(),
-                'name' => $user->getName(),
-                'role' => $user->getRole()
+                'roles' => $user->getRoles()
             ]
         ]);
     }

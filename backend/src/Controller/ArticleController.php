@@ -28,14 +28,26 @@ final class ArticleController extends AbstractController
         $page = (int) $request->query->get('page', 1);
         $limit = (int) $request->query->get('limit', 12);
         $categoryId = $request->query->getInt('category', 0); // 0 = pas de filtre
-        $authorId = $request->query->getInt('author_id', 0); // Ajout du paramètre author_id
+        // Mode mono-utilisateur: l'auteur est toujours l'administrateur (ID 1)
+        $authorId = 1; // Admin fixe avec ID 1
         $status = $request->query->getInt('status', -1); // -1 = tous les statuts (0 = brouillon, 1 = publié)
 
         // 2. Utilisation de la méthode du repository pour obtenir les articles filtrés et paginés
         $result = $repo->findWithFilters($search, $categoryId, $authorId, $status, $page, $limit);
 
         // 3. Envoi de la réponse JSON avec les articles et les métadonnées
-        return $this->json($result, 200, [], [
+        $headers = [];
+        
+        // Si des brouillons sont demandés (status=0) ou tous les articles (status=-1), ajouter des en-têtes anti-référencement
+        if ($status === 0 || $status === -1) {
+            // Vérifier que l'utilisateur est authentifié (seul l'admin peut voir les brouillons)
+            $user = $this->getUser();
+            if ($user instanceof User && $user->getRole() === 'ROLE_ADMIN') {
+                $headers['X-Robots-Tag'] = 'noindex, nofollow';
+            }
+        }
+        
+        return $this->json($result, 200, $headers, [
             'groups' => ['article:list', 'article:detail'],
             'json_encode_options' => JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
         ]);
@@ -70,11 +82,11 @@ final class ArticleController extends AbstractController
             return $this->json(['error' => 'Article non trouvé'], 404);
         }
 
-        // Si l'article est en brouillon, vérification supplémentaire
-        // pour s'assurer que seul l'auteur ou un admin peut y accéder
+        // Si l'article est en brouillon, simple vérification que l'utilisateur est admin
+        // Mode mono-utilisateur: seul l'administrateur peut accéder aux brouillons
         if ($article->getStatus() === 0) {
             $user = $this->getUser();
-            // Vérification de type : l’IDE saura que $user est bien un App\Entity\User
+            // Vérification de type : l'IDE saura que $user est bien un App\Entity\User
             if (!$user instanceof User) {
                 return $this->json(['error' => 'Utilisateur invalide'], 400);
             }
@@ -82,18 +94,20 @@ final class ArticleController extends AbstractController
                 return $this->json(['error' => 'Article non trouvé'], 404);
             }
 
-            // Si l'utilisateur n'est pas l'auteur et n'est pas admin, refuser l'accès
-            // Note: ceci est une sécurité supplémentaire même si le repository a déjà filtré
-            $isAdmin = in_array('ROLE_ADMIN', $user->getRoles());
-
-            $author = $article->getAuthor();
-            $isAuthor = $author instanceof User && $author->getId() === $user->getId();
-
-            if (!$isAdmin && !$isAuthor) {
+            // En mode mono-utilisateur, seul l'administrateur peut accéder aux brouillons
+            $isAdmin = $user->getRole() === 'ROLE_ADMIN'; 
+            
+            if (!$isAdmin) {
                 return $this->json(['error' => 'Article non trouvé'], 404);
             }
+            
+            // Ajouter des en-têtes anti-référencement pour les brouillons
+            return $this->json($article, 200, [
+                'X-Robots-Tag' => 'noindex, nofollow'
+            ], ['groups' => 'article:detail']);
         }
 
+        // Pour les articles publiés, comportement normal (sans en-têtes spéciaux)
         return $this->json($article, 200, [], ['groups' => 'article:detail']);
     }
 
@@ -175,7 +189,7 @@ final class ArticleController extends AbstractController
                 $article->setCtaButton(trim($data['ctaButton']));
             }
 
-            // 3. Récupération de l'utilisateur connecté
+            // 3. Vérification de l'authentification - en mode mono-utilisateur
             $user = $this->getUser();
 
             if (!$user) {
@@ -187,7 +201,14 @@ final class ArticleController extends AbstractController
                 return $this->json(['error' => 'Utilisateur invalide'], 400);
             }
 
-            $article->setAuthor($user);
+            // En mode mono-utilisateur: tous les articles ont le même auteur (admin ID 1)
+            $adminUser = $userRepo->find(1);
+            $article->setAuthor($adminUser);
+            
+            // Définition du statut (0 = brouillon, 1 = publié)
+            // Par défaut, le statut est publié sauf si explicitement demandé comme brouillon
+            $status = isset($data['status']) ? (int)$data['status'] : 1;
+            $article->setStatus($status);
 
             // 4. Validation de l'entité
             $errors = $validator->validate($article);
@@ -204,7 +225,12 @@ final class ArticleController extends AbstractController
             $em->flush();
 
             return $this->json(
-                ['success' => true, 'id' => $article->getId(), 'slug' => $article->getSlug()],
+                [
+                    'success' => true, 
+                    'id' => $article->getId(), 
+                    'slug' => $article->getSlug(),
+                    'redirectUrl' => '/editor/articles'
+                ],
                 201,
                 [],
                 ['groups' => 'article:detail']
@@ -308,7 +334,12 @@ final class ArticleController extends AbstractController
             $em->flush();
 
             return $this->json(
-                ['success' => true, 'id' => $article->getId(), 'slug' => $article->getSlug()],
+                [
+                    'success' => true, 
+                    'id' => $article->getId(), 
+                    'slug' => $article->getSlug(),
+                    'redirectUrl' => '/editor/articles'
+                ],
                 200,
                 [],
                 ['groups' => 'article:detail']

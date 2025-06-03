@@ -1,75 +1,9 @@
+// Interface User simplifiée pour un administrateur unique
 export type User = {
   id: string;
-  name: string;
   email: string;
-  role: string;
-  lastLogin: string | null;
-  createdAt?: string;
+  avatar?: string; // Pour compatibilité avec le composant UserNav
 };
 
-export async function getUsers(): Promise<User[]> {
-  try {
-    const response = await fetch('/api/users', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des utilisateurs');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Erreur getUsers:', error);
-    throw error;
-  }
-}
-
-export async function updateUserRole(userId: string, role: string): Promise<User> {
-  try {
-    const response = await fetch(`/api/users/${userId}/role`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ role }),
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de la mise à jour du rôle');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Erreur updateUserRole:', error);
-    throw error;
-  }
-}
-
-export async function importUsersFromCSV(file: File): Promise<{ success: number; failed: number }> {
-  try {
-    const formData = new FormData();
-    formData.append('csvFile', file);
-
-    const response = await fetch('/api/users/import', {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de l\'import des utilisateurs');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Erreur importUsersFromCSV:', error);
-    throw error;
-  }
-}
+// Remarque: Les fonctions getUsers, updateUserRole et importUsersFromCSV ont été supprimées
+// car elles ne sont plus nécessaires dans un système avec un seul administrateur

@@ -18,20 +18,18 @@ type FormData = {
 
 type LoginFormProps = React.ComponentProps<"div"> & {
   onSuccess?: () => void
-  switchToRegister?: () => void
 }
 
 export function LoginForm({
   className,
   onSuccess,
-  switchToRegister,
   ...props
 }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const registered = searchParams?.get("registered")
+  // Simplification - suppression de la vérification d'inscription
   const { login } = useAuth()
 
   const {
@@ -82,16 +80,8 @@ export function LoginForm({
           return
         }
         
-        // Sinon, redirection basée sur le rôle de l'utilisateur
-        let redirectTo = '/account/settings' // Par défaut pour les utilisateurs simples
-        
-        if (userData.user.role === 'admin') {
-          redirectTo = '/admin' // Dashboard admin pour les administrateurs
-        } else if (userData.user.role === 'editor') {
-          redirectTo = '/editor/dashboard' // Dashboard éditeur pour les éditeurs
-        }
-        
-        router.push(redirectTo)
+        // Simplification - toujours rediriger vers /admin
+        router.push('/admin')
         router.refresh()
       }
 
@@ -106,30 +96,22 @@ export function LoginForm({
   }
 
   return (
-    <div className={cn("grid gap-6 w-full max-w-md mx-auto p-6", className)} {...props}>
-
-
-      {registered && (
-        <div className="p-3 text-sm text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400 rounded-md">
-          Inscription réussie ! Vous pouvez maintenant vous connecter.
-        </div>
-      )}
-
+    <div className={cn("w-full", className)} {...props}>
       {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400 rounded-md">
+        <div className="mb-4 p-2 text-xs text-red-400 bg-red-900/30 border border-red-900/50 rounded">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium leading-none">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="email" className="text-xs font-medium text-zinc-400">
               Email
             </Label>
             <Input
               id="email"
-              placeholder="email@exemple.com"
+              placeholder="admin@exemple.com"
               type="email"
               autoCapitalize="none"
               autoComplete="email"
@@ -137,31 +119,21 @@ export function LoginForm({
               disabled={isLoading}
               {...register("email")}
               className={cn(
-                "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-                errors.email && "border-destructive"
+                "flex h-9 w-full rounded-sm border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-xs text-zinc-300 focus:bg-black/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-500 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50",
+                errors.email && "border-red-900/50 bg-red-900/10"
               )}
             />
             {errors.email && (
-              <p className="text-sm font-medium text-destructive">
+              <p className="text-xs font-medium text-red-400">
                 {errors.email.message}
               </p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-sm font-medium leading-none">
-                Mot de passe
-              </Label>
-              <Button
-                type="button"
-                variant="link"
-                className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => router.push('/forgot-password')}
-              >
-                Mot de passe oublié ?
-              </Button>
-            </div>
+          <div className="space-y-1">
+            <Label htmlFor="password" className="text-xs font-medium text-zinc-400">
+              Mot de passe
+            </Label>
             <Input
               id="password"
               placeholder="••••••••"
@@ -170,67 +142,32 @@ export function LoginForm({
               disabled={isLoading}
               {...register("password")}
               className={cn(
-                "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-                errors.password && "border-destructive"
+                "flex h-9 w-full rounded-sm border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-xs text-zinc-300 focus:bg-black/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-500 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50",
+                errors.password && "border-red-900/50 bg-red-900/10"
               )}
             />
             {errors.password && (
-              <p className="text-sm font-medium text-destructive">
+              <p className="text-xs font-medium text-red-400">
                 {errors.password.message}
               </p>
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button 
+            type="submit" 
+            className="w-full mt-2 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white" 
+            size="sm"
+            disabled={isLoading}
+          >
+            {isLoading && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
             Se connecter
           </Button>
         </div>
       </form>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Ou continuez avec
-          </span>
-        </div>
-      </div>
+      {/* Suppression des options d'authentification alternatives */}
 
-      <Button variant="outline" type="button" disabled={isLoading}>
-        {isLoading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <>
-            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
-            </svg>
-            Google
-          </>
-        )}
-      </Button>
-
-      <p className="px-8 text-center text-sm text-muted-foreground">
-        {switchToRegister ? (
-          <Button
-            variant="link"
-            className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
-            onClick={switchToRegister}
-          >
-            Pas encore de compte ? Créez-en un
-          </Button>
-        ) : (
-          <Button
-            variant="link"
-            className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
-            asChild
-          >
-            <Link href="/register">Pas encore de compte ? Créez-en un</Link>
-          </Button>
-        )}
-      </p>
+      {/* Suppression du lien d'inscription */}
     </div>
   )
 }

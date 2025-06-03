@@ -103,7 +103,8 @@ class Article
     #[Groups(['article:list', 'article:detail'])]
     private ?\DateTimeImmutable $updated_at = null;
 
-    #[ORM\ManyToOne(inversedBy: 'article')]
+    // La fonctionnalité multi-utilisateurs a été simplifiée, tous les articles pointent vers l'admin (id=1)
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['article:list', 'article:detail'])]
     private ?User $author = null;
@@ -112,11 +113,7 @@ class Article
     #[Groups(['article:list', 'article:detail'])]
     private int $status = self::STATUS_PUBLISHED; // Par défaut, les articles sont publiés
 
-    /**
-     * @var Collection<int, Comment>
-     */
-    #[ORM\OneToMany(targetEntity: Comment::class, mappedBy: 'article')]
-    private Collection $comments;
+
 
     /**
      * @var Collection<int, Media>
@@ -126,7 +123,7 @@ class Article
 
     public function __construct()
     {
-        $this->comments = new ArrayCollection();
+
         $this->media = new ArrayCollection();
     }
 
@@ -340,35 +337,7 @@ class Article
         return $this;
     }
 
-    /**
-     * @return Collection<int, Comment>
-     */
-    public function getComments(): Collection
-    {
-        return $this->comments;
-    }
 
-    public function addComment(Comment $c): static
-    {
-        if (!$this->comments->contains($c)) {
-            $this->comments->add($c);
-            $c->setArticle($this);
-        }
-
-        return $this;
-    }
-
-    public function removeComment(Comment $c): static
-    {
-        if ($this->comments->removeElement($c)) {
-            // set the owning side to null (unless already changed)
-            if ($c->getArticle() === $this) {
-                $c->setArticle(null);
-            }
-        }
-
-        return $this;
-    }
 
     /**
      * @return Collection<int, Media>

@@ -16,7 +16,8 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    public const ROLES = ['admin', 'editor', 'user'];
+    // Simplification des rôles - un seul administrateur
+    public const ROLE_ADMIN = 'ROLE_ADMIN';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -38,9 +39,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $password_hash = null;
 
-    #[ORM\Column(length: 20)]
-    #[Assert\Choice(choices: self::ROLES, message: 'Invalid role')]
-    private ?string $role = null;
+    // Rôle défini en dur comme admin
+    #[ORM\Column(type: 'json')]
+    private array $roles = ['ROLE_ADMIN'];
 
     #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
@@ -51,17 +52,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $lastLoginAt = null;
 
-    /**
-     * @var Collection<int, Article>
-     */
-    #[ORM\OneToMany(targetEntity: Article::class, mappedBy: 'author')]
-    private Collection $article;
+    // La relation OneToMany avec les articles a été supprimée
+    // Tous les articles pointent maintenant vers l'admin (ID 1)
 
-    /**
-     * @var Collection<int, Comment>
-     */
-    #[ORM\OneToMany(targetEntity: Comment::class, mappedBy: 'author')]
-    private Collection $comment;
+    // Suppression de la relation avec les commentaires qui ont été retirés
 
     #[ORM\PrePersist]
     public function onPrePersist(): void
@@ -81,8 +75,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __construct()
     {
-        $this->article = new ArrayCollection();
-        $this->comment = new ArrayCollection();
+        // Constructeur simplifié - la relation avec les articles a été supprimée
     }
 
     public function getId(): ?int
@@ -143,7 +136,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        return ['ROLE_' . strtoupper($this->role ?? 'USER')];
+        // Simplification - toujours retourner le rôle admin
+        return $this->roles;
+    }
+    
+    /**
+     * Méthode simplifiée qui retourne le rôle principal au singulier
+     * Utilisée pour l'API et l'interface utilisateur
+     */
+    public function getRole(): string
+    {
+        // Retourner le premier rôle (dans notre cas c'est toujours ROLE_ADMIN)
+        return $this->roles[0];
     }
 
     public function eraseCredentials(): void
@@ -158,21 +162,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getRole(): ?string
-    {
-        return $this->role;
-    }
-
-    public function setRole(string $role): self
-    {
-        if (!in_array($role, self::ROLES)) {
-            throw new \InvalidArgumentException("Invalid role: $role");
-        }
-
-        $this->role = $role;
-
-        return $this;
-    }
+    // Suppression des méthodes getRole et setRole qui ne sont plus nécessaires
 
     public function getCreatedAt(): ?\DateTimeImmutable
     {
@@ -210,63 +200,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @return Collection<int, Article>
-     */
-    public function getArticle(): Collection
-    {
-        return $this->article;
-    }
+    // Les méthodes de gestion des articles ont été supprimées
+    // pour simplifier le modèle en mono-utilisateur
+    // Les articles pointent tous vers l'administrateur (ID 1)
 
-    public function addArticle(Article $article): static
-    {
-        if (!$this->article->contains($article)) {
-            $this->article->add($article);
-            $article->setAuthor($this);
-        }
-
-        return $this;
-    }
-
-    public function removeArticle(Article $article): static
-    {
-        if ($this->article->removeElement($article)) {
-            // set the owning side to null (unless already changed)
-            if ($article->getAuthor() === $this) {
-                $article->setAuthor(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Comment>
-     */
-    public function getComment(): Collection
-    {
-        return $this->comment;
-    }
-
-    public function addComments(Comment $comment): static
-    {
-        if (!$this->comment->contains($comment)) {
-            $this->comment->add($comment);
-            $comment->setAuthor($this);
-        }
-
-        return $this;
-    }
-
-    public function removeComments(Comment $comment): static
-    {
-        if ($this->comment->removeElement($comment)) {
-            // set the owning side to null (unless already changed)
-            if ($comment->getAuthor() === $this) {
-                $comment->setAuthor(null);
-            }
-        }
-
-        return $this;
-    }
+    // Suppression des méthodes liées aux commentaires
 }

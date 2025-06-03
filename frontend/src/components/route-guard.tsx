@@ -4,31 +4,23 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
 
-type Role = 'admin' | 'editor' | 'user'
-
-// Définition de la hiérarchie des rôles
-const ROLE_HIERARCHY: Record<Role, number> = {
-  'admin': 3,
-  'editor': 2,
-  'user': 1
-}
+// Plus besoin d'une hiérarchie de rôles, un seul rôle administrateur
 
 type RouteGuardProps = {
   children: React.ReactNode
   requireAuth?: boolean
-  requireRole?: Role
+  requireRole?: string
 }
 
-// Fonction utilitaire pour vérifier les droits d'accès
-const hasRequiredRole = (userRole: Role | undefined, requiredRole: Role): boolean => {
-  if (!userRole) return false
-  return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[requiredRole]
+// Fonction simplifiée pour vérifier si l'utilisateur est admin
+const isAdmin = (user: any): boolean => {
+  return user && user.role === 'ROLE_ADMIN'
 }
 
 export function RouteGuard({ 
   children, 
   requireAuth = false,
-  requireRole = 'user' // Par défaut, seul l'accès utilisateur est requis
+  requireRole = 'admin' // Par défaut, l'accès administrateur est requis
 }: RouteGuardProps) {
   const { user, isLoading, isAuthenticated } = useAuth()
   const router = useRouter()
@@ -43,8 +35,8 @@ export function RouteGuard({
       return
     }
 
-    // Si un rôle spécifique est requis et l'utilisateur n'a pas les droits nécessaires
-    if (requireRole && !hasRequiredRole(user?.role as Role | undefined, requireRole)) {
+    // Vérifier si l'utilisateur est admin lorsque c'est requis
+    if (requireRole === 'admin' && !isAdmin(user)) {
       router.push("/")
       return
     }
@@ -60,8 +52,8 @@ export function RouteGuard({
     return null
   }
 
-  // Si un rôle spécifique est requis et l'utilisateur n'a pas les droits nécessaires, ne rien afficher
-  if (requireRole && !hasRequiredRole(user?.role as Role | undefined, requireRole)) {
+  // Si un rôle admin est requis et l'utilisateur n'est pas admin, ne rien afficher
+  if (requireRole === 'admin' && !isAdmin(user)) {
     return null
   }
 

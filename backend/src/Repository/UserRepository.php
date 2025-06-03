@@ -8,6 +8,8 @@ use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @extends ServiceEntityRepository<User>
+ * Repository simplifié pour système mono-utilisateur
+ * Toutes les méthodes sont optimisées pour ne gérer qu'un seul utilisateur administrateur (ID=1)
  */
 class UserRepository extends ServiceEntityRepository
 {
@@ -16,6 +18,11 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
+    /**
+     * Sauvegarde l'utilisateur en base de données
+     * @param User $user L'utilisateur à sauvegarder
+     * @param bool $flush Si true, exécute immédiatement la requête SQL
+     */
     public function save(User $user, bool $flush = false): void
     {
         $this->getEntityManager()->persist($user);
@@ -24,28 +31,25 @@ class UserRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
-    //    /**
-    //     * @return User[] Returns an array of User objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('u')
-    //            ->andWhere('u.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('u.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?User
-    //    {
-    //        return $this->createQueryBuilder('u')
-    //            ->andWhere('u.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    
+    /**
+     * Récupère l'administrateur unique du système (ID=1)
+     * @return User|null L'administrateur ou null s'il n'existe pas
+     */
+    public function getAdmin(): ?User
+    {
+        return $this->find(1);
+    }
+    
+    /**
+     * Met à jour la date de dernière connexion de l'administrateur
+     */
+    public function updateLastLogin(): void
+    {
+        $admin = $this->find(1);
+        if ($admin) {
+            $admin->setLastLoginAt(new \DateTimeImmutable());
+            $this->save($admin, true);
+        }
+    }
 }

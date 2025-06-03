@@ -32,13 +32,19 @@ class SessionController extends AbstractController
                 );
             }
             
+            // Ajouter des logs pour débogage
+            $this->logger->info('Utilisateur authentifié', [
+                'id' => $user->getId(),
+                'email' => $user->getEmail()
+            ]);
+            
             // Retourner les informations de l'utilisateur
             return new JsonResponse([
                 'user' => [
                     'id' => $user->getId(),
                     'email' => $user->getEmail(),
                     'name' => $user->getName(),
-                    'role' => $user->getRole()
+                    'role' => $user->getRole() // Utiliser getRole() au singulier pour simplification
                 ]
             ]);
         } catch (\Exception $e) {

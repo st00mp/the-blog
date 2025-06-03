@@ -44,9 +44,10 @@ export default function PreviewArticlePage() {
 
             try {
                 setIsLoading(true)
-                // Appel API avec credentials pour autoriser uniquement les utilisateurs connectés
-                const response = await fetch(`/api/articles/${slug}`, {
+                // Appel API via la route de prévisualisation spécifique avec le paramètre status=0 pour voir les brouillons
+                const response = await fetch(`/api/articles/preview/${slug}?status=0`, {
                     credentials: "include",
+                    cache: "no-store" // Éviter la mise en cache
                 })
 
                 if (!response.ok) {

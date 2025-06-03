@@ -80,23 +80,8 @@ export default function ArticlesPage() {
         });
     };
     
-    // Force un rafraîchissement quand le composant devient visible dans l'onglet
-    useEffect(() => {
-        // fonction pour détecter si la page devient visible
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                loadArticles();
-            }
-        };
-        
-        // Ajouter un écouteur d'événement pour détecter les changements de visibilité
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        
-        // Nettoyer l'écouteur d'événement lors du démontage
-        return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-        };
-    }, []);
+    // Suppression du rafraîchissement automatique lors des changements de visibilité
+    // pour éviter les re-rendus excessifs - utiliser le bouton de rafraîchissement manuel à la place
 
     // Fonction pour supprimer un article
     const handleDeleteArticle = async (id: string, slug?: string) => {

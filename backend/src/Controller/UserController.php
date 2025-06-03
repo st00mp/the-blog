@@ -2,17 +2,12 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
-#[Route('/api/users')]
+// Controller désactivé - fonctionnalités multi-utilisateurs supprimées
+// Seules les routes d'authentification et de profil personnel restent actives
 class UserController extends AbstractController
 {
     private $entityManager;
@@ -26,61 +21,6 @@ class UserController extends AbstractController
         $this->serializer = $serializer;
     }
 
-    #[Route('', name: 'api_users_list', methods: ['GET'])]
-    public function list(UserRepository $userRepository): JsonResponse
-    {
-        $users = $userRepository->findAll();
-        
-        $data = [];
-        foreach ($users as $user) {
-            $lastLoginAt = $user->getLastLoginAt();
-            
-            $data[] = [
-                'id' => $user->getId(),
-                'name' => $user->getName(),
-                'email' => $user->getEmail(),
-                'role' => $user->getRole(),
-                'lastLogin' => $lastLoginAt ? $lastLoginAt->format('c') : null,
-                'createdAt' => $user->getCreatedAt()->format('c')
-            ];
-        }
-        
-        return new JsonResponse($data);
-    }
-
-    #[Route('/{id}/role', name: 'api_user_update_role', methods: ['PATCH'])]
-    public function updateRole(
-        Request $request, 
-        User $user
-    ): JsonResponse
-    {
-        $data = json_decode($request->getContent(), true);
-        
-        // Vérifier si le rôle est valide
-        if (!isset($data['role']) || !in_array($data['role'], User::ROLES)) {
-            return new JsonResponse(
-                ['error' => 'Rôle invalide. Les valeurs autorisées sont: ' . implode(', ', User::ROLES)],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-        
-        // Sécurité: empêcher la modification du rôle d'un admin
-        if ($user->getRole() === 'admin') {
-            return new JsonResponse(
-                ['error' => 'Pour des raisons de sécurité, il n\'est pas possible de modifier le rôle d\'un administrateur'],
-                Response::HTTP_FORBIDDEN
-            );
-        }
-        
-        $user->setRole($data['role']);
-        $this->entityManager->flush();
-        
-        return new JsonResponse([
-            'id' => $user->getId(),
-            'name' => $user->getName(),
-            'email' => $user->getEmail(),
-            'role' => $user->getRole(),
-            'lastLogin' => $user->getLastLoginAt() ? $user->getLastLoginAt()->format('c') : null
-        ]);
-    }
+    // Toutes les routes de gestion d'utilisateurs multiples ont été supprimées
+    // Les articles utilisent maintenant tous l'administrateur principal (ID 1) comme auteur
 }

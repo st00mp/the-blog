@@ -236,21 +236,17 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
                         </>
                       )}
 
-                      {/* Actions communes à tous les articles */}
-                      <DropdownMenuItem asChild className="cursor-pointer text-zinc-200 flex items-center gap-2 hover:bg-zinc-800">
-                        <Link href={`/editor/articles/edit/${article.slug}`}>
-                          <FileEdit className="h-4 w-4" />
-                          <span>Modifier</span>
-                        </Link>
-                      </DropdownMenuItem>
+                      {/* Option Modifier - uniquement pour les articles en brouillon */}
+                      {article.status === "draft" && (
+                        <DropdownMenuItem asChild className="cursor-pointer text-zinc-200 flex items-center gap-2 hover:bg-zinc-800">
+                          <Link href={`/editor/articles/edit/${article.id}`}>
+                            <FileEdit className="h-4 w-4" />
+                            <span>Modifier</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
 
-                      {/* Option pour modérer les commentaires */}
-                      <DropdownMenuItem asChild className="cursor-pointer text-zinc-200 flex items-center gap-2 hover:bg-zinc-800">
-                        <Link href={`/blog/${article.slug}#comments`} target="_blank">
-                          <MessageSquare className="h-4 w-4" />
-                          <span>Commentaires</span>
-                        </Link>
-                      </DropdownMenuItem>
+                      {/* Option pour les commentaires supprimée */}
 
                       <DropdownMenuSeparator className="bg-zinc-800" />
                       <DropdownMenuItem

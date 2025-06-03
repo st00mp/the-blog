@@ -36,18 +36,16 @@ security:
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
 
-    # Easy way to control access for large sections of your site
+    # Configuration simplifiée pour le mode mono-utilisateur (admin uniquement)
     # Note: Only the *first* access control that matches will be used
     access_control:
     - { path: ^/api/login, roles: PUBLIC_ACCESS }
-    - { path: ^/api/register, methods: [POST], roles: PUBLIC_ACCESS }
+    # Route /api/register désactivée - inutile en mode mono-utilisateur
     - { path: ^/api/categories, methods: [GET], roles: PUBLIC_ACCESS }
     - { path: ^/api/articles, methods: [GET], roles: PUBLIC_ACCESS }
-    - { path: ^/api/articles, roles: IS_AUTHENTICATED_FULLY }
-    - { path: ^/api/users, roles: ROLE_ADMIN }
-    - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+    - { path: ^/api/articles, roles: ROLE_ADMIN }
+    # Toutes les autres routes API nécessitent le rôle ADMIN
+    - { path: ^/api, roles: ROLE_ADMIN }
 
 when@test:
     security:

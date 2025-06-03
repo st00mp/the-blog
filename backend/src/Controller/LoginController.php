@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -42,23 +43,39 @@ class LoginController extends AbstractController
     }
     
     /**
-     * Méthode pour mettre à jour la date de dernière connexion
-     * Cette méthode est appelée par AuthenticationSuccessHandler
+     * Cette méthode est invoquée après une authentification réussie.
+     * Elle met à jour la date de dernière connexion de l'administrateur.
      */
-    public function updateLastLogin(string $email): void
+    #[Route('/api/login/success', name: 'api_login_success', methods: ['POST'])]
+    public function loginSuccess(Request $request, UserRepository $userRepository): JsonResponse
     {
-        try {
-            $user = $this->entityManager->getRepository('App\Entity\User')->findOneBy(['email' => $email]);
-            
-            if ($user && method_exists($user, 'setLastLoginAt')) {
-                $user->setLastLoginAt(new \DateTimeImmutable());
-                $this->entityManager->persist($user);
-                $this->entityManager->flush();
+        $user = $this->getUser();
+        if ($user instanceof User) {
+            try {
+                // Utilisation de la nouvelle méthode optimisée pour mettre à jour la date de connexion
+                $userRepository->updateLastLogin();
+                
+                $this->logger->info('Connexion réussie de l\'administrateur', [
+                    'user_id' => $user->getId(),
+                    'email' => $user->getEmail(),
+                ]);
+                
+                return $this->json([
+                    'message' => 'Connexion réussie',
+                    'user' => [
+                        'id' => $user->getId(),
+                        'email' => $user->getEmail(),
+                        'name' => $user->getName(),
+                        'role' => $user->getRole(),
+                    ]
+                ]);
+            } catch (\Exception $e) {
+                $this->logger->error('Erreur lors de la mise à jour de la date de dernière connexion', [
+                    'error' => $e->getMessage()
+                ]);
             }
-        } catch (\Exception $e) {
-            $this->logger->error('Erreur lors de la mise à jour de la date de dernière connexion', [
-                'error' => $e->getMessage()
-            ]);
         }
+        
+        return $this->json(['message' => 'Utilisateur non authentifié'], 401);
     }
 }

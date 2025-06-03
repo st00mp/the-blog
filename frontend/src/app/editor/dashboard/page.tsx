@@ -18,8 +18,7 @@ export default function EditorDashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     published: 0,
     drafts: 0,
-    viewsThisMonth: 1234, // On garde cette valeur fixe comme demandé
-    comments: 0
+    viewsThisMonth: 1234 // On garde cette valeur fixe comme demandé
   });
   
   const [loading, setLoading] = useState(true);
@@ -73,7 +72,7 @@ export default function EditorDashboardPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <Card className="bg-zinc-900 border-zinc-800 hover:shadow-lg transition-shadow">
             <CardHeader className="flex items-center pb-2">
               <FileText className="mr-2 h-5 w-5 text-blue-400" />
@@ -104,15 +103,7 @@ export default function EditorDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-zinc-900 border-zinc-800 hover:shadow-lg transition-shadow">
-            <CardHeader className="flex items-center pb-2">
-              <MessageCircle className="mr-2 h-5 w-5 text-yellow-400" />
-              <CardTitle className="text-lg">Commentaires</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-white">{stats.comments}</p>
-            </CardContent>
-          </Card>
+          {/* Carte Commentaires supprimée */}
         </div>
       )}
 

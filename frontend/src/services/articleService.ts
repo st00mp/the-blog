@@ -11,7 +11,7 @@ export type Article = {
     name: string;
   };
   author: {
-    id: number;
+    id: number; // Toujours 1 (admin)
     name: string;
   };
 };
