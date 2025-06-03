@@ -1,7 +1,7 @@
-### 🛠️ Blog layout – work in progress
+### 🛠️ Blog / CMS
 
-This is an ongoing implementation of the `/blog` and `/blog/[slug]` pages using **React** and **ShadCN UI** components.  
-The goal is to recreate a clean, elegant blog layout inspired by Vercel’s design system.
+This is an ongoing implementation of the multi-authors CMS using **Symfony**, **Next.js** and **ShadCN UI** components.  
+The goal is to recreate a clean, elegant blog layout inspired by Vercel’s blog design.
 
 ---
 
