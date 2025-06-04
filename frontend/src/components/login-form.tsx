@@ -80,8 +80,8 @@ export function LoginForm({
           return
         }
         
-        // Simplification - toujours rediriger vers /admin
-        router.push('/admin')
+        // Redirection vers l'interface d'administration unique
+        router.push('/editor/dashboard')
         router.refresh()
       }
 

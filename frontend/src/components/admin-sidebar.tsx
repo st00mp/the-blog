@@ -27,23 +27,13 @@ const hasAdminRole = (userRole?: string): boolean => {
     return userRole === 'ROLE_ADMIN'
 }
 
-// Structure de navigation simplifiée pour admin
+// Structure de navigation simplifiée pour admin mono-utilisateur
 const adminNavigation = [
     {
-        title: "ADMINISTRATION",
+        title: "EDITION",
         items: [
             {
                 title: "Tableau de bord",
-                url: "/admin",
-                icon: LayoutDashboard
-            },
-        ],
-    },
-    {
-        title: "ÉDITION",
-        items: [
-            {
-                title: "Vue d'ensemble",
                 url: "/editor/dashboard",
                 icon: LayoutDashboard
             },
@@ -104,9 +94,9 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                                         </SidebarMenuItem>
                                     ))}
                                 </SidebarMenu>
-                                </SidebarGroupContent>
-                            </SidebarGroup>
-                        ))}
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    ))}
                 </SidebarContent>
             </div>
         </Sidebar>

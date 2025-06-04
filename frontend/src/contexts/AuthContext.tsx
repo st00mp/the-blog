@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Déterminer si la page actuelle nécessite une authentification
       const currentPath = window.location.pathname
       const authRequiredPaths = [
-        '/admin' // Simplifié pour n'inclure que le chemin d'administration
+        '/editor' // Interface d'administration unique
       ]
       
       const needsRedirect = authRequiredPaths.some(path => currentPath.startsWith(path))

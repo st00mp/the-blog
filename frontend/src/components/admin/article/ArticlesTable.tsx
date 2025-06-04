@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { MoreHorizontal, Eye, FileEdit, Trash2, FilePlus, Send, FileQuestion, FileMinus, MessageSquare } from "lucide-react"
+import { MoreHorizontal, Eye, FileEdit, Trash2, FilePlus, Send, FileQuestion, FileMinus, MessageSquare, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/components/ui/use-toast"
 
@@ -152,12 +152,24 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
                   className={
                     article.status === "published"
                       ? "bg-green-900/30 text-green-400 hover:bg-green-900/40"
-                      : "bg-amber-900/30 text-amber-400 hover:bg-amber-900/40"
+                      : article.status === "deleted"
+                        ? "bg-red-900/30 text-red-400 hover:bg-red-900/40"
+                        : "bg-amber-900/30 text-amber-400 hover:bg-amber-900/40"
                   }
                 >
                   <div className="flex items-center">
-                    <span className={`w-2 h-2 rounded-full mr-2 ${article.status === "published" ? "bg-green-500" : "bg-amber-500"}`}></span>
-                    {article.status === "published" ? "Publié" : "Brouillon"}
+                    <span className={`w-2 h-2 rounded-full mr-2 ${
+                      article.status === "published" 
+                        ? "bg-green-500" 
+                        : article.status === "deleted"
+                          ? "bg-red-500"
+                          : "bg-amber-500"
+                    }`}></span>
+                    {article.status === "published" 
+                      ? "Publié" 
+                      : article.status === "deleted"
+                        ? "Supprimé"
+                        : "Brouillon"}
                   </div>
                 </Badge>
               </td>
@@ -214,6 +226,34 @@ export function AdminArticlesTable({ articles, onDelete, isDeleting = false, onS
                           >
                             <FileMinus className="h-4 w-4" />
                             <span>{updatingStatusId === article.id ? 'En cours...' : 'Dépublier'}</span>
+                          </DropdownMenuItem>
+                        </>
+                      ) : article.status === "deleted" ? (
+                        // Actions pour un article supprimé
+                        <>
+                          <DropdownMenuItem
+                            className="cursor-pointer text-green-200 flex items-center gap-2 hover:bg-zinc-800"
+                            onClick={() => {
+                              // Appeler le service de restauration d'article
+                              import('@/services/articleService').then(({ restoreArticle }) => {
+                                restoreArticle(article.id)
+                                  .then(() => {
+                                    if (onStatusChange) {
+                                      // Simulation d'un article restauré pour le callback
+                                      const restoredArticle = {...article, status: 'draft'};
+                                      onStatusChange(restoredArticle);
+                                    } else {
+                                      // Rafraîchir après restauration si pas de callback
+                                      window.location.reload();
+                                    }
+                                  })
+                                  .catch(error => console.error('Erreur lors de la restauration:', error));
+                              });
+                            }}
+                            disabled={updatingStatusId === article.id}
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                            <span>{updatingStatusId === article.id ? 'En cours...' : 'Restaurer'}</span>
                           </DropdownMenuItem>
                         </>
                       ) : (

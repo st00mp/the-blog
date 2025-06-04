@@ -4,7 +4,7 @@ export type Article = {
   slug: string;
   createdAt: string;
   updatedAt: string;
-  status: string;
+  status: string; // 'published', 'draft' ou 'deleted'
   intro?: string;
   category?: {
     id: number;
@@ -28,9 +28,9 @@ function convertApiDataForUI(apiData: any[]): Article[] {
       // Convertir les dates du format snake_case vers camelCase
       createdAt: article.created_at || article.createdAt,
       updatedAt: article.updated_at || article.updatedAt,
-      // Convertir status de nombre (0/1) à chaîne (draft/published)
+      // Convertir status de nombre (-1/0/1) à chaîne (deleted/draft/published)
       status: typeof article.status === 'number' 
-        ? (article.status === 1 ? 'published' : 'draft')
+        ? (article.status === 1 ? 'published' : article.status === -1 ? 'deleted' : 'draft')
         : article.status
     };
     
@@ -151,27 +151,17 @@ export async function getMyArticles(
   }
 }
 
-// Supprimer un article
+// Mettre un article à la corbeille (au lieu d'une suppression définitive)
 export async function deleteArticle(id: string, slug?: string): Promise<void> {
   try {
-    // Si un slug est fourni, l'utiliser pour la suppression
-    // sinon utiliser l'ID (compatibilité arrière)
-    const identifier = slug || id;
-    console.log('Tentative de suppression avec l\'identifiant:', identifier);
+    // Utiliser l'ID pour la mise à la corbeille, le slug n'est plus utilisé
+    console.log('Mise à la corbeille de l\'article avec ID:', id);
     
-    const response = await fetch(`/api/articles/${identifier}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erreur lors de la suppression de l\'article: ${response.status} ${response.statusText}`);
-    }
+    // Utiliser la méthode trashArticle pour une suppression logique
+    await trashArticle(id);
     
-    console.log('Suppression réussie de l\'article avec identifiant:', identifier);
+    // Si tout s'est bien passé, pas d'erreur à lancer
+    console.log('Article mis à la corbeille avec succès');
   } catch (error) {
     console.error('Erreur deleteArticle:', error);
     throw error;
@@ -181,27 +171,75 @@ export async function deleteArticle(id: string, slug?: string): Promise<void> {
 // Change le statut d'un article (publier ou dépublier)
 export async function updateArticleStatus(id: string, status: 'published' | 'draft'): Promise<Article> {
   try {
-    // Convertir le statut en nombre pour l'API
-    const numericStatus = status === 'published' ? 1 : 0;
+    const apiStatus = status === 'published' ? 1 : 0;
     
     const response = await fetch(`/api/articles/${id}/status`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ status: apiStatus }),
       credentials: 'include',
-      body: JSON.stringify({ status: numericStatus })
     });
 
     if (!response.ok) {
-      throw new Error(`Erreur lors du changement de statut de l'article en ${status}`);
+      const error = await response.json();
+      throw new Error(error.message || 'Erreur lors du changement de statut');
     }
 
     const data = await response.json();
-    // Convertir les données pour l'interface utilisateur
-    return convertApiDataForUI([data])[0];
+    return {
+      ...data,
+      status: status, // On utilise le statut demandé plutôt que celui retourné par l'API
+    };
   } catch (error) {
-    console.error('Erreur updateArticleStatus:', error);
+    console.error('Erreur lors du changement de statut:', error);
+    throw error;
+  }
+}
+
+// Mettre un article à la corbeille (statut = -1)
+export async function trashArticle(id: string): Promise<{success: boolean, redirectUrl: string}> {
+  try {
+    const response = await fetch(`/api/articles/${id}/trash`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erreur lors de la mise à la corbeille');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erreur lors de la mise à la corbeille:', error);
+    throw error;
+  }
+}
+
+// Restaurer un article de la corbeille (statut = 0)
+export async function restoreArticle(id: string): Promise<{success: boolean, redirectUrl: string}> {
+  try {
+    const response = await fetch(`/api/articles/${id}/restore`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erreur lors de la restauration');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erreur lors de la restauration:', error);
     throw error;
   }
 }

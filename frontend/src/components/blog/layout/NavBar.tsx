@@ -32,12 +32,12 @@ function UserMenu() {
         // Empêcher la propagation de l'événement pour éviter les clics multiples
         e.preventDefault()
         e.stopPropagation()
-        
+
         try {
             // Utiliser la fonction logout du contexte d'authentification
             // Elle s'occupera déjà de la redirection appropriée
             await logout()
-            
+
             // La fonction logout du contexte gère déjà la redirection,
             // donc nous n'avons pas besoin de le faire ici
         } catch (error) {
@@ -77,22 +77,10 @@ function UserMenu() {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-zinc-800 my-1" />
 
-                        {/* Option Administration - toujours visible car utilisateur unique */}
-                        <DropdownMenuItem 
-                            className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors"
-                            onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                router.push('/admin')
-                            }}
-                        >
-                            <LayoutDashboard className="h-4 w-4" />
-                            <span>Administration</span>
-                            <span className="sr-only">Accéder au panneau d'administration</span>
-                        </DropdownMenuItem>
+                        {/* Option d'administration supprimée - interface mono-utilisateur simplifiée */}
 
-                        {/* Option Édition pour l'admin */}
-                        <DropdownMenuItem 
+                        {/* Option Édition unique pour l'admin */}
+                        <DropdownMenuItem
                             className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors"
                             onClick={(e) => {
                                 e.preventDefault()
@@ -100,13 +88,13 @@ function UserMenu() {
                                 router.push('/editor/dashboard')
                             }}
                         >
-                            <Edit className="h-4 w-4" />
+                            <LayoutDashboard className="h-4 w-4" />
                             <span>Édition</span>
-                            <span className="sr-only">Accéder à l'interface d'édition</span>
+                            <span className="sr-only">Accéder au panneau d'édition</span>
                         </DropdownMenuItem>
-                        
+
                         {/* Option Paramètres */}
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                             className="cursor-pointer flex items-center gap-2 px-3 py-2 text-sm rounded-sm text-zinc-200 hover:text-white hover:bg-zinc-800 focus:bg-zinc-800 focus:text-white transition-colors"
                             onClick={(e) => {
                                 e.preventDefault()
@@ -141,7 +129,7 @@ export function NavBar() {
     const { isAuthenticated, isLoading } = useAuth()
     const router = useRouter()
     // Plus besoin de vérifier le chemin, nous affichons la NavBar partout
-    
+
     return (
         <header className="w-full border-b border-zinc-800">
             <div className="w-full px-6 sm:px-12 py-3 flex items-center justify-between">

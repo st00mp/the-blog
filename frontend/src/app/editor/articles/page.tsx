@@ -131,7 +131,7 @@ export default function ArticlesPage() {
             const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (article.intro ? article.intro.toLowerCase().includes(searchTerm.toLowerCase()) : false);
 
-            // Comparaison de statut ("all", "published", ou "draft")
+            // Comparaison de statut ("all", "published", "draft" ou "deleted")
             const matchesStatus = statusFilter === "all" || article.status === statusFilter;
 
             return matchesSearch && matchesStatus;
@@ -245,6 +245,10 @@ export default function ArticlesPage() {
                                         <SelectItem value="draft" className="flex items-center">
                                             <span className="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
                                             Brouillons
+                                        </SelectItem>
+                                        <SelectItem value="deleted" className="flex items-center">
+                                            <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                                            Supprimés
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>

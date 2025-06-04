@@ -16,10 +16,12 @@ use Symfony\Component\Serializer\Annotation\Groups;
 class Article
 {
     // Définition des constantes pour les statuts d'article
+    public const STATUS_DELETED = -1;
     public const STATUS_DRAFT = 0;
     public const STATUS_PUBLISHED = 1;
     
     public const STATUSES = [
+        'deleted' => self::STATUS_DELETED,
         'draft' => self::STATUS_DRAFT,
         'published' => self::STATUS_PUBLISHED
     ];
@@ -37,6 +39,12 @@ class Article
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['article:list', 'article:detail'])]
     private ?Category $category = null;
+
+
+    
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    #[Groups(['article:detail'])]
+    private ?array $meta = [];
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['article:detail'])]
@@ -229,7 +237,13 @@ class Article
     
     public function getStatusAsString(): string
     {
-        return $this->status === self::STATUS_PUBLISHED ? 'published' : 'draft';
+        if ($this->status === self::STATUS_PUBLISHED) {
+            return 'published';
+        } elseif ($this->status === self::STATUS_DELETED) {
+            return 'deleted';
+        } else {
+            return 'draft';
+        }
     }
     
     public function setStatusFromString(string $statusString): self
@@ -237,6 +251,8 @@ class Article
         $statusString = strtolower(trim($statusString));
         if ($statusString === 'published') {
             $this->status = self::STATUS_PUBLISHED;
+        } elseif ($statusString === 'deleted') {
+            $this->status = self::STATUS_DELETED;
         } else {
             $this->status = self::STATUS_DRAFT;
         }
@@ -345,6 +361,20 @@ class Article
     public function getMedia(): Collection
     {
         return $this->media;
+    }
+    
+
+    
+    public function getMeta(): ?array
+    {
+        return $this->meta;
+    }
+
+    public function setMeta(?array $meta): static
+    {
+        $this->meta = $meta;
+
+        return $this;
     }
 
     public function addMedia(Media $media): static

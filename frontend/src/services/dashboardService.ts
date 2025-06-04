@@ -2,10 +2,12 @@
  * Type pour une activité récente
  */
 export type RecentActivity = {
-  type: 'article_published' | 'draft_updated';
+  type: 'article_published' | 'draft_updated' | 'article_deleted' | 'article_restored' | 
+        'article_unpublished' | 'article_updated' | 'article_created';
   color: string;
   message: string;
   date: string;
+  articleId?: string;
 };
 
 /**

@@ -37,7 +37,7 @@ final class ArticleController extends AbstractController
 
         // 3. Envoi de la réponse JSON avec les articles et les métadonnées
         $headers = [];
-        
+
         // Si des brouillons sont demandés (status=0) ou tous les articles (status=-1), ajouter des en-têtes anti-référencement
         if ($status === 0 || $status === -1) {
             // Vérifier que l'utilisateur est authentifié (seul l'admin peut voir les brouillons)
@@ -46,7 +46,7 @@ final class ArticleController extends AbstractController
                 $headers['X-Robots-Tag'] = 'noindex, nofollow';
             }
         }
-        
+
         return $this->json($result, 200, $headers, [
             'groups' => ['article:list', 'article:detail'],
             'json_encode_options' => JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
@@ -95,12 +95,12 @@ final class ArticleController extends AbstractController
             }
 
             // En mode mono-utilisateur, seul l'administrateur peut accéder aux brouillons
-            $isAdmin = $user->getRole() === 'ROLE_ADMIN'; 
-            
+            $isAdmin = $user->getRole() === 'ROLE_ADMIN';
+
             if (!$isAdmin) {
                 return $this->json(['error' => 'Article non trouvé'], 404);
             }
-            
+
             // Ajouter des en-têtes anti-référencement pour les brouillons
             return $this->json($article, 200, [
                 'X-Robots-Tag' => 'noindex, nofollow'
@@ -204,7 +204,7 @@ final class ArticleController extends AbstractController
             // En mode mono-utilisateur: tous les articles ont le même auteur (admin ID 1)
             $adminUser = $userRepo->find(1);
             $article->setAuthor($adminUser);
-            
+
             // Définition du statut (0 = brouillon, 1 = publié)
             // Par défaut, le statut est publié sauf si explicitement demandé comme brouillon
             $status = isset($data['status']) ? (int)$data['status'] : 1;
@@ -220,14 +220,39 @@ final class ArticleController extends AbstractController
                 return $this->json(['error' => 'Validation failed', 'details' => $errorMessages], 400);
             }
 
+            // Un seul événement simple et clair pour la création d'article
+            $meta = [];
+            $meta['history'] = [];
+            $timestamp = (new \DateTimeImmutable())->format('c');
+            
+            // Ne créer qu'un seul événement clair selon le statut initial
+            if ($status === Article::STATUS_PUBLISHED) {
+                // Article créé directement comme publié
+                $meta['history'][] = [
+                    'action' => 'article_published', // Type standardisé
+                    'timestamp' => $timestamp,
+                    'status' => $status,
+                    'is_creation' => true // Marquer que c'est une publication initiale
+                ];
+            } else {
+                // Article créé comme brouillon
+                $meta['history'][] = [
+                    'action' => 'article_created',
+                    'timestamp' => $timestamp,
+                    'status' => $status
+                ];
+            }
+            
+            $article->setMeta($meta);
+            
             // 5. Persistance
             $em->persist($article);
             $em->flush();
 
             return $this->json(
                 [
-                    'success' => true, 
-                    'id' => $article->getId(), 
+                    'success' => true,
+                    'id' => $article->getId(),
                     'slug' => $article->getSlug(),
                     'redirectUrl' => '/editor/articles'
                 ],
@@ -329,14 +354,44 @@ final class ArticleController extends AbstractController
                 }
                 return $this->json(['error' => 'Validation failed', 'details' => $errorMessages], 400);
             }
-
+            
+            // Mettre à jour la date de modification
+            $article->setUpdatedAt(new \DateTimeImmutable());
+            
+            // Ajouter l'événement dans l'historique seulement si le contenu a réellement changé
+            // Cela évite d'ajouter des événements quand seul le statut est modifié ailleurs
+            if (!empty($requestData)) {
+                $meta = $article->getMeta() ?? [];
+                $meta['history'] = isset($meta['history']) ? $meta['history'] : [];
+                
+                $eventType = 'updated';
+                $timestamp = (new \DateTimeImmutable())->format('c');
+                
+                // Ajouter l'événement approprié selon l'état actuel de l'article
+                if ($article->getStatus() === Article::STATUS_PUBLISHED) {
+                    $meta['history'][] = [
+                        'action' => 'article_updated', // Plus spécifique que 'updated'
+                        'timestamp' => $timestamp,
+                        'status' => $article->getStatus()
+                    ];
+                } else {
+                    $meta['history'][] = [
+                        'action' => 'draft_updated',
+                        'timestamp' => $timestamp,
+                        'status' => $article->getStatus()
+                    ];
+                }
+                
+                $article->setMeta($meta);
+            }
+            
             // 5. Persistance des modifications
             $em->flush();
 
             return $this->json(
                 [
-                    'success' => true, 
-                    'id' => $article->getId(), 
+                    'success' => true,
+                    'id' => $article->getId(),
                     'slug' => $article->getSlug(),
                     'redirectUrl' => '/editor/articles'
                 ],
@@ -354,7 +409,117 @@ final class ArticleController extends AbstractController
         }
     }
 
-    // Endpoint pour supprimer un article
+    // Endpoint pour mettre un article à la corbeille (suppression logique)
+    // PATCH /api/articles/{id}/trash
+    #[Route('/api/articles/{id}/trash', name: 'api_article_trash', methods: ['PATCH'])]
+    public function trashArticle(
+        int $id,
+        ArticleRepository $articleRepo,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        try {
+            // 1. Récupération de l'article à mettre à la corbeille
+            $article = $articleRepo->find($id);
+            if (!$article) {
+                return $this->json(['error' => 'Article non trouvé'], 404);
+            }
+
+            // 2. Enregistrer l'ancien statut avant de le changer
+            $previousStatus = $article->getStatus();
+            
+            // Marquer l'article comme supprimé et mettre à jour le timestamp
+            $article->setStatus(Article::STATUS_DELETED);
+            $article->setUpdatedAt(new \DateTimeImmutable());
+            
+            // 3. Enregistrer l'information de suppression dans les métadonnées
+            $meta = $article->getMeta() ?? [];
+            $meta['history'] = isset($meta['history']) ? $meta['history'] : [];
+            $meta['history'][] = [
+                'action' => 'article_deleted',
+                'timestamp' => (new \DateTimeImmutable())->format('c'),
+                'previous_status' => $previousStatus,
+                'new_status' => Article::STATUS_DELETED
+            ];
+            $article->setMeta($meta);
+            
+            $em->flush();
+
+            return $this->json([
+                'success' => true,
+                'message' => 'L\'article a été déplacé dans la corbeille',
+                'id' => $article->getId(),
+                'redirectUrl' => '/editor/articles'
+            ], 200);
+        } catch (Throwable $e) {
+            // Gestion des erreurs serveur
+            $message = $_ENV['APP_ENV'] === 'dev' ? $e->getMessage() : 'Une erreur est survenue';
+            return $this->json([
+                'error' => 'Erreur serveur',
+                'message' => $message,
+            ], 500);
+        }
+    }
+
+    // Endpoint pour restaurer un article de la corbeille
+    // PATCH /api/articles/{id}/restore
+    #[Route('/api/articles/{id}/restore', name: 'api_article_restore', methods: ['PATCH'])]
+    public function restoreArticle(
+        int $id,
+        ArticleRepository $articleRepo,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        try {
+            // 1. Récupération de l'article à restaurer
+            $article = $articleRepo->find($id);
+            if (!$article) {
+                return $this->json(['error' => 'Article non trouvé'], 404);
+            }
+
+            // 2. Vérifier que l'article est bien dans la corbeille
+            if ($article->getStatus() !== Article::STATUS_DELETED) {
+                return $this->json(['error' => 'Cet article n\'est pas dans la corbeille'], 400);
+            }
+
+            // 3. Restaurer l'article en brouillon
+            $article->setStatus(Article::STATUS_DRAFT);
+            // Mettre à jour le timestamp pour que l'activité soit récente
+            $article->setUpdatedAt(new \DateTimeImmutable());
+            
+            // 4. Mettre à jour les métadonnées avec un historique complet
+            $meta = $article->getMeta() ?? [];
+            $meta['restored'] = true;
+            $meta['restored_at'] = (new \DateTimeImmutable())->format('c');
+            
+            // Ajouter l'entrée de restauration à l'historique
+            $meta['history'] = isset($meta['history']) ? $meta['history'] : [];
+            $meta['history'][] = [
+                'action' => 'article_restored',
+                'timestamp' => (new \DateTimeImmutable())->format('c'),
+                'previous_status' => Article::STATUS_DELETED,
+                'new_status' => Article::STATUS_DRAFT
+            ];
+            
+            $article->setMeta($meta);
+            
+            $em->flush();
+
+            return $this->json([
+                'success' => true,
+                'message' => 'L\'article a été restauré comme brouillon',
+                'id' => $article->getId(),
+                'redirectUrl' => '/editor/articles'
+            ], 200);
+        } catch (\Throwable $e) {
+            // Gestion des erreurs serveur
+            $message = $_ENV['APP_ENV'] === 'dev' ? $e->getMessage() : 'Une erreur est survenue';
+            return $this->json([
+                'error' => 'Erreur serveur',
+                'message' => $message,
+            ], 500);
+        }
+    }
+
+    // Endpoint pour supprimer définitivement un article
     // DELETE /api/articles/{slug}
     #[Route('/api/articles/{slug}', name: 'api_article_delete', methods: ['DELETE'])]
     public function delete(
@@ -369,7 +534,7 @@ final class ArticleController extends AbstractController
                 return $this->json(['error' => 'Article non trouvé'], 404);
             }
 
-            // 2. Suppression de l'article
+            // 2. Suppression définitive de l'article
             $em->remove($article);
             $em->flush();
 
@@ -412,9 +577,37 @@ final class ArticleController extends AbstractController
                 return $this->json(['error' => 'Statut invalide. Doit être 0 (brouillon) ou 1 (publié)'], 400);
             }
 
-            // 4. Mise à jour du statut
+            // 4. Mise à jour du statut avec enregistrement dans l'historique
+            $oldStatus = $article->getStatus();
             $article->setStatus($status);
-
+            $article->setUpdatedAt(new \DateTimeImmutable());
+            $timestamp = (new \DateTimeImmutable())->format('c');
+            
+            // Ajouter à l'historique dans meta
+            $meta = $article->getMeta() ?? [];
+            $meta['history'] = isset($meta['history']) ? $meta['history'] : [];
+            
+            // Déterminer le type d'action standardisé
+            if ($status === Article::STATUS_PUBLISHED && $oldStatus === Article::STATUS_DRAFT) {
+                // Cas de publication : un seul événement standardisé
+                $meta['history'][] = [
+                    'action' => 'article_published',
+                    'timestamp' => $timestamp,
+                    'previous_status' => $oldStatus,
+                    'new_status' => $status
+                ];
+            } else if ($status === Article::STATUS_DRAFT && $oldStatus === Article::STATUS_PUBLISHED) {
+                // Cas de dépublication : un seul événement standardisé
+                $meta['history'][] = [
+                    'action' => 'article_unpublished',
+                    'timestamp' => $timestamp,
+                    'previous_status' => $oldStatus,
+                    'new_status' => $status
+                ];
+            }
+            
+            $article->setMeta($meta);
+            
             // 5. Persistance des modifications
             $em->flush();
 
