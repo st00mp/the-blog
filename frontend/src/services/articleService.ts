@@ -10,10 +10,7 @@ export type Article = {
     id: number;
     name: string;
   };
-  author: {
-    id: number; // Toujours 1 (admin)
-    name: string;
-  };
+  // author supprimé car application mono-utilisateur
 };
 
 // Fonction pour convertir le statut de l'API (number) en string pour l'UI

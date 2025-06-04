@@ -12,7 +12,7 @@ type Props = { params: { slug: string } }
 
 type Article = {
     category: { id: number; name: string }
-    author: { name: string }
+    // author supprimé - application mono-utilisateur
     title: string
     intro: string
     steps: { title: string; content: any }[]
@@ -91,10 +91,7 @@ export default async function BlogPostPage({ params }: Props) {
                                     {article.title}
                                 </h1>
                             </div>
-                            <div className="flex justify-center items-center gap-3 text-sm text-neutral-400 mb-2">
-                                <img src="/blog/avatar.png" alt={article.author?.name || "Auteur"} className="w-7 h-7 rounded-full" />
-                                <span className="text-white font-medium">{article.author?.name || "Auteur inconnu"}</span>
-                            </div>
+                            {/* Section auteur supprimée - inutile en mode mono-utilisateur */}
                             <div className="mt-16 flex justify-between items-center text-sm text-neutral-500 mb-6">
                                 <div className="flex items-center gap-2">
                                     <ClockIcon className="w-4 h-4" />

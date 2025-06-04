@@ -22,7 +22,7 @@ type Article = {
     category: Category
     updated_at: string
     created_at: string
-    author: { id: number, name: string }
+    // author supprimé - application mono-utilisateur
 }
 
 // Composant principal en rendu côté client

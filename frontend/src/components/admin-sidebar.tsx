@@ -4,8 +4,6 @@ import * as React from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { Home, FilePen, Settings, LogOut, LayoutDashboard, Edit } from "lucide-react"
-
-import { useAuth } from "@/contexts/AuthContext"
 import {
     Sidebar,
     SidebarContent,
@@ -18,14 +16,7 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Types pour les rôles - simplifié pour l'administrateur unique
-type Role = 'ROLE_ADMIN' | 'ROLE_EDITOR' | 'ROLE_USER'
-
-// Vérifie si l'utilisateur a le rôle admin - version simplifiée pour format singulier
-const hasAdminRole = (userRole?: string): boolean => {
-    if (!userRole) return false
-    return userRole === 'ROLE_ADMIN'
-}
+// Application mono-utilisateur: pas besoin de vérifier les rôles
 
 // Structure de navigation simplifiée pour admin mono-utilisateur
 const adminNavigation = [
@@ -58,7 +49,6 @@ const adminNavigation = [
 
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const pathname = usePathname()
-    const { user } = useAuth()
 
     const isActive = (path: string) => {
         return pathname.startsWith(path)
@@ -68,8 +58,8 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
         <Sidebar {...props}>
             <div className="px-4 py-6">
                 <SidebarContent className="space-y-6">
-                    {/* Afficher tous les groupes de navigation si l'utilisateur est admin */}
-                    {hasAdminRole(user?.role) && adminNavigation.map((group) => (
+                    {/* Affichage simplifié pour application mono-utilisateur */}
+                    {adminNavigation.map((group) => (
                         <SidebarGroup key={group.title}>
                             <SidebarGroupLabel className="text-zinc-400 text-xs font-medium uppercase tracking-wider">
                                 {group.title}

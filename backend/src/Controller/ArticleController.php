@@ -118,8 +118,7 @@ final class ArticleController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         ValidatorInterface $validator,
-        CategoryRepository $categoryRepo,
-        UserRepository $userRepo
+        CategoryRepository $categoryRepo
     ): JsonResponse {
         // Tentative de création d'un article à partir des données reçues
         try {
@@ -189,21 +188,15 @@ final class ArticleController extends AbstractController
                 $article->setCtaButton(trim($data['ctaButton']));
             }
 
-            // 3. Vérification de l'authentification - en mode mono-utilisateur
+            // 3. Vérification de l'authentification simplifiée pour mono-utilisateur
             $user = $this->getUser();
 
             if (!$user) {
                 return $this->json(['error' => 'Vous devez être connecté pour créer un article'], 401);
             }
-
-            // Vérification que l'utilisateur est bien une instance de User
-            if (!$user instanceof \App\Entity\User) {
-                return $this->json(['error' => 'Utilisateur invalide'], 400);
-            }
-
-            // En mode mono-utilisateur: tous les articles ont le même auteur (admin ID 1)
-            $adminUser = $userRepo->find(1);
-            $article->setAuthor($adminUser);
+            
+            // Application mono-utilisateur: l'auteur est toujours implicite
+            // Pas besoin d'associer explicitement un auteur
 
             // Définition du statut (0 = brouillon, 1 = publié)
             // Par défaut, le statut est publié sauf si explicitement demandé comme brouillon
