@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import Link from "next/link"
 import { Plus, Filter, Search, RefreshCw } from "lucide-react"
 import { useArticleActions } from "@/contexts/ArticleActionsContext"
@@ -42,35 +42,52 @@ export default function ArticlesPage() {
             setIsLoading(true);
             // Récupérer l'ID de l'utilisateur connecté et le passer au service
             const currentUserId = user?.id || null;
-            const response = await getMyArticles(searchTerm, statusFilter, currentUserId, currentPage, meta.limit);
-            setArticles(response.data);
-            setMeta(response.meta);
+            
+            // Utiliser un bloc try-catch spécifique pour la requête API
+            try {
+                const response = await getMyArticles(searchTerm, statusFilter, currentUserId, currentPage, meta.limit);
+                setArticles(response.data);
+                setMeta(response.meta);
+            } catch (apiError) {
+                console.error('Erreur API spécifique:', apiError);
+                // Ne pas afficher de toast ici car nous voulons éviter les notifications
+                // d'erreur redondantes après un filtrage réussi
+                // L'erreur est déjà enregistrée dans la console pour debugging
+            }
+            
         } catch (error) {
             toast({
                 variant: "destructive",
                 title: "Erreur",
                 description: "Impossible de charger vos articles."
             });
-            console.error(error);
+            console.error('Erreur générale:', error);
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Charger les articles au montage et quand les filtres changent
-    useEffect(() => {
-        loadArticles();
-        // Pas de rafraîchissement automatique par minuteur
-        // Le chargement se fait uniquement lors des changements de filtres ou de page
-    }, [searchTerm, statusFilter, currentPage, meta.limit, user]);
+    // useRef pour éviter les appels API redondants
+    const isLoadingRef = useRef(false);
     
-    // Vérifier si une action a été effectuée et rafraîchir les données si nécessaire
+    // Hook unique pour gérer tous les cas de rafraîchissement
     useEffect(() => {
-        if (shouldRefresh()) {
-            console.log('Rafraîchissement des articles après une action');
-            loadArticles();
+        // Éviter les appels parallèles
+        if (!isLoadingRef.current) {
+            const needsRefresh = shouldRefresh();
+            
+            // Log pour debug si c'est une action qui a déclenché le refresh
+            if (needsRefresh) {
+                console.log('Rafraîchissement des articles après une action');
+            }
+            
+            isLoadingRef.current = true;
+            loadArticles().finally(() => {
+                isLoadingRef.current = false;
+            });
         }
-    }, [shouldRefresh]);
+        // Dépend à la fois des changements de filtres et des actions effectuées
+    }, [searchTerm, statusFilter, currentPage, meta.limit, user, shouldRefresh]);
     
     // Fonction pour le rafraîchissement manuel
     const handleManualRefresh = () => {
@@ -124,19 +141,13 @@ export default function ArticlesPage() {
         // Pas de notification toast - à la demande de l'utilisateur
     };
 
-    // Fonction pour filtrer les articles
+    // Utiliser directement les résultats filtrés de l'API sans filtrage côté client supplémentaire
+    // puisque le backend applique déjà ces filtres
     const filteredArticles = useMemo(() => {
-        return articles.filter(article => {
-            // Recherche dans le titre et l'intro
-            const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (article.intro ? article.intro.toLowerCase().includes(searchTerm.toLowerCase()) : false);
-
-            // Comparaison de statut ("all", "published", "draft" ou "deleted")
-            const matchesStatus = statusFilter === "all" || article.status === statusFilter;
-
-            return matchesSearch && matchesStatus;
-        });
-    }, [articles, searchTerm, statusFilter]);
+        // Si nécessaire, on peut encore appliquer un filtrage supplémentaire ici
+        // mais uniquement pour des critères qui ne sont pas déjà gérés par l'API
+        return articles;
+    }, [articles]);
 
     // Console log pour déboguer les données reçues par le frontend
     useEffect(() => {

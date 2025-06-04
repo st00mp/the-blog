@@ -116,7 +116,24 @@ export async function getMyArticles(
     // Utiliser un paramètre spécifique pour filtrer côté serveur si un ID est fourni
     const queryParams = new URLSearchParams();
     if (searchTerm) queryParams.append('search', searchTerm);
-    if (status !== 'all') queryParams.append('status', status);
+    
+    // Convertir les chaînes de statut en valeurs numériques attendues par le backend
+    if (status !== 'all') {
+      let statusValue = '-1'; // Valeur par défaut pour 'all'
+      switch (status) {
+        case 'published':
+          statusValue = '1';
+          break;
+        case 'draft':
+          statusValue = '0';
+          break;
+        case 'deleted':
+          statusValue = '-1';
+          break;
+      }
+      queryParams.append('status', statusValue);
+    }
+    
     if (currentUserId) queryParams.append('author_id', currentUserId.toString());
     queryParams.append('page', page.toString());
     queryParams.append('limit', limit.toString());
