@@ -40,7 +40,9 @@ export const MediaUploader = ({ onSuccess, onError, type = 'all', label, icon, a
 
             const response = await fetch('/api/media/upload', {
                 method: 'POST',
-                body: formData,
+
+                body: formData
+
             });
 
             const rawBody = await response.text();
