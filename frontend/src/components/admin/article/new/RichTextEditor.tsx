@@ -57,9 +57,10 @@ type Props = {
     value: any;
     onChange: (value: any) => void;
     placeholder?: string;
+    articleId?: number;
 };
 
-export function RichTextEditor({ value, onChange, placeholder }: Props) {
+export function RichTextEditor({ value, onChange, placeholder, articleId }: Props) {
     const [hasMounted, setHasMounted] = useState(false);
     const [open, setOpen] = useState(false);
     const active = "px-2 py-1 text-white bg-zinc-700 border border-zinc-600 rounded";
@@ -227,6 +228,7 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                                                 type="image"
                                                 label="Télécharger une image"
                                                 icon={<ImagesIcon size={20} />}
+                                                articleId={articleId}
                                                 onSuccess={(url, mimeType) => {
                                                     if (mimeType.startsWith('image/')) {
                                                         const alt = prompt("Texte alternatif (description de l'image) ?") || "Image ajoutée";
@@ -263,6 +265,7 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                                                 type="video"
                                                 label="Télécharger une vidéo"
                                                 icon={<Video size={20} />}
+                                                articleId={articleId}
                                                 onSuccess={(url, mimeType) => {
                                                     // Utiliser l'extension vidéo pour insérer la vidéo correctement
                                                     editor?.chain().focus().insertContent({
@@ -323,6 +326,7 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                                                 type="document"
                                                 label="Télécharger un document"
                                                 icon={<FileText size={20} />}
+                                                articleId={articleId}
                                                 onSuccess={(url, mimeType) => {
                                                     // Pour les documents (PDF, Word, etc.)
                                                     const fileExt = url.split('.').pop()?.toLowerCase();
