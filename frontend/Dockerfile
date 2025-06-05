@@ -10,6 +10,12 @@ COPY package.json package-lock.json ./
 # Installer les dépendances
 RUN npm install
 
+# Créer la structure des dossiers uploads pour les médias
+RUN mkdir -p /app/public/uploads/images \
+    && mkdir -p /app/public/uploads/videos \
+    && mkdir -p /app/public/uploads/documents \
+    && chmod -R 755 /app/public/uploads
+
 # Copier le reste des fichiers (sans écraser node_modules)
 COPY . .
 
