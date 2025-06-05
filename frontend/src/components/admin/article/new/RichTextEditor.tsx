@@ -18,37 +18,37 @@ import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import { Node, mergeAttributes } from '@tiptap/core';
-import { Bold, Italic, Strikethrough, List, ListOrdered, Plus, ImagesIcon, X, Table as TableIcon, Minus, Link as LinkIcon, AlignLeft, AlignCenter, AlignRight, Quote, Highlighter, Palette, Video, FileText } from "lucide-react";
+import { Bold, Italic, Strikethrough, List, ListOrdered, Plus, Image as ImagesIcon, X, Table as TableIcon, Minus, Link as LinkIcon, AlignLeft, AlignCenter, AlignRight, Quote, Highlighter, Palette, Video, FileText } from "lucide-react";
 import { MediaUploader } from './MediaUploader';
 
 // Création d'une extension pour gérer directement les vidéos
 const VideoExtension = Node.create({
-  name: 'video',
-  group: 'block',
-  atom: true, // Ne peut pas être séparé plus loin
+    name: 'video',
+    group: 'block',
+    atom: true, // Ne peut pas être séparé plus loin
 
-  addAttributes() {
-    return {
-      src: { default: null },
-      controls: { default: true },
-      width: { default: '100%' },
-      height: { default: null },
-      type: { default: null },
-      class: { default: 'rounded-md my-4' },
-    };
-  },
+    addAttributes() {
+        return {
+            src: { default: null },
+            controls: { default: true },
+            width: { default: '100%' },
+            height: { default: null },
+            type: { default: null },
+            class: { default: 'rounded-md my-4' },
+        };
+    },
 
-  parseHTML() {
-    return [
-      {
-        tag: 'video',
-      },
-    ];
-  },
+    parseHTML() {
+        return [
+            {
+                tag: 'video',
+            },
+        ];
+    },
 
-  renderHTML({ HTMLAttributes }) {
-    return ['video', mergeAttributes(HTMLAttributes)];
-  },
+    renderHTML({ HTMLAttributes }) {
+        return ['video', mergeAttributes(HTMLAttributes)];
+    },
 });
 
 
@@ -218,7 +218,7 @@ export function RichTextEditor({ value, onChange, placeholder, articleId }: Prop
 
                                 <h3 className="text-lg font-bold mb-4 text-white">Ajouter un bloc</h3>
                                 <div className="flex flex-col gap-5">
-                                    
+
                                     {/* Groupe Image */}
                                     <div className="border border-zinc-700 rounded-lg p-1">
                                         <h4 className="text-zinc-300 text-sm mb-2 px-3 pt-2 font-medium">Image</h4>
@@ -241,7 +241,7 @@ export function RichTextEditor({ value, onChange, placeholder, articleId }: Prop
                                                     alert(`Erreur lors de l'upload : ${error}`);
                                                 }}
                                             />
-                                            
+
                                             {/* Image par URL */}
                                             <button className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base" onClick={() => {
                                                 const url = prompt("URL de l'image ?");
@@ -255,7 +255,7 @@ export function RichTextEditor({ value, onChange, placeholder, articleId }: Prop
                                             </button>
                                         </div>
                                     </div>
-                                    
+
                                     {/* Groupe Vidéo */}
                                     <div className="border border-zinc-700 rounded-lg p-1">
                                         <h4 className="text-zinc-300 text-sm mb-2 px-3 pt-2 font-medium">Vidéo</h4>
@@ -285,7 +285,7 @@ export function RichTextEditor({ value, onChange, placeholder, articleId }: Prop
                                                     alert(`Erreur lors de l'upload : ${error}`);
                                                 }}
                                             />
-                                            
+
                                             {/* Vidéo par URL (YouTube/Vimeo) */}
                                             <button
                                                 className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base"
@@ -316,7 +316,7 @@ export function RichTextEditor({ value, onChange, placeholder, articleId }: Prop
                                             </button>
                                         </div>
                                     </div>
-                                    
+
                                     {/* Groupe Document */}
                                     <div className="border border-zinc-700 rounded-lg p-1">
                                         <h4 className="text-zinc-300 text-sm mb-2 px-3 pt-2 font-medium">Document</h4>
@@ -331,12 +331,12 @@ export function RichTextEditor({ value, onChange, placeholder, articleId }: Prop
                                                     // Pour les documents (PDF, Word, etc.)
                                                     const fileExt = url.split('.').pop()?.toLowerCase();
                                                     let label = "📄 Document";
-                                                    
+
                                                     if (fileExt === "pdf") label = "📕 PDF à consulter";
                                                     else if (["doc", "docx"].includes(fileExt || '')) label = "📘 Fichier Word";
                                                     else if (["ppt", "pptx"].includes(fileExt || '')) label = "📙 Présentation PowerPoint";
                                                     else if (["xls", "xlsx"].includes(fileExt || '')) label = "📗 Tableur Excel";
-                                                    
+
                                                     const html = `<blockquote class="doc-preview-block"><strong>${label}</strong> — <a href="${url}" target="_blank" rel="noopener noreferrer">${url.split('/').pop()}</a></blockquote>`;
                                                     editor?.chain().focus().insertContent(html).run();
                                                     setOpen(false);
@@ -346,7 +346,7 @@ export function RichTextEditor({ value, onChange, placeholder, articleId }: Prop
                                                     alert(`Erreur lors de l'upload : ${error}`);
                                                 }}
                                             />
-                                            
+
                                             {/* Document par URL */}
                                             <button
                                                 className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 p-4 rounded-md text-white text-base"
@@ -371,7 +371,7 @@ export function RichTextEditor({ value, onChange, placeholder, articleId }: Prop
                                             </button>
                                         </div>
                                     </div>
-                                    
+
                                     {/* Groupe Mise en page */}
                                     <div className="border border-zinc-700 rounded-lg p-1">
                                         <h4 className="text-zinc-300 text-sm mb-2 px-3 pt-2 font-medium">Mise en page</h4>
