@@ -40,15 +40,23 @@ export const MediaUploader = ({ onSuccess, onError, type = 'all', label, icon, a
 
             const response = await fetch('/api/media/upload', {
                 method: 'POST',
+
                 body: formData
+
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Upload failed');
+            const rawBody = await response.text();
+            let data: any;
+            try {
+                data = JSON.parse(rawBody);
+            } catch {
+                throw new Error(rawBody || 'Upload failed');
             }
 
-            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Upload failed');
+            }
+
             onSuccess(data.url, file.type);
         } catch (error: any) {
             onError(error.message || 'Upload failed');
