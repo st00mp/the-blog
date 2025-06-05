@@ -2,6 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\Article;
+use App\Entity\Media;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -11,7 +14,7 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 class MediaController extends AbstractController
 {
     #[Route('/api/media/upload', name: 'app_media_upload', methods: ['POST'])]
-    public function upload(Request $request, SluggerInterface $slugger): Response
+    public function upload(Request $request, SluggerInterface $slugger, EntityManagerInterface $em): Response
     {
         $file = $request->files->get('file');
 
@@ -55,11 +58,29 @@ class MediaController extends AbstractController
             // URL publique du fichier
             $publicUrl = '/uploads/' . $mediaType . '/' . $newFilename;
 
+            $media = new Media();
+            $media->setUrl($publicUrl)
+                ->setType($mediaType)
+                ->setUploadedAt(new \DateTimeImmutable());
+
+            $articleId = $request->request->getInt('article_id');
+            if ($articleId > 0) {
+                $article = $em->getRepository(Article::class)->find($articleId);
+                if (!$article) {
+                    return $this->json(['error' => 'Invalid article_id'], 400);
+                }
+                $media->setArticle($article);
+            }
+
+            $em->persist($media);
+            $em->flush();
+
             return $this->json([
                 'success' => true,
                 'url' => $publicUrl,
                 'fileName' => $newFilename,
-                'mimeType' => $file->getMimeType()
+                'mimeType' => $file->getMimeType(),
+                'id' => $media->getId(),
             ]);
         } catch (\Exception $e) {
             return $this->json(['error' => $e->getMessage()], 500);

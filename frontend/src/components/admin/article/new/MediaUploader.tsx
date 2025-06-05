@@ -8,9 +8,10 @@ interface MediaUploaderProps {
     type?: 'image' | 'video' | 'document' | 'all';
     label?: string;
     icon?: ReactNode;
+    articleId?: number;
 }
 
-export const MediaUploader = ({ onSuccess, onError, type = 'all', label, icon }: MediaUploaderProps) => {
+export const MediaUploader = ({ onSuccess, onError, type = 'all', label, icon, articleId }: MediaUploaderProps) => {
     const [uploading, setUploading] = useState(false);
 
     const getAcceptTypes = () => {
@@ -33,8 +34,11 @@ export const MediaUploader = ({ onSuccess, onError, type = 'all', label, icon }:
         try {
             const formData = new FormData();
             formData.append('file', file);
+            if (articleId) {
+                formData.append('article_id', articleId.toString());
+            }
 
-            const response = await fetch('/api/upload', {  // URL modifiée
+            const response = await fetch('/api/media/upload', {
                 method: 'POST',
                 body: formData,
             });
