@@ -196,7 +196,8 @@ final class ArticleController extends AbstractController
             }
             
             // Application mono-utilisateur: l'auteur est toujours implicite
-            // Pas besoin d'associer explicitement un auteur
+            // Mais on doit quand même associer l'auteur pour la contrainte NOT NULL en base de données
+            $article->setAuthor($user);
 
             // Définition du statut (0 = brouillon, 1 = publié)
             // Par défaut, le statut est publié sauf si explicitement demandé comme brouillon
