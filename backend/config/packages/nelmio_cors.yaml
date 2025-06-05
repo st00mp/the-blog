@@ -5,6 +5,7 @@ nelmio_cors:
       - 'http://localhost:3100'
       - 'http://localhost:3000'  # Ajoutez cette ligne
       - 'http://localhost:8080'  # Et/ou celle-ci selon votre configuration
+      - 'http://localhost:8082'
     allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
     allow_headers: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
     expose_headers: ['Link']
@@ -17,3 +18,4 @@ nelmio_cors:
         - 'http://localhost:3100'
         - 'http://localhost:3000'  # Même chose ici
         - 'http://localhost:8080'  # Et ici
+        - 'http://localhost:8082'
