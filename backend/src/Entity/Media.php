@@ -23,7 +23,7 @@ class Media
     private ?\DateTimeImmutable $uploaded_at = null;
 
     #[ORM\ManyToOne(inversedBy: 'media')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Article $article = null;
 
     public function getId(): ?int

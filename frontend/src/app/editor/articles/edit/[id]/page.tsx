@@ -374,6 +374,7 @@ export default function EditArticlePage() {
                                     value={step.content}
                                     onChange={(val) => handleStepChange(i, "content", val)}
                                     placeholder={stepPlaceholders[i] || "Commence à écrire ici..."}
+                                    articleId={parseInt(articleId as string)}
                                 />
                             </StepBlock>
                         ))}
@@ -410,6 +411,7 @@ export default function EditArticlePage() {
                                     value={conclusionDescription}
                                     onChange={(val) => setConclusionDescription(val)}
                                     placeholder="Résume les points clés et propose les prochaines étapes..."
+                                    articleId={parseInt(articleId as string)}
                                 />
                             </div>
                         </div>
