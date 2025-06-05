@@ -32,42 +32,15 @@ export const MediaUploader = ({ onSuccess, onError, type = 'all', label, icon, a
         setUploading(true);
 
         try {
-            // Convertir le fichier en base64 pour éviter les problèmes de gestion des fichiers temporaires
-            const reader = new FileReader();
+            const formData = new FormData();
+            formData.append('file', file);
+            if (articleId) {
+                formData.append('article_id', articleId.toString());
+            }
 
-            // Promettre la lecture du fichier
-            const fileDataPromise = new Promise<string>((resolve, reject) => {
-                reader.onload = () => {
-                    // Le résultat contient le fichier en base64 (avec prefix data:...;base64,)
-                    const base64data = reader.result as string;
-                    // On extrait uniquement la partie base64, sans le préfixe
-                    const base64Content = base64data.split(',')[1];
-                    resolve(base64Content);
-                };
-                reader.onerror = () => reject(new Error('Failed to read the file'));
-            });
-
-            // Démarrer la lecture
-            reader.readAsDataURL(file);
-
-            // Attendre que la lecture soit terminée
-            const base64Content = await fileDataPromise;
-
-            // Préparer les données à envoyer
-            const payload = {
-                fileName: file.name,
-                mimeType: file.type,
-                content: base64Content,
-                articleId: articleId || null
-            };
-
-            // Envoyer au serveur
             const response = await fetch('/api/media/upload', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
+                body: formData
             });
 
             if (!response.ok) {
