@@ -35,7 +35,8 @@ final class CleanOrphanMediaCommand extends Command
             ->createQueryBuilder('m')
             ->select('m.url')
             ->getQuery()
-            ->getSingleColumnResult();
+            ->getArrayResult();
+        $urls = array_column($urls, 'url');
         $urls = array_map(fn($u) => ltrim($u, '/'), $urls);
 
         $removed = 0;
