@@ -117,5 +117,20 @@ Quickly insert visuals or layout elements without disrupting the writing flow.
 
 ![localhost_3100_account_settings](https://github.com/user-attachments/assets/dd8b73ca-8a84-4388-9cb7-9f6da6074d4f)
 
+---
+
+#### Cleaning orphan media files
+
+The backend provides a `app:clean-orphan-media` command to remove files from
+`public/uploads` that are no longer referenced in the database.
+
+```bash
+cd backend
+php bin/console app:clean-orphan-media
+```
+
+The command prints how many orphan files were removed. Only files missing from
+the `media` table are deleted.
+
 
 
