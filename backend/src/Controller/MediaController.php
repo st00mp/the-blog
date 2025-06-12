@@ -10,7 +10,7 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 
 class MediaController extends AbstractController
 {
-    #[Route('/api/media/upload', name: 'app_media_upload', methods: ['POST'])]
+    #[Route('/api/upload', name: 'app_upload', methods: ['POST'])]
     public function upload(Request $request, SluggerInterface $slugger): Response
     {
         $file = $request->files->get('file');
@@ -47,7 +47,7 @@ class MediaController extends AbstractController
             $targetDirectory = $this->getParameter('kernel.project_dir') . '/public/uploads/' . $mediaType;
 
             if (!file_exists($targetDirectory)) {
-                mkdir($targetDirectory, 0777, true);
+                mkdir($targetDirectory, 0755, true);
             }
 
             $file->move($targetDirectory, $newFilename);

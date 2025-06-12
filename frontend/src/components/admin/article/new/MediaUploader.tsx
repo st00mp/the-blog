@@ -37,6 +37,7 @@ export const MediaUploader = ({ onSuccess, onError, type = 'all', label, icon }:
             const response = await fetch('/api/upload', {  // URL modifiée
                 method: 'POST',
                 body: formData,
+                credentials: 'include'
             });
 
             if (!response.ok) {

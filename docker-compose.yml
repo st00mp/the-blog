@@ -6,6 +6,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./backend:/var/www/symfony
+      - uploads_volume:/var/www/symfony/public/uploads  # chemin corrigé
     ports:
       - "9500:9000"
     environment:
@@ -82,5 +83,7 @@ volumes:
   symfony_code:
   redis_data:
   frontend_node_modules:
+  uploads_volume:
+
 
 
