@@ -107,7 +107,11 @@
                     const previewSection = document.getElementById('previewSection');
                     const mediaPreview = document.getElementById('mediaPreview');
                     
-                    mediaPreview.innerHTML = `<img src="${result.url}" alt="${result.originalFileName}" style="max-width: 100%;">`;                    
+                    // Construire l'URL complète en préfixant avec le domaine du backend
+                    const backendUrl = 'http://localhost:8082';
+                    const fullImageUrl = result.url.startsWith('http') ? result.url : `${backendUrl}${result.url}`;
+                    
+                    mediaPreview.innerHTML = `<img src="${fullImageUrl}" alt="${result.originalFileName}" style="max-width: 100%;">`;
                     previewSection.style.display = 'block';
                 }
             } catch (error) {
