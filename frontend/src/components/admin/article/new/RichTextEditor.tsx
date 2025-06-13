@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect, useRef } from "react";
 import { useEditor, EditorContent, BubbleMenu } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -21,6 +22,9 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import { Bold, Italic, Strikethrough, List, ListOrdered, Plus, ImagesIcon, X, Table as TableIcon, Minus, Link as LinkIcon, AlignLeft, AlignCenter, AlignRight, Quote, Highlighter, Palette, Video, FileText } from "lucide-react";
 import { MediaUploader } from './MediaUploader';
 
+// Map pour stocker les relations entre les URLs des médias et leurs IDs
+export const mediaIdsMap = new Map<string, string>();
+
 // Création d'une extension pour gérer directement les vidéos
 const VideoExtension = Node.create({
     name: 'video',
@@ -35,6 +39,7 @@ const VideoExtension = Node.create({
             height: { default: null },
             type: { default: null },
             class: { default: 'rounded-md my-4' },
+            'data-media-id': { default: null },
         };
     },
 
@@ -57,11 +62,18 @@ type Props = {
     value: any;
     onChange: (value: any) => void;
     placeholder?: string;
+    // Ajout d'une prop pour exposer la map des IDs de média
+    onMediaMapUpdate?: (mediaMap: Map<string, string>) => void;
 };
 
-export function RichTextEditor({ value, onChange, placeholder }: Props) {
+export function RichTextEditor({ value, onChange, placeholder, onMediaMapUpdate }: Props) {
     const [hasMounted, setHasMounted] = useState(false);
     const [open, setOpen] = useState(false);
+    const [localValue, setLocalValue] = useState(value);
+    
+    // Utiliser une ref pour mediaIdsMap pour garantir la persistance entre les rendus
+    const mediaIdsMapRef = useRef(new Map<string, string>());
+    const mediaIdsMap = mediaIdsMapRef.current;
     const active = "px-2 py-1 text-white bg-zinc-700 border border-zinc-600 rounded";
     const inactive = "px-2 py-1 text-zinc-400 hover:text-white hover:bg-zinc-700 border border-zinc-700 rounded";
 
@@ -90,7 +102,13 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
             }),
             BulletList,
             OrderedList,
-            Image.configure({ inline: false, allowBase64: false }),
+            Image.configure({
+                inline: false,
+                allowBase64: false,
+                HTMLAttributes: {
+                    class: 'tiptap-image'
+                }
+            }),
             Table.configure({ resizable: true }),
             TableRow,
             TableHeader,
@@ -116,15 +134,19 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
         },
         immediatelyRender: false,
         onUpdate: ({ editor }) => {
-            onChange(editor.getJSON())
+            const newContent = editor.getJSON();
+            setLocalValue(newContent); // Mise à jour locale immédiate
+            onChange(newContent);      // Notification au parent
         },
     });
 
     useEffect(() => {
-        if (editor && JSON.stringify(editor.getJSON()) !== JSON.stringify(value)) {
+        // Ne mettre à jour que si la valeur externe change ET diffère de notre valeur locale
+        if (editor && JSON.stringify(localValue) !== JSON.stringify(value)) {
+            setLocalValue(value);
             editor.commands.setContent(value || {}, false);
         }
-    }, [value]);
+    }, [value, editor, localValue]);
 
     if (!editor) return null;
 
@@ -222,14 +244,20 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                                     <div className="border border-zinc-700 rounded-lg p-1">
                                         <h4 className="text-zinc-300 text-sm mb-2 px-3 pt-2 font-medium">Image</h4>
                                         <div className="flex flex-col gap-1">
+
                                             {/* Upload d'image */}
                                             <MediaUploader
                                                 type="image"
                                                 label="Télécharger une image"
                                                 icon={<ImagesIcon size={20} />}
-                                                onSuccess={(url, mimeType) => {
+                                                onSuccess={(url, mimeType, id) => {
                                                     if (mimeType.startsWith('image/')) {
                                                         const alt = prompt("Texte alternatif (description de l'image) ?") || "Image ajoutée";
+                                                        // Stocker l'ID du média dans la map avec l'URL comme clé
+                                                        mediaIdsMap.set(url, id);
+                                                        // Notifier le parent de la mise à jour de la map
+                                                        onMediaMapUpdate?.(mediaIdsMap);
+                                                        // Insérer l'image normalement
                                                         editor?.chain().focus().setImage({ src: url, alt }).run();
                                                         setOpen(false);
                                                     }
@@ -263,7 +291,11 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                                                 type="video"
                                                 label="Télécharger une vidéo"
                                                 icon={<Video size={20} />}
-                                                onSuccess={(url, mimeType) => {
+                                                onSuccess={(url, mimeType, id) => {
+                                                    // Stocker l'ID du média dans la map avec l'URL comme clé
+                                                    mediaIdsMap.set(url, id);
+                                                    // Notifier le parent de la mise à jour de la map
+                                                    onMediaMapUpdate?.(mediaIdsMap);
                                                     // Utiliser l'extension vidéo pour insérer la vidéo correctement
                                                     editor?.chain().focus().insertContent({
                                                         type: 'video',
@@ -272,7 +304,7 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                                                             controls: true,
                                                             width: '100%',
                                                             type: mimeType,
-                                                            class: 'rounded-md my-4',
+                                                            class: 'rounded-md my-4'
                                                         }
                                                     }).run();
                                                     setOpen(false);
@@ -323,7 +355,7 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                                                 type="document"
                                                 label="Télécharger un document"
                                                 icon={<FileText size={20} />}
-                                                onSuccess={(url, mimeType) => {
+                                                onSuccess={(url, mimeType, id) => {
                                                     // Pour les documents (PDF, Word, etc.)
                                                     const fileExt = url.split('.').pop()?.toLowerCase();
                                                     let label = "📄 Document";
@@ -333,6 +365,10 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                                                     else if (["ppt", "pptx"].includes(fileExt || '')) label = "📙 Présentation PowerPoint";
                                                     else if (["xls", "xlsx"].includes(fileExt || '')) label = "📗 Tableur Excel";
 
+                                                    // Stocker l'ID du média dans la map avec l'URL comme clé
+                                                    mediaIdsMap.set(url, id);
+                                                    // Notifier le parent de la mise à jour de la map
+                                                    onMediaMapUpdate?.(mediaIdsMap);
                                                     const html = `<blockquote class="doc-preview-block"><strong>${label}</strong> — <a href="${url}" target="_blank" rel="noopener noreferrer">${url.split('/').pop()}</a></blockquote>`;
                                                     editor?.chain().focus().insertContent(html).run();
                                                     setOpen(false);

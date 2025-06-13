@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import ArticleSection from "@/components/admin/article/new/ArticleSection";
@@ -56,6 +56,7 @@ export default function NewArticlePage() {
     const [ctaDescription, setCtaDescription] = useState("");
     const [ctaButton, setCtaButton] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+    const [mediaIdsMap, setMediaIdsMap] = useState<Map<string, string>>(new Map());
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -71,12 +72,24 @@ export default function NewArticlePage() {
         fetchCategories();
     }, []);
 
-    // Fonction pour mettre à jour une étape du contenu (titre ou contenu riche)
+    // Callback pour mettre à jour un champ de step particulier
     const handleStepChange = (index: number, field: "title" | "content", value: any) => {
-        const updated = [...steps];
-        updated[index][field] = value;
-        setSteps(updated);
+        const newSteps = [...steps];
+        newSteps[index][field] = value;
+        setSteps(newSteps);
     };
+    
+    // Callback pour récupérer les médias IDs map depuis les éditeurs
+    const handleMediaMapUpdate = useCallback((map: Map<string, string>) => {
+        setMediaIdsMap(prevMap => {
+            const newMap = new Map(prevMap);
+            // Fusionner les nouvelles entrées
+            map.forEach((value, key) => {
+                newMap.set(key, value);
+            });
+            return newMap;
+        });
+    }, []);
 
     // Fonction déclenchée lors de la soumission du formulaire (POST vers l'API)
     const handleSubmit = async (isDraft: boolean = false) => {
@@ -100,8 +113,12 @@ export default function NewArticlePage() {
             ctaDescription: string;
             ctaButton: string;
             status: number; // 0 pour brouillon, 1 pour publié
+            mediaIds: string[]; // IDs des médias utilisés dans l'article
         };
 
+        // Collecter tous les IDs de médias uniques à partir de la map
+        const mediaIds = Array.from(new Set(mediaIdsMap.values()));
+        
         const payload: NewArticlePayload = {
             category,
             title,
@@ -115,23 +132,32 @@ export default function NewArticlePage() {
             ctaDescription,
             ctaButton,
             status: isDraft ? 0 : 1, // 0 pour brouillon, 1 pour publié
+            mediaIds, // Ajouter les IDs des médias au payload
         };
 
         // 	Reset de tous les champs pour plus de clarté :
         const resetForm = () => {
-            setTitle("");
-            setMeta({ title: "", description: "" });
-            setIntro("");
-            setSteps([
-                { title: "", content: defaultTiptapContent },
-                { title: "", content: defaultTiptapContent },
-                { title: "", content: defaultTiptapContent }
-            ]);
-            setQuote("");
-            setConclusionTitle("");
-            setConclusionDescription(defaultTiptapContent);
-            setCtaDescription("");
-            setCtaButton("");
+            try {
+                setTitle("");
+                setMeta({ title: "", description: "" });
+                setIntro("");
+                // Créer de nouvelles copies du defaultTiptapContent pour éviter les problèmes de référence
+                const emptyContent = { type: "doc", content: [] };
+                setSteps([
+                    { title: "", content: { ...emptyContent } },
+                    { title: "", content: { ...emptyContent } },
+                    { title: "", content: { ...emptyContent } }
+                ]);
+                setQuote("");
+                setConclusionTitle("");
+                setConclusionDescription({ ...emptyContent });
+                setCtaDescription("");
+                setCtaButton("");
+                // Réinitialiser également la map des IDs de médias
+                setMediaIdsMap(new Map());
+            } catch (error) {
+                console.error("Erreur lors de la réinitialisation du formulaire:", error);
+            }
         };
         console.log("[API POST /api/articles] payload:", payload);
 
@@ -305,6 +331,7 @@ export default function NewArticlePage() {
                                     value={step.content}
                                     onChange={(val) => handleStepChange(i, "content", val)}
                                     placeholder={stepPlaceholders[i] || "Commence à écrire ici..."}
+                                    onMediaMapUpdate={handleMediaMapUpdate}
                                 />
                             </StepBlock>
                         ))}
@@ -341,6 +368,7 @@ export default function NewArticlePage() {
                             value={conclusionDescription}
                             onChange={(val) => setConclusionDescription(val)}
                             placeholder={`- Résumé des 2-3 grandes idées\n- Astuce ou mot de la fin\n- Question ouverte pour générer des commentaires`}
+                            onMediaMapUpdate={handleMediaMapUpdate}
                         />
                     </ArticleSection>
 

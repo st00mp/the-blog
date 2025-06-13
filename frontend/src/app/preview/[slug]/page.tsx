@@ -237,7 +237,11 @@ export default function PreviewArticlePage() {
                             )}
 
                             {/* Conclusion */}
-                            {(article.conclusionTitle || article.conclusionDescription) && (
+                            {/* Ne pas afficher le footer si conclusionTitle est vide et conclusionDescription n'a pas de contenu réel */}
+                            {(article.conclusionTitle || (article.conclusionDescription && 
+                                ((typeof article.conclusionDescription === 'string' && 
+                                    JSON.parse(article.conclusionDescription)?.content?.length > 0) || 
+                                 (article.conclusionDescription?.content?.length > 0)))) && (
                                 <footer className="mt-10 bg-white/5 p-6 rounded-md shadow-sm">
                                     {article.conclusionTitle && (
                                         <h3 className="text-xl font-semibold mb-2 text-white">{article.conclusionTitle}</h3>

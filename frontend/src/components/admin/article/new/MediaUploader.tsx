@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ReactNode } from 'react';
 
 interface MediaUploaderProps {
-    onSuccess: (url: string, mimeType: string) => void;
+    onSuccess: (url: string, mimeType: string, id: string) => void;
     onError: (error: string) => void;
     type?: 'image' | 'video' | 'document' | 'all';
     label?: string;
@@ -44,7 +44,7 @@ export const MediaUploader = ({ onSuccess, onError, type = 'all', label, icon }:
             const response_json = await response.json();
             
             if (response_json.url) {
-                onSuccess(response_json.url, file.type);
+                onSuccess(response_json.url, file.type, response_json.id);
                 return;
             }
             
