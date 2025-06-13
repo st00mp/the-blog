@@ -124,15 +124,17 @@ class Article
 
 
     /**
-     * @var Collection<int, Media>
+     * @var Collection<int, ArticleMedia>
      */
-    #[ORM\OneToMany(targetEntity: Media::class, mappedBy: 'article')]
-    private Collection $media;
+    #[ORM\OneToMany(mappedBy: 'article', targetEntity: ArticleMedia::class, orphanRemoval: true)]
+    private Collection $articleMedia;
 
     public function __construct()
     {
-
-        $this->media = new ArrayCollection();
+        $this->steps = [];
+        $this->articleMedia = new ArrayCollection();
+        $this->status = self::STATUS_DRAFT;
+        $this->created_at = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -356,11 +358,26 @@ class Article
 
 
     /**
+     * @return Collection<int, ArticleMedia>
+     */
+    public function getArticleMedia(): Collection
+    {
+        return $this->articleMedia;
+    }
+    
+    /**
+     * Returns all Media entities attached to this Article
      * @return Collection<int, Media>
      */
     public function getMedia(): Collection
     {
-        return $this->media;
+        $mediaCollection = new ArrayCollection();
+        
+        foreach ($this->articleMedia as $articleMedia) {
+            $mediaCollection->add($articleMedia->getMedia());
+        }
+        
+        return $mediaCollection;
     }
     
 
@@ -377,25 +394,57 @@ class Article
         return $this;
     }
 
-    public function addMedia(Media $media): static
+    public function addArticleMedia(ArticleMedia $articleMedia): static
     {
-        if (!$this->media->contains($media)) {
-            $this->media->add($media);
-            $media->setArticle($this);
+        if (!$this->articleMedia->contains($articleMedia)) {
+            $this->articleMedia->add($articleMedia);
+            $articleMedia->setArticle($this);
         }
 
         return $this;
     }
 
-    public function removeMedia(Media $media): static
+    public function removeArticleMedia(ArticleMedia $articleMedia): static
     {
-        if ($this->media->removeElement($media)) {
+        if ($this->articleMedia->removeElement($articleMedia)) {
             // set the owning side to null (unless already changed)
-            if ($media->getArticle() === $this) {
-                $media->setArticle(null);
+            if ($articleMedia->getArticle() === $this) {
+                $articleMedia->setArticle(null);
             }
         }
 
+        return $this;
+    }
+    
+    /**
+     * Convenience method to add a Media to the Article
+     * Creates and returns a new ArticleMedia relation
+     */
+    public function addMedia(Media $media, ?int $position = null): ArticleMedia
+    {
+        $articleMedia = new ArticleMedia();
+        $articleMedia->setArticle($this);
+        $articleMedia->setMedia($media);
+        if ($position !== null) {
+            $articleMedia->setPosition($position);
+        }
+        $this->addArticleMedia($articleMedia);
+        
+        return $articleMedia;
+    }
+    
+    /**
+     * Convenience method to remove a Media from the Article
+     */
+    public function removeMedia(Media $media): static
+    {
+        foreach ($this->articleMedia as $articleMedia) {
+            if ($articleMedia->getMedia() === $media) {
+                $this->removeArticleMedia($articleMedia);
+                break;
+            }
+        }
+        
         return $this;
     }
 }

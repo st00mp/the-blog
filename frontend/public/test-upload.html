@@ -2,15 +2,120 @@
 <html>
 
 <head>
-    <title>Test Upload</title>
+    <title>Test Upload Media</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .section { margin-bottom: 30px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+        button { padding: 8px 16px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+        input[type="file"] { margin-bottom: 10px; }
+        #uploadResult, #statusResult { display: none; }
+        h1 { color: #333; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+    </style>
 </head>
 
 <body>
-    <h1>Test Upload</h1>
-    <form action="http://nginx:8082/api/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <button type="submit">Envoyer</button>
-    </form>
+    <h1>Test du flux d'upload média complet</h1>
+    
+    <div class="section">
+        <h2>Étape 1: Upload du fichier</h2>
+        <form id="uploadForm">
+            <label for="mediaFile">Sélectionnez un fichier:</label>
+            <input type="file" id="mediaFile" name="file">
+            <button type="submit">Uploader</button>
+        </form>
+        <div id="uploadResult">
+            <h3>Résultat de l'upload:</h3>
+            <pre id="uploadResponse"></pre>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Étape 2: Vérifier le statut du média</h2>
+        <div>
+            <label for="mediaId">ID du média:</label>
+            <input type="text" id="mediaId" placeholder="UUID du média">
+            <button id="checkStatus">Vérifier le statut</button>
+        </div>
+        <div id="statusResult">
+            <h3>Statut du média:</h3>
+            <pre id="statusResponse"></pre>
+        </div>
+    </div>
+    
+    <div class="section" id="previewSection" style="display: none;">
+        <h2>Étape 3: Prévisualisation du média</h2>
+        <div id="mediaPreview"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('mediaFile');
+            
+            if (!fileInput.files.length) {
+                alert('Veuillez sélectionner un fichier');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const response = await fetch('http://localhost:8082/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                const resultDiv = document.getElementById('uploadResult');
+                const responseDiv = document.getElementById('uploadResponse');
+                
+                responseDiv.textContent = JSON.stringify(result, null, 2);
+                resultDiv.style.display = 'block';
+                
+                if (result.id) {
+                    document.getElementById('mediaId').value = result.id;
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de l\'upload: ' + error.message);
+            }
+        });
+        
+        document.getElementById('checkStatus').addEventListener('click', async () => {
+            const mediaId = document.getElementById('mediaId').value;
+            
+            if (!mediaId) {
+                alert('Veuillez entrer un ID de média');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`http://localhost:8082/api/upload/status?id=${mediaId}`);
+                const result = await response.json();
+                
+                const resultDiv = document.getElementById('statusResult');
+                const responseDiv = document.getElementById('statusResponse');
+                
+                responseDiv.textContent = JSON.stringify(result, null, 2);
+                resultDiv.style.display = 'block';
+                
+                // Afficher l'aperçu du média si c'est une image
+                if (result.mimeType && result.mimeType.startsWith('image/')) {
+                    const previewSection = document.getElementById('previewSection');
+                    const mediaPreview = document.getElementById('mediaPreview');
+                    
+                    mediaPreview.innerHTML = `<img src="${result.url}" alt="${result.originalFileName}" style="max-width: 100%;">`;                    
+                    previewSection.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la vérification du statut: ' + error.message);
+            }
+        });
+    </script>
 </body>
 
 </html>
