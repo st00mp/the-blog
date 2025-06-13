@@ -42,28 +42,64 @@ class MediaController extends AbstractController
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         ];
+        
+        // Récupérer toutes les métadonnées d'abord pour éviter toute erreur
+        $mimeType = $file->getMimeType();
+        $fileSize = $file->getSize();
+        $clientOriginalName = $file->getClientOriginalName();
+        $extension = $file->getClientOriginalExtension() ?: $file->guessExtension();
 
-        if (!in_array($file->getMimeType(), $allowedMimeTypes)) {
+        if (!in_array($mimeType, $allowedMimeTypes)) {
             return $this->json(['error' => 'File type not allowed'], 400);
         }
 
+        // Obtenir le chemin source du fichier uploadé
+        $sourcePath = $file->getPathname();
+        
         // Génération d'un nom de fichier unique
-        $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $originalFilename = pathinfo($clientOriginalName, PATHINFO_FILENAME);
         $safeFilename = $slugger->slug($originalFilename);
-        $newFilename = $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
+        $newFilename = $safeFilename . '-' . uniqid() . '.' . $extension;
 
-        // Déplacement du fichier dans le répertoire public/uploads
         try {
-            $mediaType = explode('/', $file->getMimeType())[0]; // 'image', 'video' ou 'application'
-            $targetDirectory = $this->getParameter('kernel.project_dir') . '/public/uploads/' . $mediaType;
+            // Déterminer le type de média
+            $mediaType = explode('/', $mimeType)[0]; // 'image', 'video' ou 'application'
             
-            // Création du répertoire si nécessaire
+            // Créer le répertoire cible si nécessaire
+            $targetDirectory = $this->getParameter('kernel.project_dir') . '/public/uploads/' . $mediaType;
             if (!is_dir($targetDirectory)) {
                 mkdir($targetDirectory, 0755, true);
             }
             
-            // Déplacement du fichier
-            $file->move($targetDirectory, $newFilename);
+            // Chemin complet du fichier de destination
+            $targetPath = $targetDirectory . '/' . $newFilename;
+            
+            // Vérifier si le fichier source existe
+            if (!file_exists($sourcePath)) {
+                return $this->json([
+                    'error' => 'Source file does not exist: ' . $sourcePath,
+                    'debug' => [
+                        'sourcePath' => $sourcePath,
+                        'targetPath' => $targetPath,
+                        'fileExists' => file_exists($sourcePath),
+                        'fileInfo' => $file->getPathInfo(),
+                        'fileError' => $file->getError(),
+                    ]
+                ], 500);
+            }
+            
+            // Copier manuellement le fichier
+            if (!copy($sourcePath, $targetPath)) {
+                // Si la copie échoue, essayer avec file_put_contents
+                $content = file_get_contents($sourcePath);
+                if ($content === false) {
+                    return $this->json(['error' => 'Could not read source file'], 500);
+                }
+                
+                if (file_put_contents($targetPath, $content) === false) {
+                    return $this->json(['error' => 'Could not write to target file'], 500);
+                }
+            }
             
             // URL publique du fichier
             $publicUrl = '/uploads/' . $mediaType . '/' . $newFilename;
@@ -71,14 +107,14 @@ class MediaController extends AbstractController
             // Création de l'entité Media
             $media = new Media();
             $media->setPath($publicUrl);
-            $media->setOriginalFilename($file->getClientOriginalName());
-            $media->setMimeType($file->getMimeType());
-            $media->setFileSize($file->getSize());
+            $media->setOriginalFilename($clientOriginalName);
+            $media->setMimeType($mimeType);
+            $media->setFileSize($fileSize);
             
             // Gestion des dimensions pour les images
             if ($mediaType === 'image') {
                 try {
-                    $dimensions = getimagesize($targetDirectory . '/' . $newFilename);
+                    $dimensions = getimagesize($targetPath);
                     if ($dimensions) {
                         $media->setDimensions([
                             'width' => $dimensions[0],
@@ -100,9 +136,9 @@ class MediaController extends AbstractController
                 'id' => $media->getId()->jsonSerialize(),
                 'url' => $publicUrl,
                 'fileName' => $newFilename,
-                'originalFileName' => $file->getClientOriginalName(),
-                'mimeType' => $file->getMimeType(),
-                'fileSize' => $file->getSize(),
+                'originalFileName' => $clientOriginalName,
+                'mimeType' => $mimeType,
+                'fileSize' => $fileSize,
                 'mediaType' => $mediaType
             ]);
         } catch (\Exception $e) {
