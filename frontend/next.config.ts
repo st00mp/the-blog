@@ -26,16 +26,18 @@ const nextConfig: NextConfig = {
   },
   // Configuration des rewrites pour le proxy API
   async rewrites() {
-    return {
-      beforeFiles: [],
-      afterFiles: [],
-      fallback: [
-        {
-          source: '/api/:path*',
-          destination: `${process.env.BACKEND_API_URL}/api/:path*`,
-        },
-      ],
-    };
+    return [
+      // Les rewrites prioritaires - s'appliquent avant que Next.js ne recherche les fichiers
+      {
+        source: '/uploads/:path*',
+        destination: `${process.env.BACKEND_API_URL}/uploads/:path*`,
+      },
+      // Les rewrites API normaux
+      {
+        source: '/api/:path*',
+        destination: `${process.env.BACKEND_API_URL}/api/:path*`,
+      },
+    ];
   },
   // Configuration des en-têtes de sécurité
   async headers() {

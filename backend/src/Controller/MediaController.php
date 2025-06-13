@@ -46,12 +46,6 @@ class MediaController extends AbstractController
             $mediaType = explode('/', $file->getMimeType())[0]; // 'image', 'video' ou 'application'
             $targetDirectory = $this->getParameter('kernel.project_dir') . '/public/uploads/' . $mediaType;
 
-            if (!file_exists($targetDirectory)) {
-                mkdir($targetDirectory, 0755, true);
-            }
-
-            $file->move($targetDirectory, $newFilename);
-
             // URL publique du fichier
             $publicUrl = '/uploads/' . $mediaType . '/' . $newFilename;
 

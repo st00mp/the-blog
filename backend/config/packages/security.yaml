@@ -41,6 +41,7 @@ security:
     access_control:
     - { path: ^/api/login, roles: PUBLIC_ACCESS }
     # Route /api/register désactivée - inutile en mode mono-utilisateur
+    - { path: ^/api/upload, roles: PUBLIC_ACCESS }
     - { path: ^/api/categories, methods: [GET], roles: PUBLIC_ACCESS }
     - { path: ^/api/articles, methods: [GET], roles: PUBLIC_ACCESS }
     - { path: ^/api/articles, roles: ROLE_ADMIN }

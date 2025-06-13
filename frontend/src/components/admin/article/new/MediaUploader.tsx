@@ -33,23 +33,34 @@ export const MediaUploader = ({ onSuccess, onError, type = 'all', label, icon }:
         try {
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('mediaType', type || 'default');
 
-            const response = await fetch('/api/upload', {  // URL modifiée
+            const response = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData,
-                credentials: 'include'
+                credentials: 'include' // Pour inclure les cookies d'auth
             });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Upload failed');
+            
+            const response_json = await response.json();
+            
+            if (response_json.url) {
+                onSuccess(response_json.url, file.type);
+                return;
             }
-
-            const data = await response.json();
-            onSuccess(data.url, file.type);
+            
+            // Sinon, traitement normal des erreurs et réponses
+            if (!response.ok) {
+                const errorMsg = `Server error: ${response.status} ${response.statusText}`;
+                throw new Error(errorMsg);
+            }
+            
+            // Si nous sommes arrivés jusqu'ici mais que l'URL n'a pas été trouvée dans la réponse
+            throw new Error('URL manquante dans la réponse du serveur');
         } catch (error: any) {
-            onError(error.message || 'Upload failed');
-        } finally {
+            const errorMsg = error.message || 'Upload failed';
+            onError(errorMsg);
+        }
+        finally {
             setUploading(false);
         }
     };
