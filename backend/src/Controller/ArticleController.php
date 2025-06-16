@@ -7,8 +7,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Article;
+use App\Entity\ArticleMedia;
+use App\Entity\Media;
 use App\Entity\User;
+use App\Repository\ArticleMediaRepository;
 use App\Repository\UserRepository;
+use App\Repository\MediaRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -111,14 +115,15 @@ final class ArticleController extends AbstractController
         return $this->json($article, 200, [], ['groups' => 'article:detail']);
     }
 
-    // Endpoint pour créer un nouvel article à partir d’un payload JSON
+    // Endpoint pour créer un nouvel article à partir d'un payload JSON
     // POST /api/articles
     #[Route('/api/articles', name: 'api_article_create', methods: ['POST'])]
     public function create(
         Request $request,
         EntityManagerInterface $em,
         ValidatorInterface $validator,
-        CategoryRepository $categoryRepo
+        CategoryRepository $categoryRepo,
+        MediaRepository $mediaRepo
     ): JsonResponse {
         // Tentative de création d'un article à partir des données reçues
         try {
@@ -241,7 +246,22 @@ final class ArticleController extends AbstractController
             
             // 5. Persistance
             $em->persist($article);
-            $em->flush();
+            $em->flush(); // Flush pour obtenir l'ID de l'article
+            
+            // 6. Traitement des médias associés à l'article
+            if (isset($data['mediaIds']) && is_array($data['mediaIds'])) {
+                foreach ($data['mediaIds'] as $mediaId) {
+                    $media = $mediaRepo->find($mediaId);
+                    if ($media) {
+                        $articleMedia = new ArticleMedia();
+                        $articleMedia->setArticle($article);
+                        $articleMedia->setMedia($media);
+                        $articleMedia->setCreatedAt(new \DateTimeImmutable());
+                        $em->persist($articleMedia);
+                    }
+                }
+                $em->flush();
+            }
 
             return $this->json(
                 [
@@ -273,7 +293,9 @@ final class ArticleController extends AbstractController
         EntityManagerInterface $em,
         ArticleRepository $articleRepo,
         CategoryRepository $categoryRepo,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
+        MediaRepository $mediaRepo,
+        ArticleMediaRepository $articleMediaRepo
     ): JsonResponse {
         try {
             // 1. Récupération de l'article existant
@@ -379,7 +401,42 @@ final class ArticleController extends AbstractController
                 $article->setMeta($meta);
             }
             
-            // 5. Persistance des modifications
+            // 5. Gestion des associations de médias
+            if (isset($data['mediaIds']) && is_array($data['mediaIds'])) {
+                $newMediaIds = $data['mediaIds'];
+                
+                // Récupérer les associations existantes
+                $existingMedias = $articleMediaRepo->findBy(['article' => $article]);
+                $existingMediaIds = [];
+                
+                foreach ($existingMedias as $articleMedia) {
+                    $mediaId = $articleMedia->getMedia()->getId()->__toString();
+                    $existingMediaIds[$mediaId] = $articleMedia;
+                }
+                
+                // Supprimer les associations qui ne sont plus présentes
+                foreach ($existingMediaIds as $mediaId => $articleMedia) {
+                    if (!in_array($mediaId, $newMediaIds)) {
+                        $em->remove($articleMedia);
+                    }
+                }
+                
+                // Ajouter les nouvelles associations
+                foreach ($newMediaIds as $mediaId) {
+                    if (!isset($existingMediaIds[$mediaId])) {
+                        $media = $mediaRepo->find($mediaId);
+                        if ($media) {
+                            $articleMedia = new ArticleMedia();
+                            $articleMedia->setArticle($article);
+                            $articleMedia->setMedia($media);
+                            $articleMedia->setCreatedAt(new \DateTimeImmutable());
+                            $em->persist($articleMedia);
+                        }
+                    }
+                }
+            }
+            
+            // 6. Persistance des modifications
             $em->flush();
 
             return $this->json(
