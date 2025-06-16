@@ -6,6 +6,9 @@ services:
     restart: unless-stopped
     volumes:
       - ./backend:/var/www/symfony
+      # Monter un volume d'exclusion pour éviter que les fichiers locaux écrasent les uploads
+      - /var/www/symfony/public/uploads
+      # Puis monter le volume partagé pour les uploads
       - uploads_volume:/var/www/symfony/public/uploads
       - tmp_volume:/var/www/symfony/var/tmp
     ports:
