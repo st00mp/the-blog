@@ -19,7 +19,7 @@ class Article
     public const STATUS_DELETED = -1;
     public const STATUS_DRAFT = 0;
     public const STATUS_PUBLISHED = 1;
-    
+
     public const STATUSES = [
         'deleted' => self::STATUS_DELETED,
         'draft' => self::STATUS_DRAFT,
@@ -41,7 +41,7 @@ class Article
     private ?Category $category = null;
 
 
-    
+
     #[ORM\Column(type: Types::JSON, nullable: true)]
     #[Groups(['article:detail'])]
     private ?array $meta = [];
@@ -127,6 +127,7 @@ class Article
      * @var Collection<int, ArticleMedia>
      */
     #[ORM\OneToMany(mappedBy: 'article', targetEntity: ArticleMedia::class, orphanRemoval: true)]
+    #[Groups(['article:detail'])]
     private Collection $articleMedia;
 
     public function __construct()
@@ -224,19 +225,19 @@ class Article
 
         return $this;
     }
-    
+
     public function getStatus(): int
     {
         return $this->status;
     }
-    
+
     public function setStatus(int $status): self
     {
         $this->status = $status;
 
         return $this;
     }
-    
+
     public function getStatusAsString(): string
     {
         if ($this->status === self::STATUS_PUBLISHED) {
@@ -247,7 +248,7 @@ class Article
             return 'draft';
         }
     }
-    
+
     public function setStatusFromString(string $statusString): self
     {
         $statusString = strtolower(trim($statusString));
@@ -258,7 +259,7 @@ class Article
         } else {
             $this->status = self::STATUS_DRAFT;
         }
-        
+
         return $this;
     }
 
@@ -364,7 +365,7 @@ class Article
     {
         return $this->articleMedia;
     }
-    
+
     /**
      * Returns all Media entities attached to this Article
      * @return Collection<int, Media>
@@ -372,16 +373,16 @@ class Article
     public function getMedia(): Collection
     {
         $mediaCollection = new ArrayCollection();
-        
+
         foreach ($this->articleMedia as $articleMedia) {
             $mediaCollection->add($articleMedia->getMedia());
         }
-        
+
         return $mediaCollection;
     }
-    
 
-    
+
+
     public function getMeta(): ?array
     {
         return $this->meta;
@@ -415,7 +416,7 @@ class Article
 
         return $this;
     }
-    
+
     /**
      * Convenience method to add a Media to the Article
      * Creates and returns a new ArticleMedia relation
@@ -429,10 +430,10 @@ class Article
             $articleMedia->setPosition($position);
         }
         $this->addArticleMedia($articleMedia);
-        
+
         return $articleMedia;
     }
-    
+
     /**
      * Convenience method to remove a Media from the Article
      */
@@ -444,7 +445,7 @@ class Article
                 break;
             }
         }
-        
+
         return $this;
     }
 }

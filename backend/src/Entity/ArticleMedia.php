@@ -20,6 +20,7 @@ class ArticleMedia
 
     #[ORM\ManyToOne(inversedBy: 'articleMedia')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['article:detail'])]
     private ?Media $media = null;
 
     #[ORM\Column(nullable: true)]

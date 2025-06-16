@@ -100,7 +100,7 @@ class ArticleRepository extends ServiceEntityRepository
                 ->setParameter('cat', $categoryId);
         }
     }
-    
+
     /**
      * Ajoute un filtre par auteur à la requête
      * Note: En mode mono-utilisateur, cette méthode est simplifiée
@@ -116,7 +116,7 @@ class ArticleRepository extends ServiceEntityRepository
             $qb->andWhere('1 = 0'); // Condition toujours fausse
         }
     }
-    
+
     /**
      * Ajoute un filtre par statut à la requête
      */
@@ -139,17 +139,21 @@ class ArticleRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('a')
             ->addSelect('c') // Catégorie
             ->addSelect('u') // Auteur
+            ->addSelect('am') // ArticleMedia relations
+            ->addSelect('m') // Media entities
             ->leftJoin('a.category', 'c')
             ->leftJoin('a.author', 'u')
+            ->leftJoin('a.articleMedia', 'am')
+            ->leftJoin('am.media', 'm')
             ->where('a.slug = :slug')
             ->setParameter('slug', $slug);
-            
+
         // Filtrer par statut si demandé
         if ($status !== null && $status >= 0) {
             $qb->andWhere('a.status = :status')
                 ->setParameter('status', $status);
         }
-            
+
         return $qb->getQuery()
             ->getOneOrNullResult();
     }
