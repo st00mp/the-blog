@@ -70,7 +70,7 @@ export function RichTextEditor({ value, onChange, placeholder, onMediaMapUpdate 
     const [hasMounted, setHasMounted] = useState(false);
     const [open, setOpen] = useState(false);
     const [localValue, setLocalValue] = useState(value);
-    
+
     // Utiliser une ref pour mediaIdsMap pour garantir la persistance entre les rendus
     const mediaIdsMapRef = useRef(new Map<string, string>());
     const mediaIdsMap = mediaIdsMapRef.current;
@@ -126,7 +126,7 @@ export function RichTextEditor({ value, onChange, placeholder, onMediaMapUpdate 
                 showOnlyCurrent: false,
             }),
         ],
-        content: "",
+        content: value || "",  // Utiliser la prop value pour initialiser le contenu
         editorProps: {
             attributes: {
                 class: "tiptap min-h-[120px] focus:outline-none",

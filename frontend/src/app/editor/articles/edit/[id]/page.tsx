@@ -57,29 +57,60 @@ export default function EditArticlePage() {
     useEffect(() => {
         const fetchArticleData = async () => {
             if (!articleId) return;
-            
+
             try {
                 setIsLoading(true);
                 console.log(`Chargement de l'article avec ID: ${articleId}`);
-                // Utiliser l'API byid qui contourne le bug backend en récupérant l'article via la liste si nécessaire
-                const response = await fetch(`/api/articles/byid/${articleId}`, {
+
+                // ÉTAPE 1: Récupérer la liste des articles pour trouver le slug
+                const listResponse = await fetch(`/api/articles?limit=200`, {
                     method: 'GET',
-                    credentials: 'include', // S'assurer que les cookies sont envoyés
-                    cache: 'no-store', // Éviter la mise en cache
+                    credentials: 'include',
+                    cache: 'no-store',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     }
                 });
 
-                if (!response.ok) {
-                    console.error(`Erreur lors du chargement de l'article avec ID ${articleId}: ${response.status}`);
-                    throw new Error(`Erreur ${response.status}: Impossible de charger l'article`);
+                if (!listResponse.ok) {
+                    console.error(`Erreur lors de la récupération de la liste d'articles: ${listResponse.status}`);
+                    throw new Error(`Erreur ${listResponse.status}: Impossible de récupérer la liste d'articles`);
                 }
 
-                const article = await response.json();
+                // ÉTAPE 2: Chercher l'article par ID dans la liste
+                const articlesList = await listResponse.json();
+                console.log(`Articles récupérés: ${articlesList.data?.length || 0}`);
+
+                const targetArticle = articlesList.data?.find((a: any) =>
+                    a.id === parseInt(articleId) || a.id === articleId);
+
+                if (!targetArticle) {
+                    console.error(`Article avec ID ${articleId} non trouvé dans la liste`);
+                    throw new Error(`Article avec ID ${articleId} introuvable`);
+                }
+
+                console.log(`Article trouvé - ID: ${targetArticle.id}, Slug: ${targetArticle.slug}`);
+
+                // ÉTAPE 3: Récupérer l'article complet par son slug
+                const articleResponse = await fetch(`/api/articles/${targetArticle.slug}?status=-1`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    cache: 'no-store',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!articleResponse.ok) {
+                    console.error(`Erreur lors du chargement de l'article: ${articleResponse.status}`);
+                    throw new Error(`Erreur ${articleResponse.status}: Impossible de charger l'article`);
+                }
+
+                const article = await articleResponse.json();
                 console.log("Données d'article reçues:", article);
-                
+
                 // Remplir les champs avec les données existantes
                 setTitle(article.title || "");
                 setCategory(article.category?.id?.toString() || "");
@@ -88,39 +119,39 @@ export default function EditArticlePage() {
                     description: article.metaDescription || ""
                 });
                 setIntro(article.intro || "");
-                
+
                 // Remplir les étapes avec celles de l'article existant
                 if (article.steps && article.steps.length > 0) {
                     console.log("Format des étapes:", article.steps);
                     const formattedSteps = article.steps.map((step: any) => ({
                         title: step.title || "",
                         // Vérifier si le contenu est déjà un objet ou une chaîne JSON
-                        content: typeof step.content === 'object' ? step.content : 
-                                (step.content ? JSON.parse(step.content) : defaultTiptapContent)
+                        content: typeof step.content === 'object' ? step.content :
+                            (step.content ? JSON.parse(step.content) : defaultTiptapContent)
                     }));
-                    
+
                     // S'assurer qu'il y a au moins 3 étapes
                     while (formattedSteps.length < 3) {
                         formattedSteps.push({ title: "", content: defaultTiptapContent });
                     }
-                    
+
                     console.log("Étapes formatées:", formattedSteps);
                     setSteps(formattedSteps);
                 }
-                
+
                 setQuote(article.quote || "");
                 setConclusionTitle(article.conclusionTitle || "");
                 // Vérifier si conclusionDescription est déjà un objet ou une chaîne JSON
                 setConclusionDescription(
-                    typeof article.conclusionDescription === 'object' 
+                    typeof article.conclusionDescription === 'object'
                         ? article.conclusionDescription
-                        : (article.conclusionDescription 
-                            ? JSON.parse(article.conclusionDescription) 
+                        : (article.conclusionDescription
+                            ? JSON.parse(article.conclusionDescription)
                             : defaultTiptapContent)
                 );
                 setCtaDescription(article.ctaDescription || "");
                 setCtaButton(article.ctaButton || "");
-                
+
                 setIsLoading(false);
             } catch (error) {
                 console.error('Erreur lors du chargement de l\'article:', error);
@@ -210,18 +241,18 @@ export default function EditArticlePage() {
                 credentials: 'include',
                 cache: 'no-store'
             });
-            
+
             if (!articleDetailsResponse.ok) {
                 throw new Error('Impossible de récupérer les détails de l\'article');
             }
-            
+
             const articleDetails = await articleDetailsResponse.json();
             const slug = articleDetails.slug;
-            
+
             if (!slug) {
                 throw new Error('Impossible de trouver le slug de l\'article');
             }
-            
+
             // 2. Préparer les données pour l'envoi à l'API
             const formData = {
                 title,
@@ -239,7 +270,7 @@ export default function EditArticlePage() {
                 ctaDescription,
                 ctaButton
             };
-            
+
             // 3. Envoyer la mise à jour en utilisant le SLUG
             const response = await fetch(`/api/articles/${slug}`, {
                 method: 'PUT',
@@ -256,7 +287,7 @@ export default function EditArticlePage() {
             }
 
             const data = await response.json();
-            
+
             // Vérifier si l'API a renvoyé une URL de redirection
             if (data.redirectUrl) {
                 router.push(data.redirectUrl);

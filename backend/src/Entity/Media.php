@@ -18,35 +18,35 @@ class Media
     private ?Uuid $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['media:list', 'media:detail'])]
+    #[Groups(['media:list', 'media:detail', 'article:detail'])]
     private ?string $path = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['media:list', 'media:detail'])]
+    #[Groups(['media:list', 'media:detail', 'article:detail'])]
     private ?string $thumbnailPath = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['media:list', 'media:detail'])]
+    #[Groups(['media:list', 'media:detail', 'article:detail'])]
     private ?string $originalFilename = null;
 
     #[ORM\Column(length: 50)]
-    #[Groups(['media:list', 'media:detail'])]
+    #[Groups(['media:list', 'media:detail', 'article:detail'])]
     private ?string $mimeType = null;
     
     #[ORM\Column(length: 50)]
-    #[Groups(['media:list', 'media:detail'])]
+    #[Groups(['media:list', 'media:detail', 'article:detail'])]
     private ?string $mediaType = null; // image, video, document, etc
 
     #[ORM\Column(nullable: true)]
-    #[Groups(['media:list', 'media:detail'])]
+    #[Groups(['media:list', 'media:detail', 'article:detail'])]
     private ?int $fileSize = null;
     
     #[ORM\Column(nullable: true)]
-    #[Groups(['media:list', 'media:detail'])]
+    #[Groups(['media:list', 'media:detail', 'article:detail'])]
     private ?array $dimensions = null; // [width, height] pour images/vidéos
 
     #[ORM\Column]
-    #[Groups(['media:list', 'media:detail'])]
+    #[Groups(['media:list', 'media:detail', 'article:detail'])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(nullable: true)]

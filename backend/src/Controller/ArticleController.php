@@ -115,6 +115,103 @@ final class ArticleController extends AbstractController
         return $this->json($article, 200, [], ['groups' => 'article:detail']);
     }
 
+    // Endpoint pour récupérer un article par son ID numérique (spécialement pour l'édition)
+    // GET /api/article/{id}
+    #[Route('/api/article/{id}', name: 'api_article_by_id', methods: ['GET'])]
+    public function getArticleById(Request $request, int $id, ArticleRepository $repo): JsonResponse
+    {
+        if ($_ENV['APP_ENV'] === 'dev') {
+            error_log("==== Début API /api/article/{id} - ID=$id ====");
+        }
+        
+        // Récupérer le paramètre de statut
+        $requestedStatus = $request->query->has('status') ? $request->query->getInt('status') : -1;
+        $status = 1; // Par défaut, articles publiés uniquement
+        
+        if ($_ENV['APP_ENV'] === 'dev') {
+            error_log("Status demandé: $requestedStatus");
+        }
+        
+        // Si status=-1, on veut récupérer l'article quel que soit son statut (pour édition)
+        if ($requestedStatus === -1) {
+            $user = $this->getUser();
+            // Vérifier que l'utilisateur est connecté et admin pour accéder à tous les statuts
+            if ($user && $user instanceof User && $user->getRole() === 'ROLE_ADMIN') {
+                $status = -1; // Tous les statuts
+                if ($_ENV['APP_ENV'] === 'dev') {
+                    error_log("Utilisateur admin détecté, accès à tous les statuts accordé");
+                }
+            } else {
+                if ($_ENV['APP_ENV'] === 'dev') {
+                    error_log("Utilisateur non admin, accès limité aux articles publiés");
+                }
+            }
+        } 
+        // Pour les autres statuts spécifiques (0=brouillon)
+        else if ($requestedStatus !== 1) {
+            $user = $this->getUser();
+            if ($user && $user instanceof User && $user->getRole() === 'ROLE_ADMIN') {
+                $status = $requestedStatus;
+                if ($_ENV['APP_ENV'] === 'dev') {
+                    error_log("Status spécifique $requestedStatus accordé à l'admin");
+                }
+            } else {
+                if ($_ENV['APP_ENV'] === 'dev') {
+                    error_log("Status spécifique $requestedStatus refusé (user non admin)");
+                }
+            }
+        }
+        
+        // Récupérer l'article par ID
+        if ($_ENV['APP_ENV'] === 'dev') {
+            error_log("Recherche de l'article avec ID=$id et statut=$status");
+        }
+        $article = $repo->find($id);
+        
+        // Vérifier si l'article existe
+        if (!$article) {
+            if ($_ENV['APP_ENV'] === 'dev') {
+                error_log("Article ID=$id non trouvé dans la base de données");
+                // Débogage supplémentaire - lister quelques articles
+                $sampleArticles = $repo->findBy([], ['id' => 'DESC'], 3);
+                error_log("Exemples d'articles existants:");
+                foreach ($sampleArticles as $sample) {
+                    error_log("  - ID: {$sample->getId()}, Slug: {$sample->getSlug()}, Status: {$sample->getStatus()}");
+                }
+            }
+            return $this->json(['error' => 'Article non trouvé'], 404);
+        }
+        
+        if ($_ENV['APP_ENV'] === 'dev') {
+            error_log("Article trouvé - ID: {$article->getId()}, Slug: {$article->getSlug()}, Status: {$article->getStatus()}");
+        }
+        
+        // Si on ne veut pas tous les statuts et que l'article a un autre statut que celui demandé
+        if ($status !== -1 && $article->getStatus() !== $status) {
+            if ($_ENV['APP_ENV'] === 'dev') {
+                error_log("Accès refusé: l'article a le statut {$article->getStatus()} mais l'accès est limité au statut $status");
+            }
+            // Si l'utilisateur n'est pas autorisé à voir ce statut d'article
+            return $this->json(['error' => 'Article non trouvé'], 404);
+        }
+        
+        // Si l'article est un brouillon, ajouter les en-têtes anti-référencement
+        if ($article->getStatus() === 0) {
+            if ($_ENV['APP_ENV'] === 'dev') {
+                error_log("Renvoi de l'article (brouillon) avec en-têtes anti-référencement");
+            }
+            return $this->json($article, 200, [
+                'X-Robots-Tag' => 'noindex, nofollow'
+            ], ['groups' => 'article:detail']);
+        }
+        
+        // Pour les articles publiés
+        if ($_ENV['APP_ENV'] === 'dev') {
+            error_log("Renvoi de l'article (publié) sans en-têtes spéciaux");
+        }
+        return $this->json($article, 200, [], ['groups' => 'article:detail']);
+    }
+
     // Endpoint pour créer un nouvel article à partir d'un payload JSON
     // POST /api/articles
     #[Route('/api/articles', name: 'api_article_create', methods: ['POST'])]
