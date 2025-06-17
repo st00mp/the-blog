@@ -253,12 +253,22 @@ export function RichTextEditor({ value, onChange, placeholder, onMediaMapUpdate 
                                                 onSuccess={(url, mimeType, id) => {
                                                     if (mimeType.startsWith('image/')) {
                                                         const alt = prompt("Texte alternatif (description de l'image) ?") || "Image ajoutée";
-                                                        // Stocker l'ID du média dans la map avec l'URL comme clé
+                                                        
+                                                        // Convertir l'URL relative en URL absolue pour l'affichage
+                                                        // Utiliser l'URL du backend selon la configuration Docker
+                                                        let absoluteUrl = url;
+                                                        if (url.startsWith('/')) {
+                                                            absoluteUrl = `http://localhost:8082${url}`;
+                                                            console.log(`Conversion d'URL: ${url} -> ${absoluteUrl}`);
+                                                        }
+                                                        
+                                                        // Stocker l'ID du média dans la map avec l'URL originale comme clé
                                                         mediaIdsMap.set(url, id);
                                                         // Notifier le parent de la mise à jour de la map
                                                         onMediaMapUpdate?.(mediaIdsMap);
-                                                        // Insérer l'image normalement
-                                                        editor?.chain().focus().setImage({ src: url, alt }).run();
+                                                        
+                                                        // Insérer l'image avec l'URL absolue pour l'affichage
+                                                        editor?.chain().focus().setImage({ src: absoluteUrl, alt }).run();
                                                         setOpen(false);
                                                     }
                                                 }}

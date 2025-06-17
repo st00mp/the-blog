@@ -22,6 +22,8 @@ export default function EditArticlePage() {
     // Utiliser les params via un custom hook compatible avec Next.js
     const params = useParams();
     const articleId = params?.id as string; // 'id' est maintenant l'identifiant unique de l'article (et non plus le slug)
+    const [articleSlug, setArticleSlug] = useState<string>(""); // Pour stocker le slug
+    const [mediaMap, setMediaMap] = useState<Map<string, string>>(new Map()); // Pour suivre les URLs des médias et leurs IDs
     const router = useRouter();
     const { user, isLoading: isAuthLoading, isAuthenticated } = useAuth();
 
@@ -52,6 +54,13 @@ export default function EditArticlePage() {
     const [ctaDescription, setCtaDescription] = useState("");
     const [ctaButton, setCtaButton] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    // Fonction pour mettre à jour la map des médias
+    const handleMediaMapUpdate = (newMediaMap: Map<string, string>) => {
+        console.log("Mise à jour de la mediaMap:", Object.fromEntries(newMediaMap));
+        setMediaMap(newMediaMap);
+    };
 
     // Récupérer les données de l'article existant
     useEffect(() => {
@@ -91,6 +100,9 @@ export default function EditArticlePage() {
                 }
 
                 console.log(`Article trouvé - ID: ${targetArticle.id}, Slug: ${targetArticle.slug}`);
+                
+                // Sauvegarder le slug pour l'utiliser lors de la sauvegarde
+                setArticleSlug(targetArticle.slug);
 
                 // ÉTAPE 3: Récupérer l'article complet par son slug
                 const articleResponse = await fetch(`/api/articles/${targetArticle.slug}?status=-1`, {
@@ -227,33 +239,23 @@ export default function EditArticlePage() {
             alert("Le titre est requis");
             return;
         }
-
         setIsSaving(true);
-
+        
         try {
-            // 1. Récupérer le slug de l'article
-            const articleDetailsResponse = await fetch(`/api/articles/byid/${articleId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                credentials: 'include',
-                cache: 'no-store'
-            });
-
-            if (!articleDetailsResponse.ok) {
-                throw new Error('Impossible de récupérer les détails de l\'article');
+            // Vérifier que nous avons bien le slug de l'article
+            if (!articleSlug) {
+                throw new Error('Slug de l\'article non disponible, veuillez rafraîchir la page');
             }
-
-            const articleDetails = await articleDetailsResponse.json();
-            const slug = articleDetails.slug;
-
-            if (!slug) {
-                throw new Error('Impossible de trouver le slug de l\'article');
-            }
+            
+            console.log(`Utilisation du slug stocké: ${articleSlug} pour la sauvegarde`);
+            const slug = articleSlug;
 
             // 2. Préparer les données pour l'envoi à l'API
+            
+            // Convertir la Map des médias en objet pour l'inclure dans la requête
+            const mediaIds = Object.fromEntries(mediaMap);
+            console.log('Médias détectés pour la sauvegarde:', mediaIds);
+            
             const formData = {
                 title,
                 category: category ? parseInt(category) : null, // Backend attend 'category', pas 'categoryId'
@@ -268,7 +270,8 @@ export default function EditArticlePage() {
                 conclusionTitle,
                 conclusionDescription: JSON.stringify(conclusionDescription),
                 ctaDescription,
-                ctaButton
+                ctaButton,
+                mediaIds // Envoyer les IDs des médias au backend pour les associer à l'article
             };
 
             // 3. Envoyer la mise à jour en utilisant le SLUG
@@ -405,6 +408,7 @@ export default function EditArticlePage() {
                                     value={step.content}
                                     onChange={(val) => handleStepChange(i, "content", val)}
                                     placeholder={stepPlaceholders[i] || "Commence à écrire ici..."}
+                                    onMediaMapUpdate={handleMediaMapUpdate}
                                 />
                             </StepBlock>
                         ))}
@@ -441,6 +445,7 @@ export default function EditArticlePage() {
                                     value={conclusionDescription}
                                     onChange={(val) => setConclusionDescription(val)}
                                     placeholder="Résume les points clés et propose les prochaines étapes..."
+                                    onMediaMapUpdate={handleMediaMapUpdate}
                                 />
                             </div>
                         </div>
