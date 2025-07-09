@@ -3,6 +3,17 @@
 This is an ongoing implementation of the multi-authors CMS using **Symfony**, **Next.js** and **ShadCN UI** components.  
 The goal is to recreate a clean, elegant blog layout inspired by Vercel’s blog design.
 
+### Local setup
+
+Copy the example environment files and adjust them with your own values:
+
+```bash
+cp backend/.env.dev.example backend/.env.dev
+cp frontend/.env.local.example frontend/.env.local
+```
+
+Docker Compose relies on these variables when starting the containers.
+
 ---
 
 #### ✅ Current progress

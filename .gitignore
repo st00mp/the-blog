@@ -24,6 +24,9 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+# Ignore env files inside project folders
+backend/.env.dev
+frontend/.env.local
 
 # Logs
 npm-debug.log*
